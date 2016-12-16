@@ -63,6 +63,11 @@ class Form extends FormEntity
     /**
      * @var string
      */
+    private $postActionHideForm;
+
+    /**
+     * @var string
+     */
     private $postActionProperty;
 
     /**
@@ -165,6 +170,10 @@ class Form extends FormEntity
 
         $builder->createField('postAction', 'string')
             ->columnName('post_action')
+            ->build();
+
+        $builder->createField('postActionHideForm', 'boolean')
+            ->columnName('post_action_hide_form')
             ->build();
 
         $builder->createField('postActionProperty', 'string')
@@ -439,6 +448,31 @@ class Form extends FormEntity
     public function getPostAction()
     {
         return $this->postAction;
+    }
+
+    /**
+     * Set postAction.
+     *
+     * @param string $postAction
+     *
+     * @return Form
+     */
+    public function setPostActionHideForm($postActionHideForm)
+    {
+        $this->isChanged('postActionHideForm', $postActionHideForm);
+        $this->postActionHideForm = $postActionHideForm;
+
+        return $this;
+    }
+
+    /**
+     * Get postAction.
+     *
+     * @return string
+     */
+    public function getPostActionHideForm()
+    {
+        return $this->postActionHideForm;
     }
 
     /**

@@ -160,6 +160,19 @@ class FormType extends AbstractType
             'empty_value' => false,
         ]);
 
+        $builder->add(
+            'postActionFormHide',
+            'yesno_button_group',
+            [
+                'label' => 'mautic.form.form.postactionformhide',
+                'data'  => (bool) $options['data']['postActionFormHide'],
+                'attr'  => [
+                    'data-show-on' => '{"postAction_3":"selected"}',
+                ],
+            ]
+        );
+
+
         $postAction = (isset($options['data'])) ? $options['data']->getPostAction() : '';
         $required   = (in_array($postAction, ['redirect', 'message'])) ? true : false;
         $builder->add('postActionProperty', 'text', [
