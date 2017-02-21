@@ -24,9 +24,19 @@ use MauticPlugin\MauticFocusBundle\FocusEvents;
 use Symfony\Component\EventDispatcher\Event;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Exception\MethodNotAllowedHttpException;
+use Symfony\Component\EventDispatcher\ContainerAwareEventDispatcher;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
+use Mautic\LeadBundle\Entity\Lead;
+use Mautic\LeadBundle\Model\LeadModel;
+use Mautic\CoreBundle\Event\TokenReplacementEvent;
 
 class FocusModel extends FormModel
 {
+    /**
+     * @var ContainerAwareEventDispatcher
+     */
+    protected $dispatcher;
+
     /**
      * @var \Mautic\FormBundle\Model\FormModel
      */
@@ -43,17 +53,24 @@ class FocusModel extends FormModel
     protected $templating;
 
     /**
+     * @var
+     */
+    protected $leadModel;
+
+    /**
      * FocusModel constructor.
      *
      * @param \Mautic\FormBundle\Model\FormModel $formModel
      * @param TrackableModel                     $trackableModel
      * @param TemplatingHelper                   $templating
      */
-    public function __construct(\Mautic\FormBundle\Model\FormModel $formModel, TrackableModel $trackableModel, TemplatingHelper $templating)
+    public function __construct(\Mautic\FormBundle\Model\FormModel $formModel, TrackableModel $trackableModel, TemplatingHelper $templating, EventDispatcherInterface $dispatcher, LeadModel $leadModel)
     {
         $this->formModel      = $formModel;
         $this->trackableModel = $trackableModel;
         $this->templating     = $templating;
+        $this->dispatcher     = $dispatcher;
+        $this->leadModel    = $leadModel;
     }
 
     /**
@@ -158,7 +175,6 @@ class FocusModel extends FormModel
     public function getContent(Focus $focus)
     {
         $cached = $focus->getCache();
-
         if (empty($cached)) {
             $cached = $this->generateJavascript($focus);
             $focus->setCache($cached);
@@ -177,6 +193,7 @@ class FocusModel extends FormModel
      */
     public function generateJavascript($focus, $preview = false, $ignoreMinify = false)
     {
+
         if ($focus instanceof Focus) {
             $focus = $focus->toArray();
         }
@@ -185,6 +202,17 @@ class FocusModel extends FormModel
             $form = $this->formModel->getEntity($focus['form']);
         } else {
             $form = null;
+        }
+        if($focus['id'] != 'preview'){
+            $fid = $focus['id'];
+        }elseif(isset($focus['unlockId'])){
+            $fid = $focus['unlockId'];
+        }
+        if(isset($fid) && $focus['htmlMode'] && $focus['html']) {
+            $lead = $this->leadModel->getCurrentLead();
+            $tokenEvent = new TokenReplacementEvent($focus['html'], $lead, ['focus_id' => $fid]);
+            $this->dispatcher->dispatch(FocusEvents::TOKEN_REPLACEMENT, $tokenEvent);
+            $focus['html'] = $tokenEvent->getContent();
         }
 
         if ($preview) {
@@ -228,7 +256,7 @@ class FocusModel extends FormModel
             }
         }
 
-        return $content;
+        return  $content;
     }
 
     /**

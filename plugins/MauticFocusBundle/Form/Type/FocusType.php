@@ -41,7 +41,7 @@ class FocusType extends AbstractType
      */
     public function buildForm(FormBuilderInterface $builder, array $options)
     {
-        $builder->addEventSubscriber(new CleanFormSubscriber(['website' => 'url']));
+        $builder->addEventSubscriber(new CleanFormSubscriber(['website' => 'url', 'html' => 'html']));
         $builder->addEventSubscriber(new FormExitSubscriber('focus', $options));
 
         $builder->add(
@@ -61,6 +61,49 @@ class FocusType extends AbstractType
                 'label'      => 'mautic.core.description',
                 'label_attr' => ['class' => 'control-label'],
                 'attr'       => ['class' => 'form-control editor'],
+                'required'   => false,
+            ]
+        );
+
+        $builder->add(
+            'css',
+            'textarea',
+            [
+                'label'      => 'mautic.focus.form.css',
+                'attr'       => [
+                    'class' => 'form-control',
+                    'rows' => 12,
+                    'onblur' => 'Mautic.focusUpdatePreview()',
+                ],
+                'required'   => false,
+            ]
+        );
+
+        $builder->add(
+            'html_mode',
+            'yesno_button_group',
+            [
+                'label' => 'mautic.focus.form.html_mode',
+                'data'  => $options['data']->getHtmlMode()?:false,
+                'attr'  => [
+                    'tooltip'  => 'mautic.focus.form.html_mode.tooltip',
+                    'onchange'    => 'Mautic.focusUpdatePreview()',
+                ],
+            ]
+        );
+
+        $builder->add(
+            'html',
+            'textarea',
+            [
+                'label'      => 'mautic.focus.form.html',
+                'label_attr' => ['class' => 'control-label'],
+                'attr'       => [
+                    'class' => 'form-control',
+                    'rows' => 12,
+                    'data-show-on' => '{"focus_html_mode_1":"checked"}',
+                    'onblur' => 'Mautic.focusUpdatePreview()',
+                ],
                 'required'   => false,
             ]
         );
