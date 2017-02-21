@@ -45,6 +45,20 @@ class ConfigType extends AbstractType
                 'data'  => (bool) $options['data']['notification_landing_page_enabled'],
                 'attr'  => [
                     'tooltip' => 'mautic.notification.config.form.notification.landingpage.enabled.tooltip',
+                    'data-show-on' => '{"config_notificationconfig_notification_enabled_1":"checked"}',
+                ],
+            ]
+        );
+
+        $builder->add(
+            'notification_tracking_page_enabled',
+            'yesno_button_group',
+            [
+                'label' => 'mautic.notification.config.form.notification.trackingpage.enabled',
+                'data'  => (bool) $options['data']['notification_tracking_page_enabled'],
+                'attr'  => [
+                    'tooltip' => 'mautic.notification.config.form.notification.trackingpage.enabled.tooltip',
+                    'data-show-on' => '{"config_notificationconfig_notification_enabled_1":"checked"}',
                 ],
             ]
         );
@@ -98,6 +112,20 @@ class ConfigType extends AbstractType
                 'data'  => $options['data']['gcm_sender_id'],
                 'attr'  => [
                     'tooltip'      => 'mautic.notification.config.form.notification.gcm_sender_id.tooltip',
+                    'class'        => 'form-control',
+                    'data-show-on' => '{"config_notificationconfig_notification_enabled_1":"checked"}',
+                ],
+            ]
+        );
+
+        $builder->add(
+            'notification_subdomain_name',
+            'text',
+            [
+                'label' => 'mautic.notification.config.form.notification.subdomain_name',
+                'data'  => $options['data']['notification_subdomain_name'],
+                'attr'  => [
+                    'tooltip'      => 'mautic.notification.config.form.notification.subdomain_name.tooltip',
                     'class'        => 'form-control',
                     'data-show-on' => '{"config_notificationconfig_notification_enabled_1":"checked"}',
                 ],
