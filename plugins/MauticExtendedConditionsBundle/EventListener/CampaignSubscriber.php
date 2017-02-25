@@ -3,21 +3,19 @@ namespace MauticPlugin\MauticExtendedConditionsBundle\EventListener;
 
 use Mautic\CoreBundle\EventListener\CommonSubscriber;
 use Mautic\CampaignBundle\Model\EventModel;
+use Mautic\LeadBundle\Model\LeadModel;
 use MauticPlugin\MauticExtendedConditionsBundle\ExtendedConditionsEvents;
 use Mautic\CampaignBundle\CampaignEvents;
+use Mautic\CampaignBundle\Event\CampaignExecutionEvent;
 use Mautic\CampaignBundle\Event\CampaignBuilderEvent;
-use Mautic\PageBundle\Entity\Page;
-use Mautic\PageBundle\Event\PageHitEvent;
-use Mautic\PageBundle\PageEvents;
-use Mautic\PageBundle\Model\PageModel;
 
 class CampaignSubscriber extends CommonSubscriber
 {
 
     /**
-     * @var PageModel
+     * @var LeadModel
      */
-    protected $pageModel;
+    protected $leadModel;
 
     /**
      * @var EventModel
@@ -27,13 +25,12 @@ class CampaignSubscriber extends CommonSubscriber
     /**
      * CampaignSubscriber constructor.
      *
-     * @param PageModel  $pageModel
      * @param EventModel $campaignEventModel
      */
-    public function __construct(PageModel $pageModel, EventModel $campaignEventModel)
+    public function __construct(EventModel $campaignEventModel, LeadModel $leadModel)
     {
-        $this->pageModel          = $pageModel;
         $this->campaignEventModel = $campaignEventModel;
+        $this->leadModel = $leadModel;
     }
 
 
@@ -44,7 +41,6 @@ class CampaignSubscriber extends CommonSubscriber
             ExtendedConditionsEvents::ON_CAMPAIGN_TRIGGER_DECISION  => array('onCampaignTriggerDecision', 0)
         ];
     }
-
 
 
     /**
@@ -72,11 +68,7 @@ class CampaignSubscriber extends CommonSubscriber
      */
     public function onCampaignTriggerDecision(CampaignExecutionEvent $event)
     {
-        $eventDetails = $event->getEventDetails();
-        $config       = $event->getConfig();
-
-        die('test');
-        //return $event->setResult(true);
+        return $event->setResult($event->getEventDetails());
     }
 
 }
