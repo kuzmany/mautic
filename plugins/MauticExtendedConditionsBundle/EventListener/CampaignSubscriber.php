@@ -68,7 +68,15 @@ class CampaignSubscriber extends CommonSubscriber
      */
     public function onCampaignTriggerDecision(CampaignExecutionEvent $event)
     {
-        return $event->setResult($event->getEventDetails());
+        $eventConfig = $event->getConfig();
+        $eventDetails = $event->getEventDetails();
+        if($eventConfig['last_active_limit'] < $eventDetails)
+        {
+            return $event->setResult(true);
+        }else{
+            return $event->setResult(false);
+
+        }
     }
 
 }

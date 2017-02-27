@@ -53,15 +53,13 @@ class LeadSubscriber extends CommonSubscriber
      */
     public function onLeadPreSave(LeadEvent $event)
     {
+        static $difference = null;
         $lead = $event->getLead();
         $changes = $lead->getChanges();
-        if (isset($changes['dateLastActive']) && count($changes['dateLastActive']) == 2) {
-
-            $difference = ($changes['dateLastActive'][0])->diff($changes['dateLastActive'][1])->format('%m');
-            if($difference > 30){
-                $this->campaignEventModel->triggerEvent('extendedconditions.last_active_condition', true);
-            } else {
-                $this->campaignEventModel->triggerEvent('extendedconditions.last_active_condition', false);
+        if ($difference == null) {
+            if (isset($changes['dateLastActive']) && count($changes['dateLastActive']) == 2){
+                $difference = (($changes['dateLastActive'][1])->diff($changes['dateLastActive'][0]))->format('%m');
+                    $this->campaignEventModel->triggerEvent('extendedconditions.last_active_condition', $difference);
             }
         }
     }
