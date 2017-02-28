@@ -37,8 +37,8 @@ class CampaignSubscriber extends CommonSubscriber
     static public function getSubscribedEvents()
     {
         return [
-            CampaignEvents::CAMPAIGN_ON_BUILD        => ['onCampaignBuild', 0],
-            ExtendedConditionsEvents::ON_CAMPAIGN_TRIGGER_DECISION  => array('onCampaignTriggerDecision', 0)
+            CampaignEvents::CAMPAIGN_ON_BUILD => ['onCampaignBuild', 0],
+            ExtendedConditionsEvents::ON_CAMPAIGN_TRIGGER_DECISION => array('onCampaignTriggerDecision', 0),
         ];
     }
 
@@ -52,11 +52,11 @@ class CampaignSubscriber extends CommonSubscriber
     {
 
         $pageHitTrigger = [
-            'label'          => 'plugin.extended.conditions.campaign.event.last_active',
-            'description'    => 'plugin.extended.conditions.campaign.event.last_active.description',
-            'formType'       => 'extendedconditionsnevent_last_active',
-            'eventName'      => ExtendedConditionsEvents::ON_CAMPAIGN_TRIGGER_DECISION,
-            'channel'        => 'page',
+            'label' => 'plugin.extended.conditions.campaign.event.last_active',
+            'description' => 'plugin.extended.conditions.campaign.event.last_active.description',
+            'formType' => 'extendedconditionsnevent_last_active',
+            'eventName' => ExtendedConditionsEvents::ON_CAMPAIGN_TRIGGER_DECISION,
+            'channel' => 'page',
             'channelIdField' => 'pages',
         ];
         $event->addDecision('extendedconditions.last_active_condition', $pageHitTrigger);
@@ -70,12 +70,8 @@ class CampaignSubscriber extends CommonSubscriber
     {
         $eventConfig = $event->getConfig();
         $eventDetails = $event->getEventDetails();
-        if($eventConfig['last_active_limit'] < $eventDetails)
-        {
+        if ($eventConfig['last_active_limit'] < $eventDetails) {
             return $event->setResult(true);
-        }else{
-            return $event->setResult(false);
-
         }
     }
 

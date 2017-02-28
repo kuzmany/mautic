@@ -15,6 +15,7 @@ use Mautic\CoreBundle\EventListener\CommonSubscriber;
 use Mautic\LeadBundle\Event\LeadEvent;
 use Mautic\LeadBundle\LeadEvents;
 use Mautic\CampaignBundle\Model\EventModel;
+use Symfony\Component\Validator\Constraints\DateTime;
 
 /**
  * Class PageSubscriber.
@@ -57,7 +58,7 @@ class LeadSubscriber extends CommonSubscriber
         $lead = $event->getLead();
         $changes = $lead->getChanges();
         if ($difference == null) {
-            if (isset($changes['dateLastActive']) && count($changes['dateLastActive']) == 2){
+            if (isset($changes['dateLastActive']) && count($changes['dateLastActive']) == 2 && is_object($changes['dateLastActive'][0])  && is_object($changes['dateLastActive'][1])){
                 $difference = (($changes['dateLastActive'][1])->diff($changes['dateLastActive'][0]))->format('%m');
                     $this->campaignEventModel->triggerEvent('extendedconditions.last_active_condition', $difference);
             }
