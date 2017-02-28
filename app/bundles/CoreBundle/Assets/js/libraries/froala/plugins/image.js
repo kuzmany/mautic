@@ -1833,7 +1833,7 @@
         return html;
       });
 
-      if (editor.opts.imageOutputSize) {
+      if (!editor.opts.imageOutputSize) {
         var imgs;
 
         editor.events.on('html.beforeGet', function () {
@@ -1849,8 +1849,8 @@
 
         editor.events.on('html.afterGet', function () {
           for (var i = 0; i < imgs.length; i++) {
-            imgs[i].removeAttribute('width');
-            imgs[i].removeAttribute('height');
+            // imgs[i].removeAttribute('width');
+            // imgs[i].removeAttribute('height');
           }
         });
       }
