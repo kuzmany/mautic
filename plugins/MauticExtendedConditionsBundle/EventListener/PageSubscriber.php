@@ -74,13 +74,24 @@ class PageSubscriber extends CommonSubscriber
         $lead = $event->getLead();
         $leadId = $lead->getId();
 
+       // $hit    = $event->getHit();
+//        $hit      = $event->getHit();
+//        $redirect = $hit->getRedirect();
+
+        if ($event->getPage()) {
+            return;
+        }
+
         $qb = $this->db->createQueryBuilder();
 
         $latestDateHit = $qb->select('date_hit')
             ->from(MAUTIC_TABLE_PREFIX.'page_hits', 'ph')
             ->where(
                 $qb->expr()->andX(
-                    $qb->expr()->eq('ph.lead_id', ':leadId')
+                    $qb->expr()->eq('ph.lead_id', ':leadId'),
+                    $qb->expr()->isNull('ph.page_id'),
+                    $qb->expr()->isNull('ph.redirect_id'),
+                    $qb->expr()->isNull('ph.email_id')
                 )
             )
             ->setParameter('leadId', $leadId)
@@ -93,13 +104,6 @@ class PageSubscriber extends CommonSubscriber
         $hit = $event->getHit();
         $channel = 'page';
         $channelId = null;
-
-        if ($redirect = $hit->getRedirect()) {
-            $channel = 'page.redirect';
-            $channelId = $redirect->getId();
-        } elseif ($page = $hit->getPage()) {
-            $channelId = $page->getId();
-        }
 
         $this->campaignEventModel->triggerEvent('extendedconditions.last_active_condition', $hit, $channel, $channelId);
     }

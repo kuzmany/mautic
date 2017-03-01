@@ -20,14 +20,14 @@ return [
                     'mautic.lead.model.lead',
                 ],
             ],
-//            'mautic.plugin.extendedconditions.pagebundle.subscriber' => [
-//                'class'     => 'MauticPlugin\MauticExtendedConditionsBundle\EventListener\PageSubscriber',
-//                'arguments' => [
-//                    'mautic.campaign.model.event',
-//                    'mautic.lead.model.lead',
-//                    'doctrine.dbal.default_connection',
-//                ],
-//            ],
+            'mautic.plugin.extendedconditions.pagebundle.subscriber' => [
+                'class'     => 'MauticPlugin\MauticExtendedConditionsBundle\EventListener\PageSubscriber',
+                'arguments' => [
+                    'mautic.campaign.model.event',
+                    'mautic.lead.model.lead',
+                    'doctrine.dbal.default_connection',
+                ],
+            ],
         ],
         'forms' => [
             'mautic.plugin..extendedconditions.type.last_active.campaign_trigger' => [
