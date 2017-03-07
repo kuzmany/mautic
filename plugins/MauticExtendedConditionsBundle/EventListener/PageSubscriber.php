@@ -73,38 +73,44 @@ class PageSubscriber extends CommonSubscriber
     {
         $lead = $event->getLead();
         $leadId = $lead->getId();
+        $hit = $event->getHit();
+        if ($hit->getSource() && $hit->getSourceId() && $redirect = $hit->getRedirect()) {
+            $channel = 'page.redirect';
+            $channelId = $redirect->getId();
+            $this->campaignEventModel->triggerEvent(
+                'extendedconditions.click_condition',
+                $hit,
+                $channel,
+                $channelId
+            );
+        }
 
-       // $hit    = $event->getHit();
+        // $hit    = $event->getHit();
 //        $hit      = $event->getHit();
 //        $redirect = $hit->getRedirect();
 
-        if ($event->getPage()) {
-            return;
-        }
+//        if ($event->getPage()) {
+//            return;
+//        }
+//
+//        $qb = $this->db->createQueryBuilder();
+//
+//        $latestDateHit = $qb->select('date_hit')
+//            ->from(MAUTIC_TABLE_PREFIX.'page_hits', 'ph')
+//            ->where(
+//                $qb->expr()->andX(
+//                    $qb->expr()->eq('ph.lead_id', ':leadId'),
+//                    $qb->expr()->isNull('ph.page_id'),
+//                    $qb->expr()->isNull('ph.redirect_id'),
+//                    $qb->expr()->isNull('ph.email_id')
+//                )
+//            )
+//            ->setParameter('leadId', $leadId)
+//            ->orderBy('ph.id', 'DESC')
+//            ->setFirstResult(1)
+//            ->setMaxResults(1)
+//            ->execute()
+//            ->fetchColumn();
 
-        $qb = $this->db->createQueryBuilder();
-
-        $latestDateHit = $qb->select('date_hit')
-            ->from(MAUTIC_TABLE_PREFIX.'page_hits', 'ph')
-            ->where(
-                $qb->expr()->andX(
-                    $qb->expr()->eq('ph.lead_id', ':leadId'),
-                    $qb->expr()->isNull('ph.page_id'),
-                    $qb->expr()->isNull('ph.redirect_id'),
-                    $qb->expr()->isNull('ph.email_id')
-                )
-            )
-            ->setParameter('leadId', $leadId)
-            ->orderBy('ph.id', 'DESC')
-            ->setFirstResult(1)
-            ->setMaxResults(1)
-            ->execute()
-            ->fetchColumn();
-
-        $hit = $event->getHit();
-        $channel = 'page';
-        $channelId = null;
-
-        $this->campaignEventModel->triggerEvent('extendedconditions.last_active_condition', $hit, $channel, $channelId);
     }
 }

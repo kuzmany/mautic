@@ -18,7 +18,7 @@ use Symfony\Component\Validator\Constraints\NotBlank;
 /**
  * Class CampaignEventPageHitType.
  */
-class CampaignEventLastActiveConditionType extends AbstractType
+class CampaignEventClickConditionType extends AbstractType
 {
 
     /**
@@ -28,10 +28,25 @@ class CampaignEventLastActiveConditionType extends AbstractType
     public function buildForm(FormBuilderInterface $builder, array $options)
     {
         $builder->add(
-            'last_active_limit',
+            'source',
             'text',
             [
-                'label'      => 'plugin.extended.conditions.config.last_active.limit',
+                'label'      => 'plugin.extended.conditions.click.source',
+                'label_attr' => ['class' => 'control-label'],
+                'attr'       => [
+                    'class'   => 'form-control',
+                ],
+                'required'    => true,
+                'constraints' => [
+                    new NotBlank(['message' => 'mautic.core.value.required']),
+                ],
+            ]
+        );
+        $builder->add(
+            'source_id',
+            'text',
+            [
+                'label'      => 'plugin.extended.conditions.click.source_id',
                 'label_attr' => ['class' => 'control-label'],
                 'attr'       => [
                     'class'   => 'form-control',
@@ -49,6 +64,6 @@ class CampaignEventLastActiveConditionType extends AbstractType
      */
     public function getName()
     {
-        return 'extendedconditionsnevent_last_active';
+        return 'extendedconditionsnevent_click';
     }
 }

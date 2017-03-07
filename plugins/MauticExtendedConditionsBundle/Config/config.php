@@ -21,14 +21,14 @@ return [
                     'mautic.helper.core_parameters',
                 ],
             ],
-//            'mautic.plugin.extendedconditions.pagebundle.subscriber' => [
-//                'class'     => 'MauticPlugin\MauticExtendedConditionsBundle\EventListener\PageSubscriber',
-//                'arguments' => [
-//                    'mautic.campaign.model.event',
-//                    'mautic.lead.model.lead',
-//                    'doctrine.dbal.default_connection',
-//                ],
-//            ],
+            'mautic.plugin.extendedconditions.pagebundle.subscriber' => [
+                'class'     => 'MauticPlugin\MauticExtendedConditionsBundle\EventListener\PageSubscriber',
+                'arguments' => [
+                    'mautic.campaign.model.event',
+                    'mautic.lead.model.lead',
+                    'doctrine.dbal.default_connection',
+                ],
+            ],
             'mautic.plugin.extendedconditions.configbundle.subscriber' => [
                 'class'     => 'MauticPlugin\MauticExtendedConditionsBundle\EventListener\ConfigSubscriber',
                 'arguments' => [
@@ -40,6 +40,10 @@ return [
             'mautic.plugin.extendedconditions.type.last_active.campaign_trigger' => [
                 'class' => 'MauticPlugin\MauticExtendedConditionsBundle\Form\Type\CampaignEventLastActiveConditionType',
                 'alias' => 'extendedconditionsnevent_last_active',
+            ],
+            'mautic.plugin.extendedconditions.type.click.campaign_trigger' => [
+                'class' => 'MauticPlugin\MauticExtendedConditionsBundle\Form\Type\CampaignEventClickConditionType',
+                'alias' => 'extendedconditionsnevent_click',
             ],
             'mautic.plugin.extendedconditions.type.config' => [
                 'class'     => 'MauticPlugin\MauticExtendedConditionsBundle\Form\Type\ConfigType',
