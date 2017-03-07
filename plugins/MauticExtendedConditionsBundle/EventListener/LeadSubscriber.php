@@ -46,7 +46,7 @@ class LeadSubscriber extends CommonSubscriber
      *
      * @param EventModel $campaignEventModel
      */
-    public function __construct(EventModel $campaignEventModel, LeadModel $leadModel, oreParametersHelper $coreParametersHelper)
+    public function __construct(EventModel $campaignEventModel, LeadModel $leadModel, CoreParametersHelper $coreParametersHelper)
     {
         $this->campaignEventModel = $campaignEventModel;
         $this->leadModel = $leadModel;
@@ -83,7 +83,7 @@ class LeadSubscriber extends CommonSubscriber
                 $lists = $this->coreParametersHelper->getParameter('lists');
                 if(!empty($lists) && is_array($lists)){
                     foreach($lists as $list){
-                        $this->leadModel->addToLists($lead, $list);
+                        $this->leadModel->addToLists($lead, [$list]);
                     }
                 }
             }
