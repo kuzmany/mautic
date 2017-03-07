@@ -18,6 +18,7 @@ return [
                 'arguments' => [
                     'mautic.campaign.model.event',
                     'mautic.lead.model.lead',
+                    'mautic.helper.core_parameters',
                 ],
             ],
             'mautic.plugin.extendedconditions.pagebundle.subscriber' => [
@@ -28,12 +29,25 @@ return [
                     'doctrine.dbal.default_connection',
                 ],
             ],
+            'mautic.plugin.extendedconditions.configbundle.subscriber' => [
+                'class'     => 'MauticPlugin\MauticExtendedConditionsBundle\EventListener\ConfigSubscriber',
+                'arguments' => [
+                    'mautic.helper.core_parameters',
+                ],
+            ],
         ],
         'forms' => [
-            'mautic.plugin..extendedconditions.type.last_active.campaign_trigger' => [
+            'mautic.plugin.extendedconditions.type.last_active.campaign_trigger' => [
                 'class' => 'MauticPlugin\MauticExtendedConditionsBundle\Form\Type\CampaignEventLastActiveConditionType',
                 'alias' => 'extendedconditionsnevent_last_active',
             ],
+            'mautic.plugin.extendedconditions.type.config' => [
+                'class'     => 'MauticPlugin\MauticExtendedConditionsBundle\Form\Type\ConfigType',
+                'alias'     => 'extendedconditionsnevent_config',
+            ],
         ],
     ],
+    'parameters' => array(
+        'lists' => [],
+    )
 ];
