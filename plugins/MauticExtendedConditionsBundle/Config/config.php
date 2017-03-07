@@ -21,14 +21,14 @@ return [
                     'mautic.helper.core_parameters',
                 ],
             ],
-            'mautic.plugin.extendedconditions.pagebundle.subscriber' => [
-                'class'     => 'MauticPlugin\MauticExtendedConditionsBundle\EventListener\PageSubscriber',
-                'arguments' => [
-                    'mautic.campaign.model.event',
-                    'mautic.lead.model.lead',
-                    'doctrine.dbal.default_connection',
-                ],
-            ],
+//            'mautic.plugin.extendedconditions.pagebundle.subscriber' => [
+//                'class'     => 'MauticPlugin\MauticExtendedConditionsBundle\EventListener\PageSubscriber',
+//                'arguments' => [
+//                    'mautic.campaign.model.event',
+//                    'mautic.lead.model.lead',
+//                    'doctrine.dbal.default_connection',
+//                ],
+//            ],
             'mautic.plugin.extendedconditions.configbundle.subscriber' => [
                 'class'     => 'MauticPlugin\MauticExtendedConditionsBundle\EventListener\ConfigSubscriber',
                 'arguments' => [
