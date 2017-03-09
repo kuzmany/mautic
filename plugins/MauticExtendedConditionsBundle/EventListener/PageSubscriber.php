@@ -85,6 +85,18 @@ class PageSubscriber extends CommonSubscriber
             );
         }
 
+//        if (!$hit->getPage() && !$hit->getRedirect()) {
+//            // Mautic Tracking Pixel was hit
+//            $channel = 'url.hit';
+//            $channelId = $hit->getId();
+//            $this->campaignEventModel->triggerEvent(
+//                'extendedconditions.display_focus_condition',
+//                $hit,
+//                $channel,
+//                $channelId
+//            );
+//        }
+
         // $hit    = $event->getHit();
 //        $hit      = $event->getHit();
 //        $redirect = $hit->getRedirect();

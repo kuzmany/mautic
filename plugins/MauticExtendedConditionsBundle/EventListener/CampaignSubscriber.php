@@ -4,13 +4,20 @@ namespace MauticPlugin\MauticExtendedConditionsBundle\EventListener;
 use Mautic\CoreBundle\EventListener\CommonSubscriber;
 use Mautic\CampaignBundle\Model\EventModel;
 use Mautic\LeadBundle\Model\LeadModel;
-use MauticPlugin\MauticExtendedConditionsBundle\ExtendedConditionsEvents;
+use Mautic\PageBundle\Entity\Hit;
 use Mautic\CampaignBundle\CampaignEvents;
 use Mautic\CampaignBundle\Event\CampaignExecutionEvent;
 use Mautic\CampaignBundle\Event\CampaignBuilderEvent;
+use MauticPlugin\MauticExtendedConditionsBundle\ExtendedConditionsEvents;
+use Symfony\Component\HttpFoundation\Session\Session;
 
 class CampaignSubscriber extends CommonSubscriber
 {
+
+    /**
+     * @var $sesion
+     */
+    protected $sesion;
 
     /**
      * @var LeadModel
@@ -27,10 +34,11 @@ class CampaignSubscriber extends CommonSubscriber
      *
      * @param EventModel $campaignEventModel
      */
-    public function __construct(EventModel $campaignEventModel, LeadModel $leadModel)
+    public function __construct(EventModel $campaignEventModel, LeadModel $leadModel, Session $session)
     {
         $this->campaignEventModel = $campaignEventModel;
         $this->leadModel = $leadModel;
+        $this->session = $session;
     }
 
 
@@ -70,6 +78,16 @@ class CampaignSubscriber extends CommonSubscriber
             'channelIdField' => 'pages',
         ];
         $event->addDecision('extendedconditions.click_condition', $pageHitTrigger);
+
+        $pageHitTrigger = [
+            'label' => 'plugin.extended.conditions.campaign.event.dynamic',
+            'description' => 'plugin.extended.conditions.campaign.event.dynamic.description',
+            'formType' => 'extendedconditionsnevent_dynamic',
+            'eventName' => ExtendedConditionsEvents::ON_CAMPAIGN_TRIGGER_DECISION,
+            'channel' => 'page',
+            'channelIdField' => 'pages',
+        ];
+        $event->addDecision('extendedconditions.dynamic_condition', $pageHitTrigger);
     }
 
 
@@ -82,7 +100,6 @@ class CampaignSubscriber extends CommonSubscriber
         $eventDetails = $event->getEventDetails();
 
         if ($event->checkContext('extendedconditions.last_active_condition')) {
-
             if ($event->checkContext('lead.changepoints')) {
                 if ($eventConfig['last_active_limit'] < $eventDetails) {
                     return $event->setResult(true);
@@ -100,7 +117,20 @@ class CampaignSubscriber extends CommonSubscriber
                     return $event->setResult(false);
                 }
             }
+        } elseif ($event->checkContext('extendedconditions.dynamic_condition')) {
+
+            $limitToUrl = html_entity_decode(trim($eventConfig['url']));
+            $hit = $eventDetails;
+
+            // dont diplay but dont stop decistion
+            if (!$limitToUrl || !fnmatch($limitToUrl, $hit->getUrl())) {
+           //     return $event->setResult(false);
+            }
+            //$eventDetails
+            //$eventConfig['source']
+            $lead = $this->leadModel->getCurrentLead();
+            $this->session->set('dynamic.id.'.$eventConfig['slot'].$lead->getId(), $eventConfig['dynamic_id']);
+            return $event->setResult(true);
         }
     }
-
 }
