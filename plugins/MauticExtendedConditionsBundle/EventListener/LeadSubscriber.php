@@ -46,8 +46,11 @@ class LeadSubscriber extends CommonSubscriber
      *
      * @param EventModel $campaignEventModel
      */
-    public function __construct(EventModel $campaignEventModel, LeadModel $leadModel, CoreParametersHelper $coreParametersHelper)
-    {
+    public function __construct(
+        EventModel $campaignEventModel,
+        LeadModel $leadModel,
+        CoreParametersHelper $coreParametersHelper
+    ) {
         $this->campaignEventModel = $campaignEventModel;
         $this->leadModel = $leadModel;
         $this->coreParametersHelper = $coreParametersHelper;
@@ -73,16 +76,25 @@ class LeadSubscriber extends CommonSubscriber
         static $difference = null;
         $lead = $event->getLead();
         $changes = $lead->getChanges();
-        if ($difference == null) {
-            // old date, new date
-            if (isset($changes['dateLastActive']) && count($changes['dateLastActive']) == 2 && is_object($changes['dateLastActive'][0])  && is_object($changes['dateLastActive'][1])){
-                $difference = (($changes['dateLastActive'][1])->diff($changes['dateLastActive'][0]))->format('%m');
-                    $this->campaignEventModel->triggerEvent('extendedconditions.last_active_condition', $difference);
-            }else if (isset($changes['dateLastActive']) && count($changes['dateLastActive']) == 2 && !is_object($changes['dateLastActive'][0])  && is_object($changes['dateLastActive'][1])){
+        // old date, new date
+        if ($difference == null && isset($changes['dateLastActive']) && count(
+                $changes['dateLastActive']
+            ) == 2 && is_object($changes['dateLastActive'][0]) && is_object($changes['dateLastActive'][1])
+        ) {
+
+            $difference = (($changes['dateLastActive'][1])->diff($changes['dateLastActive'][0]))->format('%i');
+
+            $this->campaignEventModel->triggerEvent('extendedconditions.last_active_condition', $difference);
+
+        } else {
+            if (isset($changes['dateLastActive']) && count($changes['dateLastActive']) == 2 && !is_object(
+                    $changes['dateLastActive'][0]
+                ) && is_object($changes['dateLastActive'][1])
+            ) {
                 // new contact
                 $lists = $this->coreParametersHelper->getParameter('lists');
-                if(!empty($lists) && is_array($lists)){
-                    foreach($lists as $list){
+                if (!empty($lists) && is_array($lists)) {
+                    foreach ($lists as $list) {
                         $this->leadModel->addToLists($lead, [$list]);
                     }
                 }

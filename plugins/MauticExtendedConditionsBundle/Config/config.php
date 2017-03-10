@@ -12,6 +12,8 @@ return [
                     'mautic.campaign.model.event',
                     'mautic.lead.model.lead',
                     'session',
+                    'mautic.page.model.page',
+                    'request_stack',
                 ],
             ],
             'mautic.plugin.extendedconditions.js.subscriber' => [

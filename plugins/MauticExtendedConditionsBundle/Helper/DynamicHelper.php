@@ -70,7 +70,7 @@ class DynamicHelper
         $this->campaignEventModel->triggerEvent('extendedconditions.dynamic_condition', $slot, 'extendedconditions.dynamic_condition.'.$slot);
 
         $dynamicId = $this->session->get('dynamic.id.'.$slot.$lead->getId());
-
+        $this->session->remove('dynamic.id.'.$slot.$lead->getId());
         $content = '';
         if (!empty($dynamicId)) {
             $dwc     = $this->dynamicContentModel->getEntity($dynamicId);

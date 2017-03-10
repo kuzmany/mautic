@@ -4,15 +4,23 @@ namespace MauticPlugin\MauticExtendedConditionsBundle\EventListener;
 use Mautic\CoreBundle\EventListener\CommonSubscriber;
 use Mautic\CampaignBundle\Model\EventModel;
 use Mautic\LeadBundle\Model\LeadModel;
+use Mautic\PageBundle\Model\PageModel;
 use Mautic\PageBundle\Entity\Hit;
 use Mautic\CampaignBundle\CampaignEvents;
 use Mautic\CampaignBundle\Event\CampaignExecutionEvent;
 use Mautic\CampaignBundle\Event\CampaignBuilderEvent;
 use MauticPlugin\MauticExtendedConditionsBundle\ExtendedConditionsEvents;
+use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Session\Session;
+use Symfony\Component\HttpFoundation\Request;
 
 class CampaignSubscriber extends CommonSubscriber
 {
+
+    /**
+     * @var $request
+     */
+    protected $request;
 
     /**
      * @var $sesion
@@ -30,15 +38,27 @@ class CampaignSubscriber extends CommonSubscriber
     protected $campaignEventModel;
 
     /**
+     * @var $pageModel
+     */
+    protected $pageModel;
+
+    /**
      * CampaignSubscriber constructor.
      *
      * @param EventModel $campaignEventModel
      */
-    public function __construct(EventModel $campaignEventModel, LeadModel $leadModel, Session $session)
-    {
+    public function __construct(
+        EventModel $campaignEventModel,
+        LeadModel $leadModel,
+        Session $session,
+        PageModel $pageModel,
+        RequestStack $requestStack
+    ) {
         $this->campaignEventModel = $campaignEventModel;
         $this->leadModel = $leadModel;
         $this->session = $session;
+        $this->pageModel = $pageModel;
+        $this->request = $requestStack->getCurrentRequest();
     }
 
 
@@ -100,13 +120,10 @@ class CampaignSubscriber extends CommonSubscriber
         $eventDetails = $event->getEventDetails();
 
         if ($event->checkContext('extendedconditions.last_active_condition')) {
-            if ($event->checkContext('lead.changepoints')) {
-                if ($eventConfig['last_active_limit'] < $eventDetails) {
-                    return $event->setResult(true);
-                } else {
-                    return $event->setResult(false);
-
-                }
+            if ($eventConfig['last_active_limit'] < $eventDetails) {
+                return $event->setResult(true);
+            } else {
+                return $event->setResult(false);
             }
         } elseif ($event->checkContext('extendedconditions.click_condition')) {
             if (is_object($eventDetails)) {
@@ -119,17 +136,16 @@ class CampaignSubscriber extends CommonSubscriber
             }
         } elseif ($event->checkContext('extendedconditions.dynamic_condition')) {
 
-            $limitToUrl = html_entity_decode(trim($eventConfig['url']));
-            $hit = $eventDetails;
-
-            // dont diplay but dont stop decistion
-            if (!$limitToUrl || !fnmatch($limitToUrl, $hit->getUrl())) {
-           //     return $event->setResult(false);
-            }
-            //$eventDetails
-            //$eventConfig['source']
             $lead = $this->leadModel->getCurrentLead();
+            $limitToUrl = html_entity_decode(trim($eventConfig['url']));
+            $currentUrl = $this->request->server->get('HTTP_REFERER');
+            if (!$limitToUrl || !fnmatch($limitToUrl, $currentUrl)) {
+                $this->session->remove('dynamic.id.'.$eventConfig['slot'].$lead->getId());
+
+                return $event->setResult(false);
+            }
             $this->session->set('dynamic.id.'.$eventConfig['slot'].$lead->getId(), $eventConfig['dynamic_id']);
+
             return $event->setResult(true);
         }
     }
