@@ -47,15 +47,19 @@ class DynamicHelper
     /**
      * DynamicContentHelper constructor.
      *
-     * @param DynamicContentModel      $dynamicContentModel
-     * @param EventModel               $campaignEventModel
+     * @param DynamicContentModel $dynamicContentModel
+     * @param EventModel $campaignEventModel
      * @param EventDispatcherInterface $dispatcher
      */
-    public function __construct(DynamicContentModel $dynamicContentModel, EventModel $campaignEventModel, EventDispatcherInterface $dispatcher,Session $session)
-    {
+    public function __construct(
+        DynamicContentModel $dynamicContentModel,
+        EventModel $campaignEventModel,
+        EventDispatcherInterface $dispatcher,
+        Session $session
+    ) {
         $this->dynamicContentModel = $dynamicContentModel;
-        $this->campaignEventModel  = $campaignEventModel;
-        $this->dispatcher          = $dispatcher;
+        $this->campaignEventModel = $campaignEventModel;
+        $this->dispatcher = $dispatcher;
         $this->session = $session;
     }
 
@@ -67,13 +71,19 @@ class DynamicHelper
      */
     public function getDynamicForLead($slot, $lead)
     {
-        $this->campaignEventModel->triggerEvent('extendedconditions.dynamic_condition', $slot, 'extendedconditions.dynamic_condition.'.$slot);
+        $this->session->remove('dynamic.id.'.$slot.$lead->getId());
+
+        $this->campaignEventModel->triggerEvent(
+            'extendedconditions.dynamic_condition',
+            ['slot' => $slot],
+            'extendedconditions.dynamic_condition.'.$slot
+        );
 
         $dynamicId = $this->session->get('dynamic.id.'.$slot.$lead->getId());
-        $this->session->remove('dynamic.id.'.$slot.$lead->getId());
+
         $content = '';
         if (!empty($dynamicId)) {
-            $dwc     = $this->dynamicContentModel->getEntity($dynamicId);
+            $dwc = $this->dynamicContentModel->getEntity($dynamicId);
             if ($dwc instanceof DynamicContent) {
                 $content = $dwc->getContent();
                 // Determine a translation based on contact's preferred locale
@@ -81,16 +91,21 @@ class DynamicHelper
                 list($ignore, $translation) = $this->dynamicContentModel->getTranslatedEntity($dwc, $lead);
                 if ($translation !== $dwc) {
                     // Use translated version of content
-                    $dwc     = $translation;
+                    $dwc = $translation;
                     $content = $dwc->getContent();
                 }
                 $this->dynamicContentModel->createStatEntry($dwc, $lead, $slot);
 
-                $tokenEvent = new TokenReplacementEvent($content, $lead, ['slot' => $slot, 'dynamic_content_id' => $dwc->getId()]);
+                $tokenEvent = new TokenReplacementEvent(
+                    $content,
+                    $lead,
+                    ['slot' => $slot, 'dynamic_content_id' => $dwc->getId()]
+                );
                 $this->dispatcher->dispatch(DynamicContentEvents::TOKEN_REPLACEMENT, $tokenEvent);
                 $content = $tokenEvent->getContent();
             }
         }
+
         return $content;
     }
 

@@ -58,14 +58,16 @@ class BuildJsSubscriber extends CommonSubscriber
         //basic js
         $js = <<<JS
         if (typeof window[window.MadeSimpleShop] !== 'undefined') {
-            window.MauticTrackingObject = window.MadeSimpleShop;
+            window.MauticTrackingObject = 'ms';
        }
        if (typeof window.MauticTrackingObject === 'undefined') {
-       var w=window;var n='mt';w['MauticTrackingObject']=n;w[n]=w[n]||function(){(w[n].q=w[n].q||[]).push(arguments)};mt('send', 'pageview');
+       var w=window;var n='ms';w['MauticTrackingObject']=n;w[n]=w[n]||function(){(w[n].q=w[n].q||[]).push(arguments)};ms('send', 'pageview');
        }
-       document.body.innerHTML += '<div class="dynamic-slot" data-slot-name="madesimpleshop-carts"></div>';
+       var elemDiv = document.createElement('div');
+elemDiv.setAttribute('data', "data-slot-name: 'madesimpleshop-carts', class: 'dynamic-slot'");
+document.body.appendChild(elemDiv);
 JS;
-      //  $event->appendJs($js, 'Extended');
+        $event->appendJs($js, 'Extended');
     }
 
 

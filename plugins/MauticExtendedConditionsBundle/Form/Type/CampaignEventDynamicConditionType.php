@@ -49,14 +49,19 @@ class CampaignEventDynamicConditionType extends AbstractType
                 ],
             ]
         );
+
         $builder->add(
             'dynamic_id',
-            'text',
+            'dwc_list',
             [
                 'label'      => 'plugin.extended.conditions.dynamic.dynamic_id',
-                'label_attr' => ['class' => 'control-label'],
                 'attr'       => [
-                    'class'   => 'form-control',
+                    'class'    => 'form-control',
+                ],
+                'multiple'    => false,
+                'required'    => true,
+                'constraints' => [
+                    new NotBlank(['message' => 'mautic.core.value.required']),
                 ],
             ]
         );

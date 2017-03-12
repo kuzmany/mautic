@@ -14,11 +14,10 @@ namespace MauticPlugin\MauticExtendedConditionsBundle\Form\Type;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\Validator\Constraints\NotBlank;
-
 /**
  * Class CampaignEventPageHitType.
  */
-class CampaignEventClickConditionType extends AbstractType
+class CampaignEventDynamicStopActionType extends AbstractType
 {
 
     /**
@@ -28,21 +27,10 @@ class CampaignEventClickConditionType extends AbstractType
     public function buildForm(FormBuilderInterface $builder, array $options)
     {
         $builder->add(
-            'source',
+            'slots',
             'text',
             [
-                'label'      => 'plugin.extended.conditions.click.source',
-                'label_attr' => ['class' => 'control-label'],
-                'attr'       => [
-                    'class'   => 'form-control',
-                ],
-            ]
-        );
-        $builder->add(
-            'source_id',
-            'text',
-            [
-                'label'      => 'plugin.extended.conditions.click.source_id',
+                'label'      => 'plugin.extended.conditions.dynamic.slots',
                 'label_attr' => ['class' => 'control-label'],
                 'attr'       => [
                     'class'   => 'form-control',
@@ -56,6 +44,6 @@ class CampaignEventClickConditionType extends AbstractType
      */
     public function getName()
     {
-        return 'extendedconditionsnevent_click';
+        return 'extendedconditionsnevent_dynamic_stop';
     }
 }

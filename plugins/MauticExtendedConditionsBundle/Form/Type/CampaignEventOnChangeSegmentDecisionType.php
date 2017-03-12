@@ -14,11 +14,10 @@ namespace MauticPlugin\MauticExtendedConditionsBundle\Form\Type;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\Validator\Constraints\NotBlank;
-
 /**
- * Class CampaignEventPageHitType.
+ * Class CampaignEventOnChangeSegmentActionType.
  */
-class CampaignEventClickConditionType extends AbstractType
+class CampaignEventOnChangeSegmentDecisionType extends AbstractType
 {
 
     /**
@@ -28,25 +27,24 @@ class CampaignEventClickConditionType extends AbstractType
     public function buildForm(FormBuilderInterface $builder, array $options)
     {
         $builder->add(
-            'source',
-            'text',
+            'addedSegments',
+            'leadlist_choices',
             [
-                'label'      => 'plugin.extended.conditions.click.source',
+                'label'      => 'plugin.extended.conditions.on.change.segment.add',
                 'label_attr' => ['class' => 'control-label'],
-                'attr'       => [
-                    'class'   => 'form-control',
-                ],
+                'multiple'   => true,
+                'required'   => false,
             ]
         );
+
         $builder->add(
-            'source_id',
-            'text',
+            'removedSegments',
+            'leadlist_choices',
             [
-                'label'      => 'plugin.extended.conditions.click.source_id',
+                'label'      => 'plugin.extended.conditions.on.change.segment.remove',
                 'label_attr' => ['class' => 'control-label'],
-                'attr'       => [
-                    'class'   => 'form-control',
-                ],
+                'multiple'   => true,
+                'required'   => false,
             ]
         );
 
@@ -56,6 +54,6 @@ class CampaignEventClickConditionType extends AbstractType
      */
     public function getName()
     {
-        return 'extendedconditionsnevent_click';
+        return 'extendedconditionsnevent_on_change_segment';
     }
 }

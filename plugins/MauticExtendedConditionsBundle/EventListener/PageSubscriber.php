@@ -11,6 +11,7 @@
 
 namespace MauticPlugin\MauticExtendedConditionsBundle\EventListener;
 
+use Guzzle\Plugin\Cookie\Cookie;
 use Mautic\CoreBundle\EventListener\CommonSubscriber;
 use Mautic\LeadBundle\Model\LeadModel;
 use Mautic\PageBundle\Event as Events;
@@ -19,17 +20,14 @@ use Mautic\LeadBundle\LeadEvent;
 use Mautic\PageBundle\Event\PageHitEvent;
 use Mautic\PageBundle\Event\PageEvent;
 use Mautic\CampaignBundle\Model\EventModel;
-use Doctrine\DBAL\Connection;
+
 
 /**
  * Class PageSubscriber.
  */
 class PageSubscriber extends CommonSubscriber
 {
-    /**
-     * @var $cookieHelper
-     */
-    protected $db;
+
 
     /**
      * @var LeadModel
@@ -46,11 +44,12 @@ class PageSubscriber extends CommonSubscriber
      *
      * @param EventModel $campaignEventModel
      */
-    public function __construct(EventModel $campaignEventModel, LeadModel $leadModel, Connection $db)
-    {
+    public function __construct(
+        EventModel $campaignEventModel,
+        LeadModel $leadModel
+    ) {
         $this->campaignEventModel = $campaignEventModel;
         $this->leadModel = $leadModel;
-        $this->db = $db;
     }
 
     /**
@@ -71,10 +70,13 @@ class PageSubscriber extends CommonSubscriber
      */
     public function onPageHit(PageHitEvent $event)
     {
+
         $lead = $event->getLead();
         $leadId = $lead->getId();
         $hit = $event->getHit();
-        if ($hit->getSource() && $hit->getSourceId() && $redirect = $hit->getRedirect()) {
+        $redirect = $hit->getRedirect();
+
+        if ($hit->getSource() && $hit->getSourceId() && $redirect) {
             $channel = 'page.redirect';
             $channelId = $redirect->getId();
             $this->campaignEventModel->triggerEvent(
@@ -85,44 +87,15 @@ class PageSubscriber extends CommonSubscriber
             );
         }
 
-//        if (!$hit->getPage() && !$hit->getRedirect()) {
-//            // Mautic Tracking Pixel was hit
-//            $channel = 'url.hit';
-//            $channelId = $hit->getId();
-//            $this->campaignEventModel->triggerEvent(
-//                'extendedconditions.display_focus_condition',
-//                $hit,
-//                $channel,
-//                $channelId
-//            );
-//        }
-
-        // $hit    = $event->getHit();
-//        $hit      = $event->getHit();
-//        $redirect = $hit->getRedirect();
-
-//        if ($event->getPage()) {
-//            return;
-//        }
-//
-//        $qb = $this->db->createQueryBuilder();
-//
-//        $latestDateHit = $qb->select('date_hit')
-//            ->from(MAUTIC_TABLE_PREFIX.'page_hits', 'ph')
-//            ->where(
-//                $qb->expr()->andX(
-//                    $qb->expr()->eq('ph.lead_id', ':leadId'),
-//                    $qb->expr()->isNull('ph.page_id'),
-//                    $qb->expr()->isNull('ph.redirect_id'),
-//                    $qb->expr()->isNull('ph.email_id')
-//                )
-//            )
-//            ->setParameter('leadId', $leadId)
-//            ->orderBy('ph.id', 'DESC')
-//            ->setFirstResult(1)
-//            ->setMaxResults(1)
-//            ->execute()
-//            ->fetchColumn();
-
+        if (!$hit->getPage() && !$redirect) {
+            $channel = 'url.hit';
+            $channelId = $hit->getId();
+            $this->campaignEventModel->triggerEvent(
+                'extendedconditions.page_session',
+                $hit,
+                $channel,
+                $channelId
+            );
+        }
     }
 }

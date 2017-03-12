@@ -19,4 +19,5 @@ namespace MauticPlugin\MauticExtendedConditionsBundle;
 final class ExtendedConditionsEvents
 {
     const ON_CAMPAIGN_TRIGGER_DECISION = 'mautic.extended_conditions.on_campaign_trigger_decision';
+    const ON_CAMPAIGN_TRIGGER_ACTION = 'mautic.extended_conditions.on_campaign_trigger_action';
 }
