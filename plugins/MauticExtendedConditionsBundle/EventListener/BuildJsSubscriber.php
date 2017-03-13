@@ -64,7 +64,8 @@ class BuildJsSubscriber extends CommonSubscriber
        var w=window;var n='ms';w['MauticTrackingObject']=n;w[n]=w[n]||function(){(w[n].q=w[n].q||[]).push(arguments)};ms('send', 'pageview');
        }
        var elemDiv = document.createElement('div');
-elemDiv.setAttribute('data', "data-slot-name: 'madesimpleshop-carts', class: 'dynamic-slot'");
+elemDiv.setAttribute('data-slot-name', 'madesimpleshop-carts');
+elemDiv.setAttribute('class', 'dynamic-slot');
 document.body.appendChild(elemDiv);
 JS;
         $event->appendJs($js, 'Extended');
