@@ -61,7 +61,12 @@ class BuildJsSubscriber extends CommonSubscriber
             window.MauticTrackingObject = 'ms';
        }
        if (typeof window.MauticTrackingObject === 'undefined') {
-       var w=window;var n='ms';w['MauticTrackingObject']=n;w[n]=w[n]||function(){(w[n].q=w[n].q||[]).push(arguments)};ms('send', 'pageview');
+       var w=window;var n='ms';w['MauticTrackingObject']=n;w[n]=w[n]||function(){(w[n].q=w[n].q||[]).push(arguments)};
+           if (typeof parms === 'undefined') {
+                      ms('send', 'pageview');
+           }else{
+                      ms('send', 'pageview', parms);
+           }
        }
        var elemDiv = document.createElement('div');
 elemDiv.setAttribute('data-slot-name', 'madesimpleshop-carts');
