@@ -488,6 +488,11 @@ class PageModel extends FormModel
             }
         }
 
+        // change points
+        if (isset($query['points'])) {
+            $lead->adjustPoints((int) $query['points']);
+        }
+
         $this->leadModel->saveEntity($lead);
 
         // Set info from request
