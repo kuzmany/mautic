@@ -11,12 +11,17 @@
 
 if (!empty($inForm)):
     $html = <<<HTML
-<div class="mauticform-row">
+<div class="mauticform-row">dddd
     <label class="text-muted">{$field['label']}</label>
     <p>{$view['translator']->trans('mautic.plugin.addressvalidators.field.helper')}
 </p>
 </div>
 HTML;
 else:
+    $html = <<<HTML
+<div class="mauticform-row">test
+ 
+</div>
+HTML;
 endif;
 echo $html;

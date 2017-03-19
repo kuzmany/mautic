@@ -23,6 +23,10 @@ return [
             'mautic.plugin.addressvalidator.type.addressvalidator.field' => [
                 'class' => 'MauticPlugin\MauticAddressValidatorBundle\Form\Type\FormFieldAddressValidatordType',
                 'alias' => 'addressvalidator',
+                'methodCalls' => [
+                    'setFieldModel' => ['mautic.form.model.field'],
+                    'setFormModel'  => ['mautic.form.model.form'],
+                ],
             ],
         ],
     ],
