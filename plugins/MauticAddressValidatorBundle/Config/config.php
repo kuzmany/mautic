@@ -9,7 +9,7 @@ return [
             'mautic.plugin.addressvalidator.formbundle.subscriber' => [
                 'class'     => 'MauticPlugin\MauticAddressValidatorBundle\EventListener\FormSubscriber',
                 'arguments' => [
-                    'mautic.focus.model.focus',
+                    'mautic.lead.model.lead',
                 ],
             ],
 //            'mautic.plugin.addressvalidator.configbundle.subscriber' => [

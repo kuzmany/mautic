@@ -22,7 +22,6 @@ foreach ($field['properties'] as $key => $property) {
         }
     }
 }
-
 $inputs = '';
 foreach ($props as $key => $field2) {
     $inputAttr = 'class="mauticform-input " type="text"';
@@ -51,13 +50,12 @@ HTML;
         }
 
         if ($idBcKey == "country" && !empty($field['properties']['optionsCountry'])) {
-            $countryOptions = explode(';', $field['properties']['optionsCountry']);
+            $countryOptions = explode(chr(10), $field['properties']['optionsCountry']);
             $inputs .= <<<HTML
             <select id="{$idAttr}"  {$inputAttr}>
 <option>{$field2['label']}</option>
 HTML;
-            foreach($countryOptions as $countryOption){
-                list($value, $option) = explode('=', $countryOption);
+            foreach($countryOptions as $option){
                 if($option) {
                     $inputs .= <<<HTML
                     <option value="$option">$option</option>
@@ -97,11 +95,18 @@ HTML;
     ?>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.2.1/jquery.min.js" charset="utf-8"></script>
+
     <script>
         //
-        //  UPDATE form name and number below (and also in the script below this)
+        //  UPDATE form name and number below (and also in script above)
         //
-        (function ($) {
+        //  It waits till the document is completely loaded to access all the DOM in the form
+        //  It calls .validateAddress function first,
+        //  THEN submit the form on VALID status back,
+        //  OR display formattedAddress on the form with checkbox checked on SUSPECT status back
+        //  OR display "Invalid Address" on the form on INVALID status back
+        $(document).ready(function () {
+
             var baseUrl = "http://av.ballistix.com/validators";
             var formName = '<?php echo str_replace('_', '', $formName); ?>';
             var formNumber = <?php echo $field['form']->getId(); ?>;
@@ -129,21 +134,6 @@ HTML;
                     return this;
                 };
             }
-        }(jQuery));
-    </script>
-
-    <script>
-        //
-        //  UPDATE form name and number below (and also in script above)
-        //
-        //  It waits till the document is completely loaded to access all the DOM in the form
-        //  It calls .validateAddress function first,
-        //  THEN submit the form on VALID status back,
-        //  OR display formattedAddress on the form with checkbox checked on SUSPECT status back
-        //  OR display "Invalid Address" on the form on INVALID status back
-        $(document).ready(function () {
-            var formName = '<?php echo str_replace('_', '', $formName); ?>';
-            var formNumber = <?php echo $field['form']->getId(); ?>;
 
             $.validateAddress();
             $("#mauticform_" + formName + "_country").after('<div id="mauticformmessage-wrap" />');
