@@ -69,7 +69,6 @@ class FormFieldAddressValidatordType extends AbstractType
             ]
         );
 
-
         $builder->add(
             'leadFieldAddress1',
             'choice',
@@ -135,6 +134,45 @@ class FormFieldAddressValidatordType extends AbstractType
         );
 
         $builder->add(
+            'labelCity',
+            'text',
+            [
+                'label' => 'plugin.addressvalidator.field.label.city',
+                'label_attr' => ['class' => 'control-label'],
+                'attr' => [
+                    'class' => 'form-control',
+                ],
+            ]
+        );
+
+        $builder->add(
+            'leadFieldCity',
+            'choice',
+            [
+                'choices' => $options['leadFields'],
+                'choice_attr' => function ($val, $key, $index) use ($options) {
+                    if (!empty($options['leadFieldProperties'][$val]) && (in_array(
+                                $options['leadFieldProperties'][$val]['type'],
+                                FormFieldHelper::getListTypes()
+                            ) || !empty($options['leadFieldProperties'][$val]['properties']['list']) || !empty($options['leadFieldProperties'][$val]['properties']['optionlist']))
+                    ) {
+                        return ['data-list-type' => 1];
+                    }
+
+                    return [];
+                },
+                'label' => 'mautic.form.field.form.lead_field',
+                'label_attr' => ['class' => 'control-label'],
+                'attr' => [
+                    'class' => 'form-control',
+                    'tooltip' => 'mautic.form.field.help.lead_field',
+                ],
+                'required' => false,
+            ]
+        );
+
+
+        $builder->add(
             'labelState',
             'text',
             [
@@ -172,118 +210,118 @@ class FormFieldAddressValidatordType extends AbstractType
             ]
         );
 
-//        $builder->add(
-//            'labelZip',
-//            'text',
-//            [
-//                'label' => 'plugin.addressvalidator.field.label.zip',
-//                'label_attr' => ['class' => 'control-label'],
-//                'attr' => [
-//                    'class' => 'form-control',
-//                ],
-//            ]
-//        );
-//
-//        $builder->add(
-//            'leadFieldZip',
-//            'choice',
-//            [
-//                'choices' => $options['leadFields'],
-//                'choice_attr' => function ($val, $key, $index) use ($options) {
-//                    if (!empty($options['leadFieldProperties'][$val]) && (in_array(
-//                                $options['leadFieldProperties'][$val]['type'],
-//                                FormFieldHelper::getListTypes()
-//                            ) || !empty($options['leadFieldProperties'][$val]['properties']['list']) || !empty($options['leadFieldProperties'][$val]['properties']['optionlist']))
-//                    ) {
-//                        return ['data-list-type' => 1];
-//                    }
-//
-//                    return [];
-//                },
-//                'label' => 'mautic.form.field.form.lead_field',
-//                'label_attr' => ['class' => 'control-label'],
-//                'attr' => [
-//                    'class' => 'form-control',
-//                    'tooltip' => 'mautic.form.field.help.lead_field',
-//                ],
-//                'required' => false,
-//            ]
-//        );
-//
-//        $builder->add(
-//            'labelCountry',
-//            'text',
-//            [
-//                'label' => 'plugin.addressvalidator.field.label.country',
-//                'label_attr' => ['class' => 'control-label'],
-//                'attr' => [
-//                    'class' => 'form-control',
-//                ],
-//            ]
-//        );
-//
-//        $builder->add(
-//            'leadFieldCountry',
-//            'choice',
-//            [
-//                'choices' => $options['leadFields'],
-//                'choice_attr' => function ($val, $key, $index) use ($options) {
-//                    if (!empty($options['leadFieldProperties'][$val]) && (in_array(
-//                                $options['leadFieldProperties'][$val]['type'],
-//                                FormFieldHelper::getListTypes()
-//                            ) || !empty($options['leadFieldProperties'][$val]['properties']['list']) || !empty($options['leadFieldProperties'][$val]['properties']['optionlist']))
-//                    ) {
-//                        return ['data-list-type' => 1];
-//                    }
-//
-//                    return [];
-//                },
-//                'label' => 'mautic.form.field.form.lead_field',
-//                'label_attr' => ['class' => 'control-label'],
-//                'attr' => [
-//                    'class' => 'form-control',
-//                    'tooltip' => 'mautic.form.field.help.lead_field',
-//                ],
-//                'required' => false,
-//            ]
-//        );
+        $builder->add(
+            'labelZip',
+            'text',
+            [
+                'label' => 'plugin.addressvalidator.field.label.zip',
+                'label_attr' => ['class' => 'control-label'],
+                'attr' => [
+                    'class' => 'form-control',
+                ],
+            ]
+        );
 
-//
-//        $builder->add(
-//            'optionsCountry',
-//            'textarea',
-//            [
-//                'label' => 'plugin.addressvalidator.field.label.country.options',
-//                'label_attr' => ['class' => 'control-label'],
-//                'attr' => [
-//                    'class' => 'form-control',
-//                    'rows' => 5,
-//                    'tooltip' => 'plugin.addressvalidator.field.label.country.options.tooltip',
-//
-//                ],
-//            ]
-//        );
-//
-//
-//        $builder->add(
-//            'apiKey',
-//            'text',
-//            [
-//                'label' => 'plugin.addressvalidator.field.label.apikey',
-//                'label_attr' => ['class' => 'control-label'],
-//                'attr' => [
-//                    'class' => 'form-control',
-//                ],
-//            ]
-//        );
-//
-//        $builder->add(
-//            'placeholderAddress',
-//            'yesno_button_group',
-//            [
-//                'label' => 'plugin.addressvalidator.field.label.placeholder',
-//            ]
-//        );
+        $builder->add(
+            'leadFieldZip',
+            'choice',
+            [
+                'choices' => $options['leadFields'],
+                'choice_attr' => function ($val, $key, $index) use ($options) {
+                    if (!empty($options['leadFieldProperties'][$val]) && (in_array(
+                                $options['leadFieldProperties'][$val]['type'],
+                                FormFieldHelper::getListTypes()
+                            ) || !empty($options['leadFieldProperties'][$val]['properties']['list']) || !empty($options['leadFieldProperties'][$val]['properties']['optionlist']))
+                    ) {
+                        return ['data-list-type' => 1];
+                    }
+
+                    return [];
+                },
+                'label' => 'mautic.form.field.form.lead_field',
+                'label_attr' => ['class' => 'control-label'],
+                'attr' => [
+                    'class' => 'form-control',
+                    'tooltip' => 'mautic.form.field.help.lead_field',
+                ],
+                'required' => false,
+            ]
+        );
+
+        $builder->add(
+            'labelCountry',
+            'text',
+            [
+                'label' => 'plugin.addressvalidator.field.label.country',
+                'label_attr' => ['class' => 'control-label'],
+                'attr' => [
+                    'class' => 'form-control',
+                ],
+            ]
+        );
+
+        $builder->add(
+            'leadFieldCountry',
+            'choice',
+            [
+                'choices' => $options['leadFields'],
+                'choice_attr' => function ($val, $key, $index) use ($options) {
+                    if (!empty($options['leadFieldProperties'][$val]) && (in_array(
+                                $options['leadFieldProperties'][$val]['type'],
+                                FormFieldHelper::getListTypes()
+                            ) || !empty($options['leadFieldProperties'][$val]['properties']['list']) || !empty($options['leadFieldProperties'][$val]['properties']['optionlist']))
+                    ) {
+                        return ['data-list-type' => 1];
+                    }
+
+                    return [];
+                },
+                'label' => 'mautic.form.field.form.lead_field',
+                'label_attr' => ['class' => 'control-label'],
+                'attr' => [
+                    'class' => 'form-control',
+                    'tooltip' => 'mautic.form.field.help.lead_field',
+                ],
+                'required' => false,
+            ]
+        );
+
+
+        $builder->add(
+            'optionsCountry',
+            'textarea',
+            [
+                'label' => 'plugin.addressvalidator.field.label.country.options',
+                'label_attr' => ['class' => 'control-label'],
+                'attr' => [
+                    'class' => 'form-control',
+                    'rows' => 5,
+                    'tooltip' => 'plugin.addressvalidator.field.label.country.options.tooltip',
+
+                ],
+            ]
+        );
+
+
+        $builder->add(
+            'apiKey',
+            'text',
+            [
+                'label' => 'plugin.addressvalidator.field.label.apikey',
+                'label_attr' => ['class' => 'control-label'],
+                'attr' => [
+                    'class' => 'form-control',
+                ],
+            ]
+        );
+
+        $builder->add(
+            'placeholderAddress',
+            'yesno_button_group',
+            [
+                'label' => 'plugin.addressvalidator.field.label.placeholder',
+            ]
+        );
 
 
     }
