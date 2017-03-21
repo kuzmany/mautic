@@ -31,6 +31,7 @@ class FormSubscriber extends CommonSubscriber
     {
         return [
             FormEvents::FORM_ON_BUILD => ['onFormBuilder', 0],
+            FormEvents::FORM_POST_SAVE => ['onFormPostSave', 0],
         ];
     }
 
@@ -49,25 +50,31 @@ class FormSubscriber extends CommonSubscriber
                 'addLeadFieldList' => false,
                 'addIsRequired'    => false,
                 'addDefaultValue'  => false,
-                'addSaveResult'    => false,
-                'addShowLabel'     => false,
+                'addSaveResult'    => true,
+                'addShowLabel'     => true,
                 'addHelpMessage'   => false,
                 'addLabelAttributes'    => false,
                 'addInputAttributes'    => false,
                 'addBehaviorFields'    => false,
                 'addContainerAttributes'=> false,
-                'allowCustomAlias'=> false,
+                'allowCustomAlias'=> true,
                 'labelText'=> false,
             ],
         ];
 
-        $event->addValidator(
-            'plugin.addressvalidator.validate',
-            [
-                'eventName' => MauticAddressValidatorEvents::ON_FORM_VALIDATE_ACTION,
-            ]
-        );
-
         $event->addFormField('plugin.addressvalidator', $action);
+    }
+
+    /**
+     * Add an entry to the audit log.
+     *
+     * @param Events\FormEvent $event
+     */
+    public function onFormPostSave(Events\FormEvent $event)
+    {
+//        $form = $event->getForm();
+//        if ($details = $event->getChanges()) {
+//
+//        }
     }
 }
