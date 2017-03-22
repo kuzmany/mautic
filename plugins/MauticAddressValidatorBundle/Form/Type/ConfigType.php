@@ -29,21 +29,18 @@ class ConfigType extends AbstractType
      */
     public function buildForm(FormBuilderInterface $builder, array $options)
     {
-       // $transformer = new IdToEntityModelTransformer($this->em, 'MauticLeadBundle:LeadList', 'id', true);
+
+
         $builder->add(
-            $builder->create(
-                'lists',
-                'text',
-                [
-                    'label'      => 'plugin.extended.conditions.config.lists.new_contacts',
-                    'label_attr' => ['class' => 'control-label'],
-                    'attr'       => [
-                        'class'        => 'form-control',
-                    ],
-                    'multiple' => true,
-                    'expanded' => false,
-                ]
-            )
+            'addressValidatorApiKey',
+            'text',
+            [
+                'label' => 'plugin.addressvalidator.field.label.apikey',
+                'label_attr' => ['class' => 'control-label'],
+                'attr' => [
+                    'class' => 'form-control',
+                ],
+            ]
         );
     }
 
@@ -52,6 +49,6 @@ class ConfigType extends AbstractType
      */
     public function getName()
     {
-        return 'addressvalidatornevent_config';
+        return 'addressvalidator_config';
     }
 }

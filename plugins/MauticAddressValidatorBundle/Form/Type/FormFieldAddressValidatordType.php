@@ -13,8 +13,6 @@ namespace MauticPlugin\MauticAddressValidatorBundle\Form\Type;
 
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\FormBuilderInterface;
-use Symfony\Component\Validator\Constraints\NotBlank;
-use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Validator\Constraints as Assert;
 use Mautic\LeadBundle\Model\FieldModel as LeadFieldModel;
 use Mautic\LeadBundle\Helper\FormFieldHelper;
@@ -298,19 +296,6 @@ class FormFieldAddressValidatordType extends AbstractType
                     'rows' => 5,
                     'tooltip' => 'plugin.addressvalidator.field.label.country.options.tooltip',
 
-                ],
-            ]
-        );
-
-
-        $builder->add(
-            'apiKey',
-            'text',
-            [
-                'label' => 'plugin.addressvalidator.field.label.apikey',
-                'label_attr' => ['class' => 'control-label'],
-                'attr' => [
-                    'class' => 'form-control',
                 ],
             ]
         );

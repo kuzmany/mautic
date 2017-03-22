@@ -10,14 +10,12 @@ return [
                 'class'     => 'MauticPlugin\MauticAddressValidatorBundle\EventListener\FormSubscriber',
                 'arguments' => [
                     'mautic.lead.model.lead',
+                    'mautic.helper.core_parameters',
                 ],
             ],
-//            'mautic.plugin.addressvalidator.configbundle.subscriber' => [
-//                'class' => 'MauticPlugin\MauticAddressValidatorBundle\EventListener\ConfigSubscriber',
-//                'arguments' => [
-//                    'mautic.helper.core_parameters',
-//                ],
-//            ],
+            'mautic.plugin.addressvalidator.configbundle.subscriber' => [
+                'class' => 'MauticPlugin\MauticAddressValidatorBundle\EventListener\ConfigSubscriber'
+            ],
         ],
         'forms' => [
             'mautic.plugin.addressvalidator.type.addressvalidator.field' => [

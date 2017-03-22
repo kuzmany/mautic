@@ -16,8 +16,8 @@ use Mautic\FormBundle\Event\FormBuilderEvent;
 use Mautic\FormBundle\FormEvents;
 use Mautic\FormBundle\Event as Events;
 use Mautic\LeadBundle\Model\LeadModel;
-use MauticPlugin\MauticAddressValidatorBundle\MauticAddressValidatorEvents;
 use Mautic\FormBundle\Event\SubmissionEvent;
+use Mautic\CoreBundle\Helper\CoreParametersHelper;
 
 
 /**
@@ -26,16 +26,25 @@ use Mautic\FormBundle\Event\SubmissionEvent;
 class FormSubscriber extends CommonSubscriber
 {
 
+    /**
+     * @var LeadModel $leadModel
+     */
     protected $leadModel;
+
+    /**
+     * @var CoreParametersHelper
+     */
+    protected $coreParametersHelper;
 
     /**
      * FormSubscriber constructor.
      *
      * @param LeadModel $leadModel
      */
-    public function __construct(LeadModel $leadModel)
+    public function __construct(LeadModel $leadModel, CoreParametersHelper $coreParametersHelper)
     {
         $this->leadModel = $leadModel;
+        $this->coreParametersHelper = $coreParametersHelper;
     }
 
     /**
@@ -105,27 +114,29 @@ class FormSubscriber extends CommonSubscriber
      */
     public function onFormBuilder(FormBuilderEvent $event)
     {
-        $action = [
-            'label' => 'mautic.plugin.field.addressvalidator',
-            'formType' => 'addressvalidator',
-            'template' => 'MauticAddressValidatorBundle:SubscribedEvents\Field:addressvalidator.html.php',
-            'builderOptions' => [
-                'addLeadFieldList' => false,
-                'addIsRequired' => false,
-                'addDefaultValue' => false,
-                'addSaveResult' => true,
-                'addShowLabel' => true,
-                'addHelpMessage' => false,
-                'addLabelAttributes' => false,
-                'addInputAttributes' => false,
-                'addBehaviorFields' => false,
-                'addContainerAttributes' => false,
-                'allowCustomAlias' => true,
-                'labelText' => false,
-            ],
-        ];
+        if ($this->coreParametersHelper->getParameter('addressValidatorApiKey')) {
+            $action = [
+                'label' => 'mautic.plugin.field.addressvalidator',
+                'formType' => 'addressvalidator',
+                'template' => 'MauticAddressValidatorBundle:SubscribedEvents\Field:addressvalidator.html.php',
+                'builderOptions' => [
+                    'addLeadFieldList' => false,
+                    'addIsRequired' => false,
+                    'addDefaultValue' => false,
+                    'addSaveResult' => true,
+                    'addShowLabel' => true,
+                    'addHelpMessage' => false,
+                    'addLabelAttributes' => false,
+                    'addInputAttributes' => false,
+                    'addBehaviorFields' => false,
+                    'addContainerAttributes' => false,
+                    'allowCustomAlias' => true,
+                    'labelText' => false,
+                ],
+            ];
 
-        $event->addFormField('plugin.addressvalidator', $action);
+            $event->addFormField('plugin.addressvalidator', $action);
+        }
     }
 
 }

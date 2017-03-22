@@ -13,29 +13,13 @@ namespace MauticPlugin\MauticAddressValidatorBundle\EventListener;
 
 use Mautic\ConfigBundle\ConfigEvents;
 use Mautic\ConfigBundle\Event\ConfigBuilderEvent;
-use Mautic\ConfigBundle\Event\ConfigEvent;
 use Mautic\CoreBundle\EventListener\CommonSubscriber;
-use Mautic\CoreBundle\Helper\CoreParametersHelper;
 
 /**
  * Class ConfigSubscriber.
  */
 class ConfigSubscriber extends CommonSubscriber
 {
-    /**
-     * @var CoreParametersHelper
-     */
-    protected $coreParametersHelper;
-
-    /**
-     * ConfigSubscriber constructor.
-     *
-     * @param CoreParametersHelper $coreParametersHelper
-     */
-    public function __construct(CoreParametersHelper $coreParametersHelper)
-    {
-        $this->coreParametersHelper = $coreParametersHelper;
-    }
 
     /**
      * @return array
@@ -54,7 +38,7 @@ class ConfigSubscriber extends CommonSubscriber
     {
         $event->addForm([
             'bundle'     => 'MauticAddressValidatorBundle',
-            'formAlias'  => 'addressvalidatornevent_config',
+            'formAlias'  => 'addressvalidator_config',
             'formTheme'  => 'MauticAddressValidatorBundle:FormTheme\Config',
             'parameters' => $event->getParametersFromConfig('MauticAddressValidatorBundle'),
         ]);
