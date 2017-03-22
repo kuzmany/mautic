@@ -25,6 +25,13 @@ return [
                     'mautic.lead.model.field',
                 ],
             ],
+            'mautic.plugin.addressvalidator.type.config' => [
+                'class' => 'MauticPlugin\MauticAddressValidatorBundle\Form\Type\ConfigType',
+                'alias' => 'addressvalidator_config',
+            ],
         ],
+    ],
+    'parameters' => [
+        'apiKey'                       => '',
     ],
 ];

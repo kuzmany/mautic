@@ -9,7 +9,7 @@
 ?>
 <div class="panel panel-primary">
     <div class="panel-heading">
-        <h3 class="panel-title"><?php echo $view['translator']->trans('plugin.extended.conditions.settings'); ?></h3>
+        <h3 class="panel-title"><?php echo $view['translator']->trans('plugin.addressvalidator.settings'); ?></h3>
     </div>
     <div class="panel-body">
         <?php foreach ($form->children as $f): ?>

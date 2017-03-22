@@ -114,7 +114,7 @@ class FormSubscriber extends CommonSubscriber
      */
     public function onFormBuilder(FormBuilderEvent $event)
     {
-        if ($this->coreParametersHelper->getParameter('addressValidatorApiKey')) {
+        if ($this->coreParametersHelper->getParameter('apiKey') || 1==1) {
             $action = [
                 'label' => 'mautic.plugin.field.addressvalidator',
                 'formType' => 'addressvalidator',

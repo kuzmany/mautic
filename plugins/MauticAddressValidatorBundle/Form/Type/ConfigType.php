@@ -25,22 +25,23 @@ class ConfigType extends AbstractType
 
     /**
      * @param FormBuilderInterface $builder
-     * @param array                $options
+     * @param array $options
      */
     public function buildForm(FormBuilderInterface $builder, array $options)
     {
 
-
         $builder->add(
-            'addressValidatorApiKey',
-            'text',
-            [
-                'label' => 'plugin.addressvalidator.field.label.apikey',
-                'label_attr' => ['class' => 'control-label'],
-                'attr' => [
-                    'class' => 'form-control',
-                ],
-            ]
+            $builder->create(
+                'apiKey',
+                'text',
+                [
+                    'label' => 'plugin.addressvalidator.field.label.apikey',
+                    'label_attr' => ['class' => 'control-label'],
+                    'attr' => [
+                        'class' => 'form-control',
+                    ],
+                ]
+            )
         );
     }
 
