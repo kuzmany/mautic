@@ -105,6 +105,10 @@ return [
                 'path' => '/dynamic/{objectAlias}',
                 'controller' => 'MauticExtendedConditionsBundle:DynamicApi:process',
             ],
+            'mautic_jss' => [
+                'path'       => '/mss.js',
+                'controller' => 'MauticCoreBundle:Js:index',
+            ],
         ],
     ],
     'parameters' => array(
