@@ -62,7 +62,7 @@ HTML;
 HTML;
                 }
             }
-                    $inputs .= <<<HTML
+            $inputs .= <<<HTML
                     </select>
 HTML;
 
@@ -116,21 +116,27 @@ HTML;
 
                     var address = this.val();
                     var streetaddress = $("#mauticform_input_" + formName + "_address_line_1").val() + " " + $("#mauticform_input_" + formName + "_address_line_2").val();
-                    var res = $.post(baseUrl,
+                    var res = $.ajax(
                         {
-                            "StreetAddress": streetaddress,
-                            "City": $("#mauticform_input_" + formName + "_town_or_city").val(),
-                            "PostalCode": $("#mauticform_input_" + formName + "_zip_or_postal_code").val(),
-                            "State": $("#mauticform_input_" + formName + "_state_or_province").val(),
-                            "CountryCode": $("#mauticform_input_" + formName + "_country").val(),
-                            "AddressValidated": $("#mauticform_input_" + formName + "_address_validated").val()
-                        },
-                        'json');
-
-                    res.done(function (data) {
-                        cb(JSON.stringify(res));
-                    });
-
+                            type : 'POST',
+                            url : baseUrl,
+                            headers : {
+                                Authorization : 'Token token=' + 'a7bdc315d9e7385b865554afcf0d4235'
+                            },
+                            dataType : 'json',
+                            data:
+                            {
+                                "StreetAddress": streetaddress,
+                                "City": $("#mauticform_input_" + formName + "_town_or_city").val(),
+                                "PostalCode": $("#mauticform_input_" + formName + "_zip_or_postal_code").val(),
+                                "State": $("#mauticform_input_" + formName + "_state_or_province").val(),
+                                "CountryCode": $("#mauticform_input_" + formName + "_country").val(),
+                                "AddressValidated": $("#mauticform_input_" + formName + "_address_validated").val()
+                            },
+                            success: function (data){
+                                cb(JSON.stringify(res));
+                            }
+                        });
                     return this;
                 };
             }
