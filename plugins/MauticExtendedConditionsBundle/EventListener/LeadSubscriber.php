@@ -66,7 +66,7 @@ class LeadSubscriber extends CommonSubscriber
             LeadEvents::LEAD_PRE_SAVE => ['onLeadPreSave', 0],
             LeadEvents::LEAD_POST_SAVE => ['onLeadPostSave', 0],
             LeadEvents::LEAD_LIST_CHANGE => ['onLeadListChange', 0],
-            // LeadEvents::LEAD_LIST_BATCH_CHANGE => ['onLeadListChange', 0],
+            LeadEvents::LEAD_LIST_BATCH_CHANGE => ['onLeadListChange', 0],
         ];
     }
 
@@ -137,6 +137,7 @@ class LeadSubscriber extends CommonSubscriber
                 );
             }
         } else {
+            $this->leadModel->setSystemCurrentLead($event->getLead());
             $this->campaignEventModel->triggerEvent('extendedconditions.on_change_segment', $event);
         }
 
