@@ -107,7 +107,7 @@ HTML;
         //  OR display "Invalid Address" on the form on INVALID status back
         $(document).ready(function () {
 
-            var baseUrl = "http://av.ballistix.com/validators";
+            var baseUrl = "http://av-test.ballistix.com/validators";
             var formName = '<?php echo str_replace('_', '', $formName); ?>';
             var formNumber = <?php echo $field['form']->getId(); ?>;
 
@@ -119,11 +119,9 @@ HTML;
                     var res = $.ajax(
                         {
                             type : 'POST',
+                            dataType  : 'json',
                             url : baseUrl,
-                            headers : {
-                                Authorization : 'Token token=' + 'a7bdc315d9e7385b865554afcf0d4235'
-                            },
-                            dataType : 'json',
+                            headers: { "Authorization" : "Token token=a7bdc315d9e7385b865554afcf0d4235"},
                             data:
                             {
                                 "StreetAddress": streetaddress,
