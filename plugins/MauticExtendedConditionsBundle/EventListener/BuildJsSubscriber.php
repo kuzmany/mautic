@@ -72,7 +72,21 @@ class BuildJsSubscriber extends CommonSubscriber
 
        if (typeof window.MauticTrackingObject === 'undefined') {
        var w=window;var n='ms';w['MauticTrackingObject']=n;w[n]=w[n]||function(){(w[n].q=w[n].q||[]).push(arguments)};
+       var cookie = '';
+           if(document.cookie.indexOf('_ga')  > 0 ){
+              var cookies = document.cookie ? document.cookie.split('; ') : [];
+               for (var i = 0, l = cookies.length; i < l; i++) {
+                var parts = cookies[i].split('=');
+                var name = (parts.shift());
+                cookie = parts.join('=');
+                if(name == '_ga'){
+                      ms('send', 'pageview', { userid: cookie});
+                }
+            }
+       }
+       if(cookie==''){
             ms('send', 'pageview');
+            }
        }
        var elemDiv = document.createElement('div');
 elemDiv.setAttribute('data-slot-name', 'madesimpleshop-carts');
