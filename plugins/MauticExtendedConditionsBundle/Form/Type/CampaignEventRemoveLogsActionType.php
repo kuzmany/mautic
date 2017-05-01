@@ -27,6 +27,17 @@ class CampaignEventRemoveLogsActionType extends AbstractType
     public function buildForm(FormBuilderInterface $builder, array $options)
     {
 
+        $builder->add(
+            'campaigns',
+            'campaign_list', [
+            'label'      => 'plugin.extended.conditions.camapign.from',
+            'attr'       => [
+                'class'   => 'form-control',
+            ],
+            'multiple'   => true,
+            'required' => false,
+        ]);
+
     }
     /**
      * {@inheritdoc}

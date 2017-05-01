@@ -446,17 +446,7 @@ class CampaignSubscriber extends CommonSubscriber
         } elseif ($event->checkContext('extendedconditions.click_condition')) {
             if (is_object($eventDetails)) {
                 $hit = $eventDetails;
-                $limitToUrl = str_replace(
-                    ['\|', '\$', '\^'],
-                    ['|', '$', '^'],
-                    preg_quote(trim($eventConfig['url']), '/')
-                );
-                $currentUrl = $hit->getUrl();
-                // if url match
-                preg_match('/'.$limitToUrl.'/', $currentUrl, $matches);
-                if ((!$limitToUrl || !empty($matches[0])) && $eventConfig['source'] == $hit->getSource(
-                    ) && $eventConfig['source_id'] == $hit->getSourceId()
-                ) {
+                if ($eventConfig['source'] == $hit->getSource() && $eventConfig['source_id'] == $hit->getSourceId()) {
                     return $event->setResult(true);
                 } else {
                     return $event->setResult(false);
@@ -517,14 +507,17 @@ class CampaignSubscriber extends CommonSubscriber
             }
 
         } elseif ($event->checkContext('extendedconditions.campaign_logs_remove')) {
-            $qb = $this->db;
-            $qb->delete(
-                MAUTIC_TABLE_PREFIX.'campaign_lead_event_log',
-                [
-                    'lead_id' => (int)$lead->getId(),
-                    'campaign_id' => (int)$event->getEvent()['campaign']['id'],
-                ]
-            );
+            $campaigns = $eventConfig['campaigns'];
+            foreach ($campaigns as $campaign) {
+                $qb = $this->db;
+                $qb->delete(
+                    MAUTIC_TABLE_PREFIX.'campaign_lead_event_log',
+                    [
+                        'lead_id' => (int)$lead->getId(),
+                        'campaign_id' => $campaign,
+                    ]
+                );
+            }
         }
     }
 }
