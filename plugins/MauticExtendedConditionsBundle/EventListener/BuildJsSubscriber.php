@@ -57,6 +57,17 @@ class BuildJsSubscriber extends CommonSubscriber
     {
         //basic js
         $js = <<<JS
+        
+        function mergeObjects() {
+    var tmpObj = {};
+
+    for(var o in arguments) {
+        for(var m in arguments[o]) {
+            tmpObj[m] = arguments[o][m];
+        }
+    }
+    return tmpObj;
+}
         if (typeof window[window.MadeSimpleShop] !== 'undefined') {
             window.MauticTrackingObject = 'ms';
        }
@@ -69,6 +80,9 @@ class BuildJsSubscriber extends CommonSubscriber
             }
         }
     }
+       if (typeof parms !== 'undefined') {
+            var  parms;
+       }
 
        if (typeof window.MauticTrackingObject === 'undefined') {
        var w=window;var n='ms';w['MauticTrackingObject']=n;w[n]=w[n]||function(){(w[n].q=w[n].q||[]).push(arguments)};
@@ -80,12 +94,14 @@ class BuildJsSubscriber extends CommonSubscriber
                 var name = (parts.shift());
                 cookie = parts.join('=');
                 if(name == '_ga'){
-                      ms('send', 'pageview', { userid: cookie});
+                    parms = mergeObjects(parms, { userid: cookie});
+                    console.log(parms);
+                      ms('send', 'pageview', parms);
                 }
             }
        }
        if(cookie==''){
-            ms('send', 'pageview');
+            ms('send', 'pageview', parms);
             }
        }
        var elemDiv = document.createElement('div');

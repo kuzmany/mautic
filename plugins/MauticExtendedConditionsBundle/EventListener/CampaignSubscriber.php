@@ -446,7 +446,7 @@ class CampaignSubscriber extends CommonSubscriber
         } elseif ($event->checkContext('extendedconditions.click_condition')) {
             if (is_object($eventDetails)) {
                 $hit = $eventDetails;
-                if ($eventConfig['source'] == $hit->getSource() && $eventConfig['source_id'] == $hit->getSourceId()) {
+                if ($eventConfig['source'] == $hit->getSource() && (!$eventConfig['source_id'] || $eventConfig['source_id'] == $hit->getSourceId())) {
                     return $event->setResult(true);
                 } else {
                     return $event->setResult(false);
@@ -511,7 +511,7 @@ class CampaignSubscriber extends CommonSubscriber
             foreach ($campaigns as $campaign) {
                 $qb = $this->db;
                 $qb->delete(
-                    MAUTIC_TABLE_PREFIX.'campaign_lead_event_log',
+                        MAUTIC_TABLE_PREFIX.'campaign_lead_event_log',
                     [
                         'lead_id' => (int)$lead->getId(),
                         'campaign_id' => $campaign,
