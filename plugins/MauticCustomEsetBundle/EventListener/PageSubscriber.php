@@ -101,10 +101,17 @@ class PageSubscriber extends CommonSubscriber
             }    // change points
 
             if ($request->get('owner')) {
-                $lead->addUpdatedField('preferred_locale', $request->get('owner'));
+                if ($request->get('owner') == 'mt2') {
+                    $lead->addUpdatedField('preferred_locale', 'de');
+
+                } elseif ($request->get('owner') == 'mt1') {
+                    $lead->addUpdatedField('preferred_locale', 'sk');
+                } else {
+                    $lead->addUpdatedField('preferred_locale', $request->get('owner'));
+                }
             }
             if ($lead->getChanges()) {
-                $this->leadModel->saveEntity($lead);
+             //   $this->leadModel->saveEntity($lead);
             }
         }
     }
