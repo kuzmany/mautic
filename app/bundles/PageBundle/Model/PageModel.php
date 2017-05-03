@@ -477,22 +477,6 @@ class PageModel extends FormModel
             $lead->setTimezone($this->dateTimeHelper->guessTimezoneFromOffset($timezone));
         }
 
-        //  change contact owner
-        if (isset($query['owner'])) {
-            $currentOwner = $lead->getOwner();
-            if (!$currentOwner || ($currentOwner && $currentOwner->getUsername() != $query['owner'])) {
-                $newOwner = $this->userProvider->loadUserByUsername($query['owner']);
-                if ($newOwner) {
-                    $lead->setOwner($newOwner);
-                }
-            }
-        }
-
-        // change points
-        if (isset($query['points'])) {
-            $lead->adjustPoints((int) $query['points']);
-        }
-
         $this->leadModel->saveEntity($lead);
 
         // Set info from request
