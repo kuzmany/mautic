@@ -167,6 +167,10 @@ class PublicController extends CommonFormController
                 $leadModel->setCurrentLead($lead);
             }
 
+            if($lead->getPreferredLocale()) {
+                $translator->setLocale($lead->getPreferredLocale());
+            }
+
             if (!$this->get('mautic.helper.core_parameters')->getParameter('show_contact_preferences')) {
                 $model->setDoNotContact($stat, $translator->trans('mautic.email.dnc.unsubscribed'), DoNotContact::UNSUBSCRIBED);
 
@@ -216,10 +220,6 @@ class PublicController extends CommonFormController
                     );
                 }
 
-                //set locale
-                if($lead->getPreferredLocale()) {
-                    $translator->setLocale($lead->getPreferredLocale());
-                }
 
                 $html = $this->get('mautic.helper.templating')->getTemplating()->render(
                     'MauticEmailBundle:Lead:preference_options.html.php',
