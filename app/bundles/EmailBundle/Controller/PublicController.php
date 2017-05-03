@@ -216,6 +216,11 @@ class PublicController extends CommonFormController
                     );
                 }
 
+                //set locale
+                if($lead->getPreferredLocale()) {
+                    $translator->setLocale($lead->getPreferredLocale());
+                }
+
                 $html = $this->get('mautic.helper.templating')->getTemplating()->render(
                     'MauticEmailBundle:Lead:preference_options.html.php',
                     array_merge(
