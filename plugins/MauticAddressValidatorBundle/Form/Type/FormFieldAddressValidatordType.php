@@ -23,6 +23,9 @@ use Mautic\LeadBundle\Helper\FormFieldHelper;
  */
 class FormFieldAddressValidatordType extends AbstractType
 {
+    /**
+     * @var LeadFieldModel $leadFieldModel
+     */
     protected $leadFieldModel;
 
     /**
@@ -307,7 +310,6 @@ class FormFieldAddressValidatordType extends AbstractType
                 'label' => 'plugin.addressvalidator.field.label.placeholder',
             ]
         );
-
 
     }
 

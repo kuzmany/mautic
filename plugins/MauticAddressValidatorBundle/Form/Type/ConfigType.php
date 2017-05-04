@@ -32,7 +32,7 @@ class ConfigType extends AbstractType
 
         $builder->add(
             $builder->create(
-                'apiKey',
+                'validatorApiKey',
                 'text',
                 [
                     'label' => 'plugin.addressvalidator.field.label.apikey',

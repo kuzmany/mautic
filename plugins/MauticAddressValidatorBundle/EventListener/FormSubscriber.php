@@ -18,6 +18,7 @@ use Mautic\FormBundle\Event as Events;
 use Mautic\LeadBundle\Model\LeadModel;
 use Mautic\FormBundle\Event\SubmissionEvent;
 use Mautic\CoreBundle\Helper\CoreParametersHelper;
+use MauticPlugin\MauticAddressValidatorBundle\Helper\AddressValidatorHelper;
 
 
 /**
@@ -37,14 +38,20 @@ class FormSubscriber extends CommonSubscriber
     protected $coreParametersHelper;
 
     /**
+     * @var AddressValidatorHelper $addressValidatorHelper;
+     */
+    protected $addressValidatorHelper;
+
+    /**
      * FormSubscriber constructor.
      *
      * @param LeadModel $leadModel
      */
-    public function __construct(LeadModel $leadModel, CoreParametersHelper $coreParametersHelper)
+    public function __construct(LeadModel $leadModel, CoreParametersHelper $coreParametersHelper, AddressValidatorHelper $addressValidatorHelper)
     {
         $this->leadModel = $leadModel;
         $this->coreParametersHelper = $coreParametersHelper;
+        $this->addressValidatorHelper = $addressValidatorHelper;
     }
 
     /**
@@ -114,7 +121,7 @@ class FormSubscriber extends CommonSubscriber
      */
     public function onFormBuilder(FormBuilderEvent $event)
     {
-        if ($this->coreParametersHelper->getParameter('apiKey') || 1==1) {
+        if ($this->addressValidatorHelper->validation(true)) {
             $action = [
                 'label' => 'mautic.plugin.field.addressvalidator',
                 'formType' => 'addressvalidator',

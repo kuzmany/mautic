@@ -11,10 +11,14 @@ return [
                 'arguments' => [
                     'mautic.lead.model.lead',
                     'mautic.helper.core_parameters',
+                    'mautic.plugin.helper.addressvalidator'
                 ],
             ],
             'mautic.plugin.addressvalidator.configbundle.subscriber' => [
-                'class' => 'MauticPlugin\MauticAddressValidatorBundle\EventListener\ConfigSubscriber'
+                'class' => 'MauticPlugin\MauticAddressValidatorBundle\EventListener\ConfigSubscriber',
+                'arguments' => [
+                    'mautic.plugin.helper.addressvalidator'
+                ]
             ],
         ],
         'forms' => [
@@ -23,6 +27,7 @@ return [
                 'alias' => 'addressvalidator',
                 'arguments' => [
                     'mautic.lead.model.field',
+
                 ],
             ],
             'mautic.plugin.addressvalidator.type.config' => [
@@ -30,8 +35,27 @@ return [
                 'alias' => 'addressvalidator_config',
             ],
         ],
+        'other' => [
+            'mautic.plugin.helper.addressvalidator' => [
+                'class'     => 'MauticPlugin\MauticAddressValidatorBundle\Helper\AddressValidatorHelper',
+                'arguments' => [
+                    'mautic.http.connector',
+                    'request_stack',
+                    'mautic.helper.core_parameters',
+                ],
+            ],
+        ],
+    ],
+    'routes' => [
+        'public' => [
+            'mautic_addressvalidator_validation' => [
+                'path'       => '/addressvalidation',
+                'controller' => 'MauticAddressValidatorBundle:Ajax:validation',
+            ],
+        ],
     ],
     'parameters' => [
-        'apiKey'                       => '',
+        'validatorApiKey'                       => '6893d607ecaa622daa3d074751ca92bc',
+        'validatorUrl'                          => 'http://av-test.ballistix.com/validators',
     ],
 ];

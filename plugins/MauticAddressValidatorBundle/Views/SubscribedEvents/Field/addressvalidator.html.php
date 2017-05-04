@@ -116,12 +116,15 @@ HTML;
 
                     var address = this.val();
                     var streetaddress = $("#mauticform_input_" + formName + "_address_line_1").val() + " " + $("#mauticform_input_" + formName + "_address_line_2").val();
+                    var request = {
+                        'address': this.val(),
+                        'streetaddress': streetaddress,
+                    };
                     var res = $.ajax(
                         {
                             type : 'POST',
                             dataType  : 'json',
-                            url : baseUrl,
-                            headers: { "Authorization" : "Token token=a7bdc315d9e7385b865554afcf0d4235"},
+                            url : '<?php echo $this->container->get('router')->generate('mautic_addressvalidator_validation'); ?>',
                             data:
                             {
                                 "StreetAddress": streetaddress,

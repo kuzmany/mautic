@@ -13,13 +13,32 @@ namespace MauticPlugin\MauticAddressValidatorBundle\EventListener;
 
 use Mautic\ConfigBundle\ConfigEvents;
 use Mautic\ConfigBundle\Event\ConfigBuilderEvent;
+use Mautic\ConfigBundle\Event\ConfigEvent;
 use Mautic\CoreBundle\EventListener\CommonSubscriber;
+use MauticPlugin\MauticAddressValidatorBundle\Helper\AddressValidatorHelper;
+
 
 /**
  * Class ConfigSubscriber.
  */
 class ConfigSubscriber extends CommonSubscriber
 {
+
+
+    /**
+     * @var AddressValidatorHelper $addressValidatorHelper;
+     */
+    protected $addressValidatorHelper;
+
+    /**
+     * FormSubscriber constructor.
+     *
+     * @param LeadModel $leadModel
+     */
+    public function __construct(AddressValidatorHelper $addressValidatorHelper)
+    {
+        $this->addressValidatorHelper = $addressValidatorHelper;
+    }
 
     /**
      * @return array
@@ -28,6 +47,7 @@ class ConfigSubscriber extends CommonSubscriber
     {
         return [
             ConfigEvents::CONFIG_ON_GENERATE => ['onConfigGenerate', 0],
+            ConfigEvents::CONFIG_PRE_SAVE    => ['onConfigSave', 0],
         ];
     }
 
@@ -42,5 +62,22 @@ class ConfigSubscriber extends CommonSubscriber
             'formTheme'  => 'MauticAddressValidatorBundle:FormTheme\Config',
             'parameters' => $event->getParametersFromConfig('MauticAddressValidatorBundle'),
         ]);
+    }
+
+    /**
+     * @param ConfigEvent $event
+     */
+    public function onConfigSave(ConfigEvent $event)
+    {
+        /** @var array $values */
+        $values = $event->getConfig();
+
+        // Manipulate the values
+        if (!empty($values['validatorApiKey']) && !$this->addressValidatorHelper->validation(true)) {
+            $event->setError('mautic.user.saml.metadata.invalid', []);
+        }
+
+        // Set updated values
+        $event->setConfig($values);
     }
 }
