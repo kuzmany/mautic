@@ -44,6 +44,14 @@ return [
                     'mautic.helper.core_parameters',
                 ],
             ],
+            'mautic.plugin.validator.addressvalidator' => [
+                'class'     => 'MauticPlugin\MauticAddressValidatorBundle\Form\Validator\Constraints\AddressValidatorAccessValidator',
+                'arguments' => [
+                    'mautic.plugin.helper.addressvalidator'
+                ],
+                'tag'       => 'validator.constraint_validator',
+                'alias'     => 'addressvalidator_access',
+            ],
         ],
     ],
     'routes' => [

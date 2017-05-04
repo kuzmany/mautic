@@ -18,7 +18,7 @@ use Mautic\CoreBundle\Helper\CoreParametersHelper;
 class AddressValidatorHelper
 {
     /**
-     * @var Http $connector;
+     * @var Http $connector ;
      */
     protected $connector;
 
@@ -44,18 +44,20 @@ class AddressValidatorHelper
     }
 
 
-    public function validation($check = false)
+    public function validation($check = false, $value = null)
     {
         $data = $this->connector->post(
             $this->coreParameterHelper->getParameter('validatorUrl'),
             $this->request->request->all(),
-            array('Authorization' => 'Token '.$this->coreParameterHelper->getParameter('validatorApiKey').'',),
+            array(
+                'Authorization' => 'Token '.($value ? $value : $this->coreParameterHelper->getParameter('validatorApiKey')).'',
+            ),
             10
         );
         if ($check) {
-            if(trim($data->body) == 'HTTP Token: Access denied.'){
+            if (trim($data->body) == 'HTTP Token: Access denied.') {
                 return false;
-            }else{
+            } else {
                 return true;
             }
         } else {

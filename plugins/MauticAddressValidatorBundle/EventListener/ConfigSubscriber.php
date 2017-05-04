@@ -47,7 +47,6 @@ class ConfigSubscriber extends CommonSubscriber
     {
         return [
             ConfigEvents::CONFIG_ON_GENERATE => ['onConfigGenerate', 0],
-            ConfigEvents::CONFIG_PRE_SAVE    => ['onConfigSave', 0],
         ];
     }
 
@@ -64,20 +63,4 @@ class ConfigSubscriber extends CommonSubscriber
         ]);
     }
 
-    /**
-     * @param ConfigEvent $event
-     */
-    public function onConfigSave(ConfigEvent $event)
-    {
-        /** @var array $values */
-        $values = $event->getConfig();
-
-        // Manipulate the values
-        if (!empty($values['validatorApiKey']) && !$this->addressValidatorHelper->validation(true)) {
-            $event->setError('mautic.user.saml.metadata.invalid', []);
-        }
-
-        // Set updated values
-        $event->setConfig($values);
-    }
 }

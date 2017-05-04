@@ -12,10 +12,10 @@
 namespace MauticPlugin\MauticAddressValidatorBundle\Form\Type;
 
 use Mautic\CoreBundle\Factory\MauticFactory;
+use MauticPlugin\MauticAddressValidatorBundle\Form\Validator\Constraints\AddressValidatorAccess;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\FormBuilderInterface;
-use Symfony\Component\Validator\Constraints\Email;
-use Symfony\Component\Validator\Constraints\NotBlank;
+use Symfony\Component\Validator\Constraints\NotEqualTo;
 
 /**
  * Class ConfigType.
@@ -29,7 +29,6 @@ class ConfigType extends AbstractType
      */
     public function buildForm(FormBuilderInterface $builder, array $options)
     {
-
         $builder->add(
             $builder->create(
                 'validatorApiKey',
@@ -39,6 +38,10 @@ class ConfigType extends AbstractType
                     'label_attr' => ['class' => 'control-label'],
                     'attr' => [
                         'class' => 'form-control',
+                    ],
+                    'required' => false,
+                    'constraints' => [
+                        new AddressValidatorAccess(),
                     ],
                 ]
             )
