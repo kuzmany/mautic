@@ -66,7 +66,7 @@ class PageSubscriber extends CommonSubscriber
     public static function getSubscribedEvents()
     {
         return [
-            PageEvents::PAGE_ON_HIT => ['onPageHit', 0],
+            PageEvents::PAGE_ON_HIT => ['onPageHit', 1500],
         ];
     }
 
@@ -111,7 +111,7 @@ class PageSubscriber extends CommonSubscriber
                 }
             }
             if ($lead->getChanges()) {
-             //   $this->leadModel->saveEntity($lead);
+                $this->leadModel->saveEntity($lead);
             }
         }
     }
