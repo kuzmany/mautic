@@ -11,6 +11,7 @@
 
 namespace MauticPlugin\MauticAddressValidatorBundle\Helper;
 
+use Mautic\CoreBundle\Exception as MauticException;
 use Joomla\Http\Http;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Mautic\CoreBundle\Helper\CoreParametersHelper;
@@ -46,15 +47,22 @@ class AddressValidatorHelper
 
     public function validation($check = false, $value = null)
     {
-        $data = $this->connector->post(
+        try {
+            $data = $this->connector->post(
             $this->coreParameterHelper->getParameter('validatorUrl'),
-            $this->request->request->all(),
-            array(
-                'Authorization' => 'Token '.($value ? $value : $this->coreParameterHelper->getParameter('validatorApiKey')).'',
-            ),
-            10
-        );
-        if ($check) {
+                    $this->request->request->all(),
+                array(
+                    'Authorization' => 'Token '.($value ? $value : $this->coreParameterHelper->getParameter(
+                            'validatorApiKey'
+                        )).'',
+                ),
+                10
+            );
+        } catch (\Exception $e) {
+            return json_encode(['address_validated'=>false]);
+        }
+
+       if ($check) {
             if (trim($data->body) == 'HTTP Token: Access denied.') {
                 return false;
             } else {
