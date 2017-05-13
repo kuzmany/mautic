@@ -249,6 +249,8 @@ class FormFieldAddressValidatordType extends AbstractType
             ]
         );
 
+
+
         $builder->add(
             'labelCountry',
             'text',
@@ -288,6 +290,9 @@ class FormFieldAddressValidatordType extends AbstractType
         );
 
 
+
+
+
         $builder->add(
             'optionsCountry',
             'textarea',
@@ -310,6 +315,47 @@ class FormFieldAddressValidatordType extends AbstractType
                 'label' => 'plugin.addressvalidator.field.label.placeholder',
             ]
         );
+
+        $builder->add(
+            'labelAddressValidated',
+            'hidden',
+            [
+                'label' => 'plugin.addressvalidator.field.label.address_validated',
+                'label_attr' => ['class' => 'control-label'],
+                'attr' => [
+                    'class' => 'form-control',
+                ],
+            ]
+        );
+
+        $builder->add(
+            'leadFieldAddressValidated',
+            'choice',
+            [
+                'choices' => $options['leadFields'],
+                'choice_attr' => function ($val, $key, $index) use ($options) {
+                    if (!empty($options['leadFieldProperties'][$val]) && (in_array(
+                                $options['leadFieldProperties'][$val]['type'],
+                                FormFieldHelper::getListTypes()
+                            ) || !empty($options['leadFieldProperties'][$val]['properties']['list']) || !empty($options['leadFieldProperties'][$val]['properties']['optionlist']))
+                    ) {
+                        return ['data-list-type' => 1];
+                    }
+
+                    return [];
+                },
+                'label' => 'mautic.form.field.form.lead_field.address_validated',
+                'label_attr' => ['class' => 'control-label'],
+                'attr' => [
+                    'class' => 'form-control',
+                    'tooltip' => 'mautic.form.field.help.lead_field',
+                ],
+                'required' => false,
+            ]
+        );
+
+
+
 
     }
 

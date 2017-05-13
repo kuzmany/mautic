@@ -29,8 +29,8 @@ foreach ($props as $key => $field2) {
         $inputAttr .= 'name="mauticform['.$field['alias'].']['.$key.']"';
     }
     $idBcKey = str_replace(
-        ['address1', 'address2', 'city', 'zip', 'state'],
-        ['address_line_1', 'address_line_2', 'town_or_city', 'zip_or_postal_code', 'state_or_province'],
+        ['address1', 'address2', 'city', 'zip', 'state', 'addressvalidated'],
+        ['address_line_1', 'address_line_2', 'town_or_city', 'zip_or_postal_code', 'state_or_province', 'address_validated'],
         $key
     );
     $idAttr = 'mauticform_input'.$formName.'_'.$idBcKey;
@@ -76,6 +76,11 @@ HTML;
         </div>
 HTML;
     }
+    if( $key=='addressvalidated') {
+        $inputs .= <<<HTML
+           <input id="{$idAttr}"  type="hidden" value="Yes" />
+HTML;
+    }
 }
 
 if (!empty($inForm)):
@@ -90,7 +95,6 @@ else:
     $html = <<<HTML
 <div class="mauticform-row">{$inputs}</div>
 <div id="mauticformmessage-wrap"><div class="mauticform-error" id="mauticform{$formName}_error"></div><div class="mauticform-message" id="mauticform{$formName}_message"></div></div>
-<input id="mauticform_input{$formName}_address_validated" name="mauticform[address_validated]" value="Yes" class="mauticform-hidden" type="hidden">
 HTML;
     ?>
 
