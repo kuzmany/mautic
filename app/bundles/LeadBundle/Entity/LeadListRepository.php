@@ -954,6 +954,54 @@ class LeadListRepository extends CommonRepository
                     }
                     $groupExpr->add(sprintf('%s (%s)', $operand, $subqb->getSQL()));
                     break;
+                case 'device_model':
+                    $operand = in_array($func, ['eq', 'like', 'regexp', 'notRegexp']) ? 'EXISTS' : 'NOT EXISTS';
+
+                    $column = $details['field'];
+                    $subqb = $this->_em->getConnection()
+                        ->createQueryBuilder()
+                        ->select('id')
+                        ->from(MAUTIC_TABLE_PREFIX.'lead_devices', $alias);
+                    switch ($func) {
+                        case 'eq':
+                        case 'neq':
+                            $parameters[$parameter] = $details['filter'];
+                            $subqb->where(
+                                $q->expr()->andX(
+                                    $q->expr()->eq($alias.'.'.$column, $exprParameter),
+                                    $q->expr()->eq($alias.'.lead_id', 'l.id')
+                                )
+                            );
+                            break;
+                        case 'like':
+                        case '!like':
+                            $parameters[$parameter] = '%'.$details['filter'].'%';
+                        $subqb->where(
+                                $q->expr()->andX(
+                                    $q->expr()->like($alias.'.'.$column, $exprParameter),
+                                    $q->expr()->eq($alias.'.lead_id', 'l.id')
+                                )
+                            );
+                            break;
+                        case 'regexp':
+                        case 'notRegexp':
+                            $parameters[$parameter] = $details['filter'];
+                            $not                    = ($func === 'notRegexp') ? ' NOT' : '';
+                            $subqb->where(
+                                $q->expr()->andX(
+                                    $q->expr()->eq($alias.'.lead_id', 'l.id'),
+                                    $alias.'.'.$column.$not.' REGEXP '.$exprParameter
+                                )
+                            );
+                            break;
+                    }
+                    // Specific lead
+                    if (!empty($leadId)) {
+                        $subqb->andWhere($subqb->expr()
+                            ->eq($alias.'.lead_id', $leadId));
+                    }
+                    $groupExpr->add(sprintf('%s (%s)', $operand, $subqb->getSQL()));
+                    break;
                 case 'hit_url_date':
                 case 'lead_email_read_date':
                     $operand = (in_array($func, ['eq', 'gt', 'lt', 'gte', 'lte', 'between'])) ? 'EXISTS' : 'NOT EXISTS';
@@ -1208,14 +1256,14 @@ class LeadListRepository extends CommonRepository
                 case 'globalcategory':
                 case 'lead_email_received':
                 case 'lead_email_sent':
+                case 'device_type':
+                case 'device_brand':
+                case 'device_os':
 
                     // Special handling of lead lists and tags
                     $func = in_array($func, ['eq', 'in']) ? 'EXISTS' : 'NOT EXISTS';
 
                     $ignoreAutoFilter = true;
-                    foreach ($details['filter'] as &$value) {
-                        $value = (int) $value;
-                    }
 
                     $subQb   = $this->_em->getConnection()->createQueryBuilder();
                     $subExpr = $subQb->expr()->andX(
@@ -1262,10 +1310,22 @@ class LeadListRepository extends CommonRepository
                             $table  = 'email_stats';
                             $column = 'email_id';
                             break;
+                        case 'device_type':
+                            $table  = 'lead_devices';
+                            $column = 'device';
+                            break;
+                        case 'device_brand':
+                            $table  = 'lead_devices';
+                            $column = 'device_brand';
+                            break;
+                        case 'device_os':
+                            $table  = 'lead_devices';
+                            $column = 'device_os_name';
+                            break;
                     }
 
                     $subExpr->add(
-                        $subQb->expr()->in(sprintf('%s.%s', $alias, $column), $details['filter'])
+                        $subQb->expr()->in(sprintf('%s.%s', $alias, $column),  "'".implode("','", $details['filter'])."'")
                     );
 
                     $subQb->select('null')
@@ -1275,7 +1335,6 @@ class LeadListRepository extends CommonRepository
                     $groupExpr->add(
                         sprintf('%s (%s)', $func, $subQb->getSQL())
                     );
-
                     break;
                 case 'stage':
                     $operand = ($func === 'eq') ? 'EXISTS' : 'NOT EXISTS';
