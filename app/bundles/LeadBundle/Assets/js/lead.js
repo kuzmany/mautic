@@ -245,12 +245,12 @@ Mautic.convertLeadFilterInput = function(el) {
     var prefix = 'leadlist';
 
     var parent = mQuery(el).parents('.dynamic-content-filter');
-    if (parent) {
+    if (parent.length) {
         prefix = parent.attr('id');
     }
 
     var operator = mQuery(el).val();
-
+    
     // Extract the filter number
     var regExp    = /_filters_(\d+)_operator/;
     var matches   = regExp.exec(mQuery(el).attr('id'));
