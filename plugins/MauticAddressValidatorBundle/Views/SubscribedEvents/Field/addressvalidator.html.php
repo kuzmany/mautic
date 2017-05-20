@@ -77,8 +77,9 @@ HTML;
 HTML;
     }
     if( $key=='addressvalidated') {
+        $inputAttr = str_replace('"text"', '"hidden"', $inputAttr);
         $inputs .= <<<HTML
-           <input id="{$idAttr}"  type="hidden" value="Yes" />
+           <input  id="{$idAttr}"  {$inputAttr}  value="Yes" />
 HTML;
     }
 }
