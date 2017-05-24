@@ -678,8 +678,8 @@ class FormModel extends CommonFormModel
         $html = $this->getContent($form);
 
         //replace line breaks with literal symbol and escape quotations
-        $search  = ["\r\n","\n", '"'];
-        $replace = ["", "", '\"'];
+        $search  = ["\r\n", "\n", '"'];
+        $replace = ['\n', '\n', '\"'];
         $html    = str_replace($search, $replace, $html);
 
         return 'document.write("'.$html.'");';
