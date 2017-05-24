@@ -74,6 +74,10 @@ return [
                 'class' => 'MauticPlugin\MauticExtendedConditionsBundle\Form\Type\CampaignEventRemoveLogsActionType',
                 'alias' => 'extendedconditionsnevent_remove_logs',
             ],
+            'mautic.plugin.extendedconditions.type.contat.identified.campaign_decision' => [
+                'class' => 'MauticPlugin\MauticExtendedConditionsBundle\Form\Type\CampaignEventIdentifiedDecisionType',
+                'alias' => 'extendedconditionsnevent_identified',
+            ],
             'mautic.plugin.extendedconditions.type.on.change.segment.campaign_decision' => [
                 'class' => 'MauticPlugin\MauticExtendedConditionsBundle\Form\Type\CampaignEventOnChangeSegmentDecisionType',
                 'alias' => 'extendedconditionsnevent_on_change_segment',

@@ -195,6 +195,16 @@ class CampaignSubscriber extends CommonSubscriber
         $event->addDecision('extendedconditions.dynamic_condition', $trigger);
 
 
+        $trigger = [
+            'label' => 'plugin.extended.conditions.campaign.event.contact.identified',
+            'description' => 'plugin.extended.conditions.campaign.event.contact.identified.description',
+            'formType' => 'extendedconditionsnevent_identified',
+            'eventName' => ExtendedConditionsEvents::ON_CAMPAIGN_TRIGGER_DECISION,
+            'channel' => 'lead',
+        ];
+        $event->addDecision('extendedconditions.identified', $trigger);
+
+
         $action = [
             'label' => 'plugin.extended.conditions.campaign.event.dynamic.stop',
             'eventName' => ExtendedConditionsEvents::ON_CAMPAIGN_TRIGGER_ACTION,
@@ -223,176 +233,101 @@ class CampaignSubscriber extends CommonSubscriber
         $eventDetails = $event->getEventDetails();
         $lead = $event->getLead();
 
-        if ($event->checkContext('extendedconditions.on_change_segment')) {
-            $check = 'SEGMENT_CHANGED_'.$event->getEvent()['id'].'_'.$lead->getId();
-            if (!defined($check) && $lead->getId() && $eventDetails instanceof ListChangeEvent) {
-                $leadFromEvent = $eventDetails->getLead();
-
-                if ($leadFromEvent->getId() == $lead->getId()) {
-                    $actionListId = $eventDetails->getList()->getId();
-                    if ($eventDetails->wasAdded()) {
-                        $lists = $eventConfig['addedSegments'];
-                    } elseif ($eventDetails->wasRemoved()) {
-                        $lists = $eventConfig['removedSegments'];
-                    }
-                    if (!empty($lists) && in_array($actionListId, $lists)) {
-                        define($check, 1);
-
-                        return $event->setResult(true);
-                    }
-                }
-            }
-
-            return $event->setResult(false);
-        } elseif ($event->checkContext('extendedconditions.on_change_campaign')) {
-
-            $check = 'CAMPAIGN_CHANGED_'.$event->getEvent()['id'].'_'.$lead->getId();
-            if (!defined($check) && $eventDetails instanceof CampaignLeadChangeEvent) {
-                $leadFromEvent = $eventDetails->getLead();
-                if ($leadFromEvent->getId() == $lead->getId()) {
-                    $actionListId = $eventDetails->getCampaign()->getId();
-                    if ($eventDetails->wasAdded()) {
-                        $campaigns = $eventConfig['addedCampaigns'];
-                    } elseif ($eventDetails->wasRemoved()) {
-                        $campaigns = $eventConfig['removedCampaigns'];
-                    }
-                    if (!empty($campaigns) && in_array($actionListId, $campaigns)) {
-                        define($check, 1);
-
-                        return $event->setResult(true);
-                    }
-                }
-            }
-
-            return $event->setResult(false);
-        } elseif ($event->checkContext('extendedconditions.last_active_condition')) {
-            if ($eventConfig['last_active_limit'] < $eventDetails) {
+        if ($event->checkContext('extendedconditions.identified')) {
+            if ($eventDetails == true) {
                 return $event->setResult(true);
-            } else {
-                return $event->setResult(false);
             }
-        } elseif ($event->checkContext('extendedconditions.page_session')) {
-            if ($eventDetails instanceof Hit) {
-                $hit = $eventDetails;
-                $lead = $hit->getLead();
-                // just one time
-                if (!$this->request->cookies->get('page_session_check') || 1 == 1) {
-                    $sessionTimeLimit = $eventConfig['page_session_time_limit'] ?: 30;
-                    // is session
-                    $qb = $this->db->createQueryBuilder();
-                    $latestDateHit = $qb->select('date_hit')
-                        ->from(MAUTIC_TABLE_PREFIX.'page_hits', 'ph')
-                        ->where(
-                            $qb->expr()->andX(
-                                $qb->expr()->eq('ph.lead_id', ':leadId'),
-                                $qb->expr()->isNull('ph.page_id'),
-                                $qb->expr()->isNull('ph.redirect_id'),
-                                $qb->expr()->isNull('ph.email_id')
-                            )
-                        )
-                        ->setParameter('leadId', $lead->getId())
-                        ->orderBy('ph.id', 'DESC')
-                        ->setFirstResult(1)
-                        ->setMaxResults(1)
-                        ->execute()
-                        ->fetchColumn();
+            return $event->setResult(false);
+        } else {
+            if ($event->checkContext('extendedconditions.on_change_segment')) {
+                $check = 'SEGMENT_CHANGED_'.$event->getEvent()['id'].'_'.$lead->getId();
+                if (!defined($check) && $lead->getId() && $eventDetails instanceof ListChangeEvent) {
+                    $leadFromEvent = $eventDetails->getLead();
 
-                    $from_time = strtotime($latestDateHit);
-                    $to_time = strtotime($hit->getDateHit()->format("Y-m-d H:i:s"));
-                    $difference = round(abs($to_time - $from_time) / 60, 2);
+                    if ($leadFromEvent->getId() == $lead->getId()) {
+                        $actionListId = $eventDetails->getList()->getId();
+                        if ($eventDetails->wasAdded()) {
+                            $lists = $eventConfig['addedSegments'];
+                        } elseif ($eventDetails->wasRemoved()) {
+                            $lists = $eventConfig['removedSegments'];
+                        }
+                        if (!empty($lists) && in_array($actionListId, $lists)) {
+                            define($check, 1);
 
-                    // just check once per sesssion timout - performance
-                    $this->cookieHelper->setCookie('page_session_check', $difference, $sessionTimeLimit * 60);
-                    // not new session, continue
-                    if ($sessionTimeLimit > $difference) {
-                        return $event->setResult(false);
-                    }
-
-                    //sesssioncount
-                    //session sub query
-                    $sessionCountsMin = $eventConfig['page_session_min_count'] ?: 0;
-                    $sessionCountsMax = $eventConfig['page_session_max_count'] ?: 0;
-                    if ($sessionCountsMin || $sessionCountsMax) {
-                        $alias = 'ph';
-                        $alias2 = 'ph2';
-                        $qb2 = $this->db->createQueryBuilder();
-                        $qb2->select($alias2.'.id')
-                            ->from(MAUTIC_TABLE_PREFIX.'page_hits', $alias2)
-                            ->where(
-                                $qb2->expr()
-                                    ->andX(
-                                        $qb2->expr()->eq($alias2.'.lead_id', 'ph.lead_id'),
-                                        $qb2->expr()->isNull('ph2.page_id'),
-                                        $qb2->expr()->isNull('ph2.redirect_id'),
-                                        $qb2->expr()->isNull('ph2.email_id'),
-                                        $qb2->expr()->lt($alias2.'.date_hit', $alias.'.date_hit'),
-                                        $qb2->expr()->gt(
-                                            $alias2.'.date_hit',
-                                            '('.$alias.'.date_hit - INTERVAL '.$sessionTimeLimit.' MINUTE)'
-                                        )
-                                    )
-                            );
-
-                        //session main query
-                        $qb = $this->db->createQueryBuilder();
-                        $sessionCounts = $qb->select('COUNT(id)')
-                            ->from(MAUTIC_TABLE_PREFIX.'page_hits', 'ph')
-                            ->where(
-                                $qb->expr()->andX(
-                                    $qb->expr()->eq('ph.lead_id', ':leadId'),
-                                    $qb->expr()->isNull('ph.page_id'),
-                                    $qb->expr()->isNull('ph.redirect_id'),
-                                    $qb->expr()->isNull('ph.email_id'),
-                                    sprintf('%s (%s)', 'NOT EXISTS', $qb2->getSQL())
-                                )
-                            )
-                            ->setParameter('leadId', $lead->getId())
-                            ->execute()
-                            ->fetchColumn();
-
-                        if (($sessionCountsMin > 0 && $sessionCountsMin > $sessionCounts) || ($sessionCountsMax > 0 && $sessionCountsMax < $sessionCounts)) {
-                            return $event->setResult(false);
+                            return $event->setResult(true);
                         }
                     }
+                }
 
+                return $event->setResult(false);
+            } elseif ($event->checkContext('extendedconditions.on_change_campaign')) {
 
-                    //referrer chceck
-                    $limitToUrl = str_replace('\|', '|', preg_quote(trim($eventConfig['page_session_referrer']), '/'));
-                    $currentUrl = $this->request->server->get('HTTP_REFERER');
-                    if ($limitToUrl && !preg_match('/'.$limitToUrl.'/', $currentUrl)) {
-                        return $event->setResult(false);
+                $check = 'CAMPAIGN_CHANGED_'.$event->getEvent()['id'].'_'.$lead->getId();
+                if (!defined($check) && $eventDetails instanceof CampaignLeadChangeEvent) {
+                    $leadFromEvent = $eventDetails->getLead();
+                    if ($leadFromEvent->getId() == $lead->getId()) {
+                        $actionListId = $eventDetails->getCampaign()->getId();
+                        if ($eventDetails->wasAdded()) {
+                            $campaigns = $eventConfig['addedCampaigns'];
+                        } elseif ($eventDetails->wasRemoved()) {
+                            $campaigns = $eventConfig['removedCampaigns'];
+                        }
+                        if (!empty($campaigns) && in_array($actionListId, $campaigns)) {
+                            define($check, 1);
+
+                            return $event->setResult(true);
+                        }
                     }
+                }
 
-                    // referrer in history check
-                    $referer = trim($eventConfig['page_session_history_referrer']);
-                    if ($referer) {
+                return $event->setResult(false);
+            } elseif ($event->checkContext('extendedconditions.last_active_condition')) {
+                if ($eventConfig['last_active_limit'] < $eventDetails) {
+                    return $event->setResult(true);
+                } else {
+                    return $event->setResult(false);
+                }
+            } elseif ($event->checkContext('extendedconditions.page_session')) {
+                if ($eventDetails instanceof Hit) {
+                    $hit = $eventDetails;
+                    $lead = $hit->getLead();
+                    // just one time
+                    if (!$this->request->cookies->get('page_session_check') || 1 == 1) {
+                        $sessionTimeLimit = $eventConfig['page_session_time_limit'] ?: 30;
+                        // is session
                         $qb = $this->db->createQueryBuilder();
-                        $existsReferer = $qb->select('date_hit')
+                        $latestDateHit = $qb->select('date_hit')
                             ->from(MAUTIC_TABLE_PREFIX.'page_hits', 'ph')
                             ->where(
                                 $qb->expr()->andX(
                                     $qb->expr()->eq('ph.lead_id', ':leadId'),
                                     $qb->expr()->isNull('ph.page_id'),
                                     $qb->expr()->isNull('ph.redirect_id'),
-                                    $qb->expr()->isNull('ph.email_id'),
-                                    $qb->expr()->lt('ph.id', $hit->getId()),
-                                    'ph.referer  REGEXP :referer'
+                                    $qb->expr()->isNull('ph.email_id')
                                 )
                             )
                             ->setParameter('leadId', $lead->getId())
-                            ->setParameter('referer', $referer)
                             ->orderBy('ph.id', 'DESC')
+                            ->setFirstResult(1)
                             ->setMaxResults(1)
                             ->execute()
                             ->fetchColumn();
 
-                        if (!$existsReferer) {
+                        $from_time = strtotime($latestDateHit);
+                        $to_time = strtotime($hit->getDateHit()->format("Y-m-d H:i:s"));
+                        $difference = round(abs($to_time - $from_time) / 60, 2);
+
+                        // just check once per sesssion timout - performance
+                        $this->cookieHelper->setCookie('page_session_check', $difference, $sessionTimeLimit * 60);
+                        // not new session, continue
+                        if ($sessionTimeLimit > $difference) {
                             return $event->setResult(false);
                         }
 
-                        // referer session sub query
-                        $sessionCountsMin = $eventConfig['page_session_referrer_min_count'] ?: 0;
-                        $sessionCountsMax = $eventConfig['page_session_referrer_max_count'] ?: 0;
+                        //sesssioncount
+                        //session sub query
+                        $sessionCountsMin = $eventConfig['page_session_min_count'] ?: 0;
+                        $sessionCountsMax = $eventConfig['page_session_max_count'] ?: 0;
                         if ($sessionCountsMin || $sessionCountsMax) {
                             $alias = 'ph';
                             $alias2 = 'ph2';
@@ -424,62 +359,150 @@ class CampaignSubscriber extends CommonSubscriber
                                         $qb->expr()->isNull('ph.page_id'),
                                         $qb->expr()->isNull('ph.redirect_id'),
                                         $qb->expr()->isNull('ph.email_id'),
-                                        'ph.referer  REGEXP :referer',
                                         sprintf('%s (%s)', 'NOT EXISTS', $qb2->getSQL())
                                     )
                                 )
                                 ->setParameter('leadId', $lead->getId())
-                                ->setParameter('referer', $referer)
                                 ->execute()
                                 ->fetchColumn();
+
                             if (($sessionCountsMin > 0 && $sessionCountsMin > $sessionCounts) || ($sessionCountsMax > 0 && $sessionCountsMax < $sessionCounts)) {
                                 return $event->setResult(false);
                             }
                         }
+
+
+                        //referrer chceck
+                        $limitToUrl = str_replace(
+                            '\|',
+                            '|',
+                            preg_quote(trim($eventConfig['page_session_referrer']), '/')
+                        );
+                        $currentUrl = $this->request->server->get('HTTP_REFERER');
+                        if ($limitToUrl && !preg_match('/'.$limitToUrl.'/', $currentUrl)) {
+                            return $event->setResult(false);
+                        }
+
+                        // referrer in history check
+                        $referer = trim($eventConfig['page_session_history_referrer']);
+                        if ($referer) {
+                            $qb = $this->db->createQueryBuilder();
+                            $existsReferer = $qb->select('date_hit')
+                                ->from(MAUTIC_TABLE_PREFIX.'page_hits', 'ph')
+                                ->where(
+                                    $qb->expr()->andX(
+                                        $qb->expr()->eq('ph.lead_id', ':leadId'),
+                                        $qb->expr()->isNull('ph.page_id'),
+                                        $qb->expr()->isNull('ph.redirect_id'),
+                                        $qb->expr()->isNull('ph.email_id'),
+                                        $qb->expr()->lt('ph.id', $hit->getId()),
+                                        'ph.referer  REGEXP :referer'
+                                    )
+                                )
+                                ->setParameter('leadId', $lead->getId())
+                                ->setParameter('referer', $referer)
+                                ->orderBy('ph.id', 'DESC')
+                                ->setMaxResults(1)
+                                ->execute()
+                                ->fetchColumn();
+
+                            if (!$existsReferer) {
+                                return $event->setResult(false);
+                            }
+
+                            // referer session sub query
+                            $sessionCountsMin = $eventConfig['page_session_referrer_min_count'] ?: 0;
+                            $sessionCountsMax = $eventConfig['page_session_referrer_max_count'] ?: 0;
+                            if ($sessionCountsMin || $sessionCountsMax) {
+                                $alias = 'ph';
+                                $alias2 = 'ph2';
+                                $qb2 = $this->db->createQueryBuilder();
+                                $qb2->select($alias2.'.id')
+                                    ->from(MAUTIC_TABLE_PREFIX.'page_hits', $alias2)
+                                    ->where(
+                                        $qb2->expr()
+                                            ->andX(
+                                                $qb2->expr()->eq($alias2.'.lead_id', 'ph.lead_id'),
+                                                $qb2->expr()->isNull('ph2.page_id'),
+                                                $qb2->expr()->isNull('ph2.redirect_id'),
+                                                $qb2->expr()->isNull('ph2.email_id'),
+                                                $qb2->expr()->lt($alias2.'.date_hit', $alias.'.date_hit'),
+                                                $qb2->expr()->gt(
+                                                    $alias2.'.date_hit',
+                                                    '('.$alias.'.date_hit - INTERVAL '.$sessionTimeLimit.' MINUTE)'
+                                                )
+                                            )
+                                    );
+
+                                //session main query
+                                $qb = $this->db->createQueryBuilder();
+                                $sessionCounts = $qb->select('COUNT(id)')
+                                    ->from(MAUTIC_TABLE_PREFIX.'page_hits', 'ph')
+                                    ->where(
+                                        $qb->expr()->andX(
+                                            $qb->expr()->eq('ph.lead_id', ':leadId'),
+                                            $qb->expr()->isNull('ph.page_id'),
+                                            $qb->expr()->isNull('ph.redirect_id'),
+                                            $qb->expr()->isNull('ph.email_id'),
+                                            'ph.referer  REGEXP :referer',
+                                            sprintf('%s (%s)', 'NOT EXISTS', $qb2->getSQL())
+                                        )
+                                    )
+                                    ->setParameter('leadId', $lead->getId())
+                                    ->setParameter('referer', $referer)
+                                    ->execute()
+                                    ->fetchColumn();
+                                if (($sessionCountsMin > 0 && $sessionCountsMin > $sessionCounts) || ($sessionCountsMax > 0 && $sessionCountsMax < $sessionCounts)) {
+                                    return $event->setResult(false);
+                                }
+                            }
+                        }
+
+                        return $event->setResult(true);
                     }
+                }
 
+                return $event->setResult(false);
+            } elseif ($event->checkContext('extendedconditions.click_condition')) {
+                if (is_object($eventDetails)) {
+                    $hit = $eventDetails;
+                    if ($eventConfig['source'] == $hit->getSource(
+                        ) && (!$eventConfig['source_id'] || $eventConfig['source_id'] == $hit->getSourceId())
+                    ) {
+                        return $event->setResult(true);
+                    } else {
+                        return $event->setResult(false);
+                    }
+                }
+            } elseif ($event->checkContext('extendedconditions.dynamic_condition')) {
+
+                $slot = $eventDetails['slot'];
+                $stop = isset($eventDetails['stop']) ? true : false;
+
+                //go to false
+                if ($stop) {
+                    //go true if stop
                     return $event->setResult(true);
                 }
-            }
 
-            return $event->setResult(false);
-        } elseif ($event->checkContext('extendedconditions.click_condition')) {
-            if (is_object($eventDetails)) {
-                $hit = $eventDetails;
-                if ($eventConfig['source'] == $hit->getSource() && (!$eventConfig['source_id'] || $eventConfig['source_id'] == $hit->getSourceId())) {
-                    return $event->setResult(true);
-                } else {
-                    return $event->setResult(false);
+                if ($slot) {
+                    $limitToUrl = str_replace(
+                        ['\|', '\$', '\^'],
+                        ['|', '$', '^'],
+                        preg_quote(trim($eventConfig['url']), '/')
+                    );
+                    $currentUrl = $this->request->server->get('HTTP_REFERER');
+                    // if url match
+                    preg_match('/'.$limitToUrl.'/', $currentUrl, $matches);
+                    if (!$limitToUrl || !empty($matches[0])) {
+                        $this->session->set('dynamic.id.'.$slot.$lead->getId(), $eventConfig['dynamic_id']);
+                    } else {
+                        $this->session->remove('dynamic.id.'.$slot.$lead->getId());
+                    }
                 }
+
+                return $event->setResult(false);
             }
-        } elseif ($event->checkContext('extendedconditions.dynamic_condition')) {
-
-            $slot = $eventDetails['slot'];
-            $stop = isset($eventDetails['stop']) ? true : false;
-
-            //go to false
-            if ($stop) {
-                //go true if stop
-                return $event->setResult(true);
-            }
-
-            if ($slot) {
-                $limitToUrl = str_replace(
-                    ['\|', '\$', '\^'],
-                    ['|', '$', '^'],
-                    preg_quote(trim($eventConfig['url']), '/')
-                );
-                $currentUrl = $this->request->server->get('HTTP_REFERER');
-                // if url match
-                preg_match('/'.$limitToUrl.'/', $currentUrl, $matches);
-                if (!$limitToUrl || !empty($matches[0])) {
-                    $this->session->set('dynamic.id.'.$slot.$lead->getId(), $eventConfig['dynamic_id']);
-                } else {
-                    $this->session->remove('dynamic.id.'.$slot.$lead->getId());
-                }
-            }
-
-            return $event->setResult(false);
         }
     }
 
@@ -511,7 +534,7 @@ class CampaignSubscriber extends CommonSubscriber
             foreach ($campaigns as $campaign) {
                 $qb = $this->db;
                 $qb->delete(
-                        MAUTIC_TABLE_PREFIX.'campaign_lead_event_log',
+                    MAUTIC_TABLE_PREFIX.'campaign_lead_event_log',
                     [
                         'lead_id' => (int)$lead->getId(),
                         'campaign_id' => $campaign,

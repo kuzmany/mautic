@@ -67,6 +67,7 @@ class LeadSubscriber extends CommonSubscriber
             LeadEvents::LEAD_POST_SAVE => ['onLeadPostSave', 0],
             LeadEvents::LEAD_LIST_CHANGE => ['onLeadListChange', 0],
             LeadEvents::LEAD_LIST_BATCH_CHANGE => ['onLeadListChange', 0],
+            LeadEvents::LEAD_IDENTIFIED => ['onLeadIdentified', 0],
         ];
     }
 
@@ -87,6 +88,16 @@ class LeadSubscriber extends CommonSubscriber
                 }
             }
         }
+    }
+
+    /**
+     * Trigger actions for page hits.
+     *
+     * @param LeadEvent $event
+     */
+    public function onLeadIdentified(LeadEvent $event)
+    {
+        $this->campaignEventModel->triggerEvent('extendedconditions.identified', true);
     }
 
     /**
