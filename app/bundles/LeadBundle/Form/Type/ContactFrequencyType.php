@@ -181,6 +181,7 @@ class ContactFrequencyType extends AbstractType
                 'lead_lists',
                 'leadlist_choices',
                 [
+                    'global_only' => true,
                     'label'      => 'mautic.lead.form.list',
                     'label_attr' => ['class' => 'control-label'],
                     'multiple'   => true,
