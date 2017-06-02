@@ -84,6 +84,8 @@ HTML;
     }
 }
 
+$formNameWithout_ = str_replace('_', '', $formName);
+
 if (!empty($inForm)):
     $html = <<<HTML
     
@@ -97,7 +99,7 @@ else:
 <div class="mauticform-row">{$inputs}</div>
 <div id="mauticformmessage-wrap"><div class="mauticform-error" id="mauticform{$formName}_error"></div><div class="mauticform-message" id="mauticform{$formName}_message"></div></div>
  <input  class="addressvalidatorid" name="addressvalidatorid" value="{$field['form']->getId()}" type="hidden" /> 
- <input  class="addressvalidatorname" name="addressvalidatorname" value="{str_replace('_', '', $formName);}" type="hidden" />
+ <input  class="addressvalidatorname" name="addressvalidatorname" value="{$formNameWithout_}" type="hidden" />
 HTML;
     ?>
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.2.1/jquery.min.js"></script>
