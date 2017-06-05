@@ -99,11 +99,8 @@ else:
 <div class="mauticform-row">{$inputs}</div>
 <div id="mauticformmessage-wrap"><div class="mauticform-error" id="mauticform{$formName}_error"></div><div class="mauticform-message" id="mauticform{$formName}_message"></div></div>
  <input  class="addressvalidatorid" name="addressvalidatorid" value="{$field['form']->getId()}" type="hidden" /> 
- <input  class="addressvalidatorname" name="addressvalidatorname" value="{$formNameWithout_}" type="hidden" />
+ <input  class="addressvalidatorname" name="addressvalidatorname" value="{$formNameWithout_}" type="hidden" /><script type="text/javascript" src="{$view['assets']->getBaseUrl() }/plugins/MauticAddressValidatorBundle/Assets/js/generate.js"></script>
 HTML;
-    ?>
-    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.2.1/jquery.min.js"></script>
-    <script type="text/javascript" src="<?php echo $view['assets']->getBaseUrl() ?>/plugins/MauticAddressValidatorBundle/Assets/js/generate.js"></script>
-    <?php
+
 endif;
 echo $html;
