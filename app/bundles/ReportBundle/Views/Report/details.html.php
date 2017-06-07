@@ -126,7 +126,7 @@ if ($tmpl == 'index') {
             </div>
         </div>
     </div>
-    <div class="collapse" id="report-filters">
+    <div class="collapse in" id="report-filters" style="height: auto;">
         <div class="pr-md pl-md pb-md">
             <div class="panel shd-none mb-0 pa-lg">
                 <div class="row">
