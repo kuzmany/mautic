@@ -97,6 +97,7 @@ class LeadSubscriber extends CommonSubscriber
      */
     public function onLeadIdentified(LeadEvent $event)
     {
+        $this->leadModel->setSystemCurrentLead($event->getLead());
         $this->campaignEventModel->triggerEvent('extendedconditions.identified', true);
     }
 
