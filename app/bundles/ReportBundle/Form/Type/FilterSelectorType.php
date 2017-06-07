@@ -29,6 +29,7 @@ class FilterSelectorType extends AbstractType
      */
     public function buildForm(FormBuilderInterface $builder, array $options)
     {
+
         // Build a list of columns
         $builder->add(
             'column',
@@ -99,7 +100,6 @@ class FilterSelectorType extends AbstractType
                 'required'   => false,
             ]
         );
-
         $builder->add(
             'dynamic',
             'yesno_button_group',
@@ -111,9 +111,9 @@ class FilterSelectorType extends AbstractType
                     'tooltip' => 'mautic.report.report.label.filterdynamic_tooltip',
                 ],
                 'required' => false,
-                'data'     => (!isset($options['data']['dynamic']) || !empty($options['data']['dynamic'])),
             ]
         );
+
     }
 
     /**
