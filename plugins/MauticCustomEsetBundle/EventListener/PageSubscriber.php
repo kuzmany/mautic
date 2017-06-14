@@ -110,6 +110,11 @@ class PageSubscriber extends CommonSubscriber
                     $lead->addUpdatedField('preferred_locale', $request->get('owner'));
                 }
             }
+
+            if ($request->get('utm_campaign')) {
+                $lead->addTag('campaign:'.$request->get('utm_campaign'));
+            }
+
             if ($lead->getChanges()) {
                 $this->leadModel->saveEntity($lead);
             }

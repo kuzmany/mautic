@@ -56,7 +56,18 @@ class BuildJsSubscriber extends CommonSubscriber
     {
         //basic js
         $js = <<<JS
-  
+function getQuery(q) {
+   return (window.location.search.match(new RegExp('[?&]' + q + '=([^&]+)')) || [, null])[1];
+}
+var utmCampaign =   getQuery('utm_campaign');
+if(utmCampaign != null){
+  if (typeof parms.tags === 'undefined') {
+            var  parms = {tags: ['utm_campaign:'+utmCampaign]};
+       }else{
+            parms.tags.push('utm_campaign:'+utmCampaign);
+        }    
+}
+
 JS;
         $event->appendJs($js, 'CustomEset');
     }

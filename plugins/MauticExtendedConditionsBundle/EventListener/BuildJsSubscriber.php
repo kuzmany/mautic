@@ -57,21 +57,56 @@ class BuildJsSubscriber extends CommonSubscriber
     {
         //basic js
         $js = <<<JS
+        
+        function mergeObjects() {
+    var tmpObj = {};
+
+    for(var o in arguments) {
+        for(var m in arguments[o]) {
+            tmpObj[m] = arguments[o][m];
+        }
+    }
+    return tmpObj;
+}
         if (typeof window[window.MadeSimpleShop] !== 'undefined') {
             window.MauticTrackingObject = 'ms';
        }
+     function mss(action){
+        if(typeof action !== 'undefined'){
+            if(action == 'addtocart'){
+               ms('send', 'pageview', { page_url: location.href+'#addtocart'});
+            }else if(action == 'order'){
+               ms('send', 'pageview', { page_url: location.href+'#order'});
+            }
+        }
+    }
+       if (typeof parms === 'undefined') {
+            var  parms;
+       }
+
        if (typeof window.MauticTrackingObject === 'undefined') {
        var w=window;var n='ms';w['MauticTrackingObject']=n;w[n]=w[n]||function(){(w[n].q=w[n].q||[]).push(arguments)};
-           if (typeof parms === 'undefined') {
-                      ms('send', 'pageview');
-           }else{
+       var cookie = '';
+           if(document.cookie.indexOf('_ga')  > 0 ){
+              var cookies = document.cookie ? document.cookie.split('; ') : [];
+               for (var i = 0, l = cookies.length; i < l; i++) {
+                var parts = cookies[i].split('=');
+                var name = (parts.shift());
+                cookie = parts.join('=');
+                if(name == '_ga'){
+                    parms = mergeObjects(parms, { userid: cookie});
                       ms('send', 'pageview', parms);
-           }
+                }
+            }
        }
-       var elemDiv = document.createElement('div');
-elemDiv.setAttribute('data-slot-name', 'madesimpleshop-carts');
-elemDiv.setAttribute('class', 'dynamic-slot');
-document.body.appendChild(elemDiv);
+       if(cookie==''){
+            ms('send', 'pageview', parms);
+            }
+       }
+//        var elemDiv = document.createElement('div');
+// elemDiv.setAttribute('data-slot-name', 'madesimpleshop-carts');
+// elemDiv.setAttribute('class', 'dynamic-slot');
+// document.body.appendChild(elemDiv);
 JS;
         $event->appendJs($js, 'Extended');
     }
@@ -83,7 +118,11 @@ JS;
     public function onBuildJs(BuildJsEvent $event)
     {
 
-        $dwcUrl = $this->router->generate('mautic_api_dynamic_action', ['objectAlias' => 'slotNamePlaceholder'], UrlGeneratorInterface::ABSOLUTE_URL);
+        $dwcUrl = $this->router->generate(
+            'mautic_api_dynamic_action',
+            ['objectAlias' => 'slotNamePlaceholder'],
+            UrlGeneratorInterface::ABSOLUTE_URL
+        );
 
         $js = <<<JS
            // call variable if doesnt exist
@@ -108,7 +147,12 @@ MauticJS.replaceDynamicContent = function () {
                     if (response.search("mauticform_wrapper") > 0) {
                         // if doesn't exist
                         if (typeof MauticSDK == 'undefined') {
-                            MauticJS.insertScript('{$this->assetsHelper->getUrl('media/js/mautic-form.js', null, null, true)}');
+                            MauticJS.insertScript('{$this->assetsHelper->getUrl(
+            'media/js/mautic-form.js',
+            null,
+            null,
+            true
+        )}');
                             
                             // check initialize form library
                             var fileInterval = setInterval(function() {
