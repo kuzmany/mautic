@@ -560,7 +560,6 @@ class ReportController extends FormController
         $model    = $this->getModel('report');
         $entity   = $model->getEntity($objectId);
         $security = $this->container->get('mautic.security');
-
         if ($entity === null) {
             $page = $this->container->get('session')->get('mautic.report.page', 1);
 
@@ -590,6 +589,7 @@ class ReportController extends FormController
         if ($this->request->getMethod() == 'POST') {
             $this->setListFilters();
         }
+
 
         $mysqlFormat = 'Y-m-d';
         $session     = $this->container->get('session');
@@ -625,13 +625,11 @@ class ReportController extends FormController
                 $session->set('mautic.report.date.from', $dateRangeValues['date_from']);
             }
         }
-
         // Setup dynamic filters
         $filterDefinitions = $model->getFilterList($entity->getSource());
         $dynamicFilters    = $session->get('mautic.report.'.$objectId.'.filters', []);
         $filterSettings    = [];
-
-        foreach ($dynamicFilters as $filter) {
+            foreach ($dynamicFilters as $filter) {
             $filterSettings[$filterDefinitions->definitions[$filter['column']]['alias']] = $filter['value'];
         }
 
@@ -644,7 +642,6 @@ class ReportController extends FormController
                 'filterDefinitions' => $filterDefinitions,
             ]
         );
-
         $reportData = $model->getReportData(
             $entity,
             $this->container->get('form.factory'),
@@ -656,7 +653,6 @@ class ReportController extends FormController
                 'dateTo'         => new \DateTime($dateRangeForm->get('date_to')->getData()),
             ]
         );
-
         return $this->delegateView(
             [
                 'viewParameters' => [
@@ -785,12 +781,13 @@ class ReportController extends FormController
 
         $dynamicFilters = $session->get('mautic.report.'.$objectId.'.filters', []);
 
+        $orderBy    = $session->get('mautic.report.'.$objectId.'.orderby', '');
+        $orderByDir = $session->get('mautic.report.'.$objectId.'.orderbydir', 'ASC');
         $reportData = $model->getReportData($entity, null, [
             'dateFrom'       => new \DateTime($fromDate),
             'dateTo'         => new \DateTime($toDate),
             'dynamicFilters' => $dynamicFilters,
         ]);
-
         return $model->exportResults($format, $entity, $reportData);
     }
 }

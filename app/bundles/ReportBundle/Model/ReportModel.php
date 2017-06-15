@@ -552,7 +552,6 @@ class ReportModel extends FormModel
             'dateTo'         => (isset($options['dateTo'])) ? $options['dateTo'] : null,
             'dynamicFilters' => (isset($options['dynamicFilters'])) ? $options['dynamicFilters'] : [],
         ];
-
         /** @var \Doctrine\DBAL\Query\QueryBuilder $query */
         $query                 = $reportGenerator->getQuery($dataOptions);
         $options['translator'] = $this->translator;
@@ -565,7 +564,7 @@ class ReportModel extends FormModel
         // Reset the orderBy as it causes errors in graphs and the count query in table data
         $parts = $query->getQueryParts();
         $order = $parts['orderBy'];
-        $query->resetQueryPart('orderBy');
+       // $query->resetQueryPart('orderBy');
 
         if (empty($options['ignoreGraphData'])) {
             $chartQuery            = new ChartQuery($this->em->getConnection(), $chartDateFrom, $chartDateTo);
@@ -619,7 +618,7 @@ class ReportModel extends FormModel
                 $query->select('COUNT(*) as count');
 
                 $result       = $query->execute()->fetchAll();
-                $totalResults = (!empty($result[0]['count'])) ? $result[0]['count'] : 0;
+                $totalResults = (!empty($result[0]['count'])) ? count($result) : 0;
 
                 // Set the limit and get the results
                 if ($limit > 0) {

@@ -237,7 +237,6 @@ final class MauticReportBuilder implements ReportBuilderInterface
                 $queryBuilder->having($options['having']);
             }
         }
-
         // Generate a count query in case a formula needs total number
         $countQuery = clone $queryBuilder;
         $countQuery->select('COUNT(*) as count');
@@ -253,6 +252,9 @@ final class MauticReportBuilder implements ReportBuilderInterface
 
                     if (array_key_exists('channelData', $fieldOptions)) {
                         $select .= $this->buildCaseSelect($fieldOptions['channelData']);
+                    } elseif (isset($options['columns'][$field]['alias']) && $options['columns'][$field]['alias'] == 'tag') {
+                        $selField = (isset($fieldOptions['formula'])) ? $fieldOptions['formula'] : $field;
+                        $select .= "GROUP_CONCAT({$selField} SEPARATOR ', ')";
                     } else {
                         $select .= (isset($fieldOptions['formula'])) ? $fieldOptions['formula'] : $field;
                     }
@@ -326,6 +328,22 @@ final class MauticReportBuilder implements ReportBuilderInterface
                         );
                         $filterExpr->add(
                             $expr->eq($filter['column'], $expr->literal(''))
+                        );
+                        break;
+                    case 'in':
+                        if (!$filter['value']) {
+                            break;
+                        }
+                        $filterExpr->add(
+                            $expr->in('lt.id', $filter['value'])
+                        );
+                        break;
+                    case 'notIn':
+                        if (!$filter['value']) {
+                            break;
+                        }
+                        $filterExpr->add(
+                            $expr->notIn('lt.id', $filter['value'])
                         );
                         break;
                     default:

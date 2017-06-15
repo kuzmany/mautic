@@ -128,8 +128,12 @@ class ReportSubscriber extends CommonSubscriber
     {
         $leadContexts    = ['leads', 'lead.pointlog', 'contact.attribution.multi', 'contact.attribution.first', 'contact.attribution.last'];
         $companyContexts = ['companies'];
-
         if ($event->checkContext($leadContexts)) {
+            $aTags     = [];
+            $aTagsList = $this->leadModel->getTagList();
+            foreach ($aTagsList as $aTemp) {
+                $aTags[$aTemp['value']] = $aTemp['label'];
+            }
             $columns = [
                 'l.id' => [
                     'label' => 'mautic.lead.report.contact_id',
@@ -160,6 +164,11 @@ class ReportSubscriber extends CommonSubscriber
                 'u.last_name' => [
                     'label' => 'mautic.lead.report.owner_lastname',
                     'type'  => 'string',
+                ],
+                'lt.tag' => [
+                    'label' => 'mautic.lead.tags',
+                    'type'  => 'multiselect',
+                    'list'  => $aTags,
                 ],
             ];
 
@@ -285,8 +294,7 @@ class ReportSubscriber extends CommonSubscriber
                 'columns'      => $companyColumns,
                 'filters'      => $companyFilters,
             ];
-
-            $event->addTable('companies', $data, 'companies');
+            $event->addTable('com   panies', $data, 'companies');
             $event->addGraph('companies', 'line', 'mautic.lead.graph.line.companies');
             $event->addGraph('companies', 'pie', 'mautic.lead.graph.pie.companies.industry');
             $event->addGraph('companies', 'pie', 'mautic.lead.table.pie.company.country');
@@ -323,6 +331,11 @@ class ReportSubscriber extends CommonSubscriber
                 } else {
                     $event->applyDateFilters($qb, 'date_added', 'l');
                 }
+                if ($event->hasFilter('lt.tag') || $event->hasColumn('lt.tag')) {
+                    $qb->leftJoin('l', MAUTIC_TABLE_PREFIX.'lead_tags_xref', 'ltx', 'ltx.lead_id = l.id')
+                        ->leftJoin('l', MAUTIC_TABLE_PREFIX.'lead_tags', 'lt', 'ltx.tag_id = lt.id')
+                        ->groupBy('l.id');
+                }
                 break;
 
             case 'lead.pointlog':
@@ -338,7 +351,11 @@ class ReportSubscriber extends CommonSubscriber
                     $qb->leftJoin('l', MAUTIC_TABLE_PREFIX.'lead_ips_xref', 'lip', 'lip.lead_id = l.id');
                     $event->addIpAddressLeftJoin($qb, 'lp');
                 }
-
+                if ($event->hasFilter('lt.tag') || $event->hasColumn('lt.tag')) {
+                    $qb->leftJoin('l', MAUTIC_TABLE_PREFIX.'lead_tags_xref', 'ltx', 'ltx.lead_id = l.id')
+                        ->leftJoin('l', MAUTIC_TABLE_PREFIX.'lead_tags', 'lt', 'ltx.tag_id = lt.id')
+                        ->groupBy('l.id');
+                }
                 break;
 
             case 'contact.attribution.multi':
@@ -372,7 +389,11 @@ class ReportSubscriber extends CommonSubscriber
                 if ($event->hasColumn(['cat.id', 'cat.title']) || $event->hasColumn(['cat.id', 'cat.title'])) {
                     $event->addCategoryLeftJoin($qb, 'c', 'cat');
                 }
-
+            if ($event->hasFilter('lt.tag') || $event->hasColumn('lt.tag')) {
+                $qb->leftJoin('l', MAUTIC_TABLE_PREFIX.'lead_tags_xref', 'ltx', 'ltx.lead_id = l.id')
+                    ->leftJoin('l', MAUTIC_TABLE_PREFIX.'lead_tags', 'lt', 'ltx.tag_id = lt.id')
+                    ->groupBy('l.id');
+            }
                 $subQ = clone $qb;
                 $subQ->resetQueryParts();
 
@@ -435,7 +456,6 @@ class ReportSubscriber extends CommonSubscriber
 
                 break;
         }
-
         $event->setQueryBuilder($qb);
     }
 
@@ -878,7 +898,6 @@ class ReportSubscriber extends CommonSubscriber
     public function onReportDisplay(ReportDataEvent $event)
     {
         $data = $event->getData();
-
         if ($event->checkContext(['contact.attribution.first', 'contact.attribution.last', 'contact.attribution.multi'])) {
             if (isset($data[0]['channel']) || isset($data[0]['channel_action']) || (isset($data[0]['activity_count']) && isset($data[0]['attribution']))) {
                 foreach ($data as $key => &$row) {

@@ -141,6 +141,11 @@ Mautic.updateReportFilterValueInput = function (filterColumn, setup) {
         // Activate a chosen
         var currentValue = mQuery(valueEl).val();
 
+        if (filterType == 'multiselect') {
+            valueName += '[]';
+            currentValue = (typeof currentValue !== 'undefined') ? currentValue.split(",") : null;
+        }
+
         var attr = {
             id: valueId,
             name: valueName,
@@ -158,12 +163,15 @@ Mautic.updateReportFilterValueInput = function (filterColumn, setup) {
                 .val(value)
                 .html(label);
 
-            if (value == currentValue) {
+            if (value == currentValue && filterType != 'multiselect') {
                 newOption.prop('selected', true);
             }
 
             newOption.appendTo(newSelect);
         });
+                if (filterType == 'multiselect') {
+                        newSelect.val(currentValue);
+                    }
         mQuery(valueEl).replaceWith(newSelect);
 
         Mautic.activateChosenSelect(newSelect);
