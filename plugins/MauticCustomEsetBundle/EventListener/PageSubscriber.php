@@ -111,9 +111,6 @@ class PageSubscriber extends CommonSubscriber
                 }
             }
 
-            if ($request->get('utm_campaign')) {
-                $lead->addTag('campaign:'.$request->get('utm_campaign'));
-            }
 
             if ($lead->getChanges()) {
                 $this->leadModel->saveEntity($lead);

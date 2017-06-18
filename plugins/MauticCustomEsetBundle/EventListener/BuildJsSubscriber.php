@@ -68,6 +68,15 @@ if(utmCampaign != null){
         }    
 }
 
+var utmCampaign =   getQuery('utm_source');
+if(utmCampaign != null){
+  if (typeof parms.tags === 'undefined') {
+            var  parms = {tags: ['utm_source:'+utmCampaign]};
+       }else{
+            parms.tags.push('utm_source:'+utmCampaign);
+        }    
+}
+
 JS;
         $event->appendJs($js, 'CustomEset');
     }
