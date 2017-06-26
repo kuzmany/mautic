@@ -48,6 +48,12 @@ return [
                     'mautic.helper.core_parameters',
                 ],
             ],
+            'mautic.plugin.extendedconditions.emailbundle.subscriber' => [
+                'class' => 'MauticPlugin\MauticExtendedConditionsBundle\EventListener\EmailSubscriber',
+                'arguments' => [
+                    'mautic.http.connector',
+                ],
+            ],
         ],
         'forms' => [
             'mautic.plugin.extendedconditions.type.last_active.campaign_trigger' => [
