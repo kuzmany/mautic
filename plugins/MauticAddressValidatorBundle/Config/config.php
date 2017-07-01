@@ -14,12 +14,6 @@ return [
                     'mautic.plugin.helper.addressvalidator'
                 ],
             ],
-            'mautic.plugin.addressvalidator.configbundle.subscriber' => [
-                'class' => 'MauticPlugin\MauticAddressValidatorBundle\EventListener\ConfigSubscriber',
-                'arguments' => [
-                    'mautic.plugin.helper.addressvalidator'
-                ]
-            ],
         ],
         'forms' => [
             'mautic.plugin.addressvalidator.type.addressvalidator.field' => [
@@ -41,7 +35,7 @@ return [
                 'arguments' => [
                     'mautic.http.connector',
                     'request_stack',
-                    'mautic.helper.core_parameters',
+                    'mautic.helper.integration',
                 ],
             ],
             'mautic.plugin.validator.addressvalidator' => [
@@ -68,6 +62,6 @@ return [
     ],
     'parameters' => [
         'validatorApiKey'                       => '6893d607ecaa622daa3d074751ca92bc',
-        'validatorUrl'                          => 'http://av-test.ballistix.com/validators',
+        'validatorUrl'                          => 'http://api.ballistix.com/validators',
     ],
 ];

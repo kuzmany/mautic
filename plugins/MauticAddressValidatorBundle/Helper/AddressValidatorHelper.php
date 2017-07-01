@@ -14,7 +14,7 @@ namespace MauticPlugin\MauticAddressValidatorBundle\Helper;
 use Mautic\CoreBundle\Exception as MauticException;
 use Joomla\Http\Http;
 use Symfony\Component\HttpFoundation\RequestStack;
-use Mautic\CoreBundle\Helper\CoreParametersHelper;
+use Mautic\PluginBundle\Helper\IntegrationHelper;
 
 class AddressValidatorHelper
 {
@@ -29,32 +29,42 @@ class AddressValidatorHelper
     protected $request;
 
     /**
-     * @var CoreParametersHelper $coreParameterHelper
+     * @var IntegrationHelper $integrationHelper
      */
-    protected $coreParameterHelper;
+    protected $integrationHelper;
 
 
     public function __construct(
         Http $connector,
         RequestStack $request,
-        CoreParametersHelper $coreParametersHelper
+        IntegrationHelper $integrationHelper
     ) {
         $this->connector = $connector;
         $this->request = $request->getCurrentRequest();
-        $this->coreParameterHelper = $coreParametersHelper;
+        $this->integrationHelper = $integrationHelper;
     }
 
 
     public function validation($check = false, $value = null)
     {
+
+
+        $integration = $this->integrationHelper->getIntegrationObject('AddressValidator');
+
+        if (!$integration || $integration->getIntegrationSettings()->getIsPublished() === false) {
+            return;
+        }
+
+        $featureSettings = $integration->getDecryptedApiKeys();
+
         try {
             $data = $this->connector->post(
-            $this->coreParameterHelper->getParameter('validatorUrl'),
+                $featureSettings['apiUrl'],
                     $this->request->request->all(),
                 array(
-                    'Authorization' => 'Token '.($value ? $value : $this->coreParameterHelper->getParameter(
-                            'validatorApiKey'
-                        )).'',
+                    'Authorization' => 'Token '.($value ? $value : $featureSettings['validatorApiKey']
+
+                        ).'',
                 ),
                 10
             );
