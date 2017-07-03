@@ -48,7 +48,6 @@ class AddressValidatorHelper
     public function validation($check = false, $value = null)
     {
 
-
         $integration = $this->integrationHelper->getIntegrationObject('AddressValidator');
 
         if (!$integration || $integration->getIntegrationSettings()->getIsPublished() === false) {
@@ -57,10 +56,17 @@ class AddressValidatorHelper
 
         $featureSettings = $integration->getDecryptedApiKeys();
 
+        if (isset($_POST['integration_details']['apiKeys'])) {
+            $featureSettings = [
+                'apiUrl' => $_POST['integration_details']['apiKeys']['apiUrl'],
+                'validatorApiKey' => $_POST['integration_details']['apiKeys']['validatorApiKey'],
+            ];
+        }
+
         try {
             $data = $this->connector->post(
                 $featureSettings['apiUrl'],
-                    $this->request->request->all(),
+                $this->request->request->all(),
                 array(
                     'Authorization' => 'Token '.($value ? $value : $featureSettings['validatorApiKey']
 
@@ -69,17 +75,24 @@ class AddressValidatorHelper
                 10
             );
         } catch (\Exception $e) {
-            return json_encode(['address_validated'=>false]);
+            if ($check) {
+                return false;
+            }
+
+            return json_encode(['address_validated' => false]);
         }
 
-       if ($check) {
-            if (trim($data->body) == 'HTTP Token: Access denied.') {
-                return false;
-            } else {
-                return true;
-            }
-        } else {
-            return $data->body;
+        $result = false;
+        if (in_array($data->code, [200, 201])  && trim($data->body) != 'HTTP Token: Access denied.') {
+            $result = true;
         }
+        if ($check) {
+            return $result;
+        } elseif ($result == true) {
+            return $data->body;
+        } else {
+            return json_encode(['address_validated' => false]);
+        }
+
     }
 }
