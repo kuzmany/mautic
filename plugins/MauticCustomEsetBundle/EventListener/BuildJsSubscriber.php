@@ -60,6 +60,18 @@ function getQuery(q) {
    return (window.location.search.match(new RegExp('[?&]' + q + '=([^&]+)')) || [, null])[1];
 }
 var utmCampaign =   getQuery('utm_campaign');
+var utmSource =   getQuery('utm_source');
+var utmMedium =   getQuery('utm_medium');
+
+if(utmMedium == 'email' && utmSource != null){
+      if (typeof parms.resellerid === 'undefined') {
+            var  parms = {'resellerid': utmSource};
+       }else{
+            parms.push('resellerid', utmSource);
+        }    
+}
+
+/*
 if(utmCampaign != null){
   if (typeof parms.tags === 'undefined') {
             var  parms = {tags: ['utm_campaign:'+utmCampaign]};
@@ -68,14 +80,14 @@ if(utmCampaign != null){
         }    
 }
 
-var utmCampaign =   getQuery('utm_source');
+
 if(utmCampaign != null){
   if (typeof parms.tags === 'undefined') {
             var  parms = {tags: ['utm_source:'+utmCampaign]};
        }else{
             parms.tags.push('utm_source:'+utmCampaign);
         }    
-}
+}*/
 
 JS;
         $event->appendJs($js, 'CustomEset');

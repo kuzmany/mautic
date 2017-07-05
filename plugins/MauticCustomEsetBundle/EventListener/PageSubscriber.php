@@ -86,7 +86,7 @@ class PageSubscriber extends CommonSubscriber
 
         if (!$hit->getPage() && !$redirect) {
             //change points unique by url
-            if ($request->get('owner')) {
+            if ($lead->isAnonymous() && $request->get('owner')) {
                 $currentOwner = $lead->getOwner();
                 if (!$currentOwner || ($currentOwner && $currentOwner->getUsername() != $request->get('owner'))) {
                     $newOwner = $this->userProvider->loadUserByUsername($request->get('owner'));
@@ -95,6 +95,11 @@ class PageSubscriber extends CommonSubscriber
                     }
                 }
             }
+
+            if (empty($lead->getFieldValue('resellerid')) &&  $request->get('resellerid')) {
+                $lead->addUpdatedField('resellerid', $request->get('resellerid'));
+            }
+
             // change points
             if ($request->get('points')) {
                 $lead->adjustPoints((int)$request->get('points'));
