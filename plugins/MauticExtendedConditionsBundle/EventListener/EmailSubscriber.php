@@ -81,7 +81,7 @@ class EmailSubscriber extends CommonSubscriber
                     $data = $this->connector->get(
                         $id,
                         [],
-                        10
+                        30
                     );
                     $tokens[$token] = $data->body;
                 } catch (\Exception $e) {
