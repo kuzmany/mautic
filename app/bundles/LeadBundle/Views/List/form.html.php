@@ -28,6 +28,9 @@ $templates = [
     'timezones'      => 'timezone-template',
     'select'         => 'select-template',
     'lists'          => 'leadlist-template',
+    'deviceTypes'    => 'device_type-template',
+    'deviceBrands'   => 'device_brand-template',
+    'deviceOs'       => 'device_os-template',
     'emails'         => 'lead_email_received-template',
     'tags'           => 'tags-template',
     'stage'          => 'stage-template',
@@ -88,7 +91,7 @@ $filterErrors = ($view['form']->containsErrors($form['filters'])) ? 'class="text
                                     <?php
                                     foreach ($fields as $object => $field):
                                         $header = $object;
-                                        $icon   = ($object == 'company') ? 'fa-building' : 'fa-user';
+                                        $icon   = ($object == 'company') ? 'building' : 'user';
                                     ?>
                                     <optgroup label="<?php echo $view['translator']->trans('mautic.lead.'.$header); ?>">
                                         <?php foreach ($field as $value => $params):
@@ -98,7 +101,16 @@ $filterErrors = ($view['form']->containsErrors($form['filters'])) ? 'class="text
                                             $callback  = (!empty($params['properties']['callback'])) ? $params['properties']['callback'] : '';
                                             $operators = (!empty($params['operators'])) ? $view->escape(json_encode($params['operators'])) : '{}';
                                             ?>
-                                            <option value="<?php echo $value; ?>" id="available_<?php echo $value; ?>" data-field-object="<?php echo $object; ?>" data-field-type="<?php echo $params['properties']['type']; ?>" data-field-list="<?php echo $view->escape($list); ?>" data-field-callback="<?php echo $callback; ?>" data-field-operators="<?php echo $operators; ?>" class="segment-filter fa <?php echo $icon; ?>"><?php echo $view['translator']->trans($params['label']); ?></option>
+                                            <option value="<?php echo $value; ?>"
+                                                    id="available_<?php echo $value; ?>"
+                                                    data-field-object="<?php echo $object; ?>"
+                                                    data-field-type="<?php echo $params['properties']['type']; ?>"
+                                                    data-field-list="<?php echo $view->escape($list); ?>"
+                                                    data-field-callback="<?php echo $callback; ?>"
+                                                    data-field-operators="<?php echo $operators; ?>"
+                                                    class="segment-filter <?php echo $icon; ?>">
+                                                    <?php echo $view['translator']->trans($params['label']); ?>
+                                            </option>
                                         <?php endforeach; ?>
                                     </optgroup>
                                     <?php endforeach; ?>

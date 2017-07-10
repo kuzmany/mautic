@@ -238,6 +238,10 @@ JS;
         $mediaElementCss = $this->assetsHelper->getUrl('media/css/mediaelementplayer.css', null, null, true);
         $jQueryUrl       = $this->assetsHelper->getUrl('app/bundles/CoreBundle/Assets/js/libraries/2.jquery.js', null, null, true);
 
+        $mauticBaseUrl   = str_replace('/index_dev.php', '', $mauticBaseUrl);
+        $mediaElementCss = str_replace('/index_dev.php', '', $mediaElementCss);
+        $jQueryUrl       = str_replace('/index_dev.php', '', $jQueryUrl);
+
         $mediaElementJs = <<<'JS'
 /*!
  *
@@ -272,8 +276,9 @@ JS;
         $js = <<<JS
 MauticJS.initGatedVideo = function () {
     MauticJS.videoElements = MauticJS.videoElements || document.getElementsByTagName('video');
-    
+ 
     if (! MauticJS.videoElements.length) {
+        MauticJS.videoElements = null;
         return;
     }
 
@@ -372,13 +377,17 @@ MauticJS.processGatedVideos = function (videoElements) {
             node.id = 'mautic-player-' + i;
         }
        
-        var cookieName = 'mautic-player-'+i+'-'+node.dataset.formId;
-        if (node.dataset.formId) {
+
             mediaPlayers[i] = [];
             
+            if(node.dataset.formId){
+            var cookieName = 'mautic-player-'+i+'-'+node.dataset.formId;
             MauticJS.makeCORSRequest('GET', '{$mauticBaseUrl}form/embed/' + node.dataset.formId, {}, function (data) {
                 mediaPlayers[i].formHtml = data;
             });
+            }else{
+                mediaPlayers[i].formHtml = '';
+            }
             
             mediaPlayers[i].player = new MediaElementPlayer('#' + node.id, {features: playerFeatures, alwaysShowControls: true, enableKeyboard: false, success: function (mediaElement, domElement) {
                 mediaPlayers[i].inPoster = false;
@@ -411,7 +420,7 @@ MauticJS.processGatedVideos = function (videoElements) {
                     
                     MauticJS.addVideoView(i, currentTime);
 
-                    if (document.cookie.indexOf(cookieName) == -1 && currentTime >= node.dataset.gateTime && mediaPlayers[i].inPoster === false && mediaPlayers[i].success === false) {
+                    if (node.dataset.formId && document.cookie.indexOf(cookieName) == -1 && currentTime >= node.dataset.gateTime && mediaPlayers[i].inPoster === false && mediaPlayers[i].success === false) {
                         if (document.activeElement.tagName == 'IFRAME') {
                             window.mejs.previousActiveElement = document.activeElement;
                             document.activeElement.blur();
@@ -478,7 +487,6 @@ MauticJS.processGatedVideos = function (videoElements) {
             if (node.autoplay) {
                 mediaPlayers[i].player.play();
             }
-        }
     });
 }
 

@@ -141,8 +141,9 @@ class ReportSubscriber extends CommonSubscriber
                     'type'  => 'text',
                 ],
                 'l.date_identified' => [
-                    'label' => 'mautic.lead.report.date_identified',
-                    'type'  => 'datetime',
+                    'label'          => 'mautic.lead.report.date_identified',
+                    'type'           => 'datetime',
+                    'groupByFormula' => 'DATE(l.date_identified)',
                 ],
                 'l.points' => [
                     'label' => 'mautic.lead.points',
@@ -306,7 +307,6 @@ class ReportSubscriber extends CommonSubscriber
 
         switch ($context) {
             case 'leads':
-                $event->applyDateFilters($qb, 'date_added', 'l');
                 $qb->from(MAUTIC_TABLE_PREFIX.'leads', 'l');
 
                 if ($event->hasColumn(['u.first_name', 'u.last_name']) || $event->hasFilter(['u.first_name', 'u.last_name'])) {
@@ -320,6 +320,9 @@ class ReportSubscriber extends CommonSubscriber
 
                 if ($event->hasFilter('s.leadlist_id')) {
                     $qb->join('l', MAUTIC_TABLE_PREFIX.'lead_lists_leads', 's', 's.lead_id = l.id AND s.manually_removed = 0');
+                    $event->applyDateFilters($qb, 'date_added', 's');
+                } else {
+                    $event->applyDateFilters($qb, 'date_added', 'l');
                 }
                 break;
 
@@ -724,8 +727,9 @@ class ReportSubscriber extends CommonSubscriber
                 'type'  => 'int',
             ],
             'lp.date_added' => [
-                'label' => 'mautic.lead.report.points.date_added',
-                'type'  => 'datetime',
+                'label'          => 'mautic.lead.report.points.date_added',
+                'type'           => 'datetime',
+                'groupByFormula' => 'DATE(lp.date_added)',
             ],
         ];
         $data = [
@@ -757,8 +761,9 @@ class ReportSubscriber extends CommonSubscriber
                 'link'  => 'mautic_campaign_action',
             ],
             'log.date_triggered' => [
-                'label' => 'mautic.lead.report.attribution.action_date',
-                'type'  => 'datetime',
+                'label'          => 'mautic.lead.report.attribution.action_date',
+                'type'           => 'datetime',
+                'groupByFormula' => 'DATE(log.date_triggered)',
             ],
             'c.name' => [
                 'alias' => 'campaign_name',

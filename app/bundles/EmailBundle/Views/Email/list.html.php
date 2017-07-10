@@ -11,10 +11,9 @@
 if ($tmpl == 'index') {
     $view->extend('MauticEmailBundle:Email:index.html.php');
 }
+?>
 
-if (count($items)):
-
-    ?>
+<?php if (count($items)): ?>
     <div class="table-responsive">
         <table class="table table-hover table-striped table-bordered email-list">
             <thead>
@@ -125,23 +124,23 @@ if (count($items)):
                             ); ?>" data-toggle="ajax">
                                 <?php echo $item->getName(); ?>
                                 <?php if ($hasVariants): ?>
-                                    <span data-toggle="tooltip" title="<?php echo $view['translator']->trans('mautic.core.icon_tooltip.ab_test'); ?>">
-                                <i class="fa fa-fw fa-sitemap"></i>
-                            </span>
+                                <span data-toggle="tooltip" title="<?php echo $view['translator']->trans('mautic.core.icon_tooltip.ab_test'); ?>">
+                                    <i class="fa fa-fw fa-sitemap"></i>
+                                </span>
                                 <?php endif; ?>
                                 <?php if ($hasTranslations): ?>
-                                    <span data-toggle="tooltip" title="<?php echo $view['translator']->trans(
+                                <span data-toggle="tooltip" title="<?php echo $view['translator']->trans(
                                         'mautic.core.icon_tooltip.translation'
                                     ); ?>">
-                                <i class="fa fa-fw fa-language"></i>
-                            </span>
+                                    <i class="fa fa-fw fa-language"></i>
+                                </span>
                                 <?php endif; ?>
                                 <?php if ($type == 'list'): ?>
-                                    <span data-toggle="tooltip" title="<?php echo $view['translator']->trans(
+                                <span data-toggle="tooltip" title="<?php echo $view['translator']->trans(
                                         'mautic.email.icon_tooltip.list_email'
                                     ); ?>">
-                                <i class="fa fa-fw fa-pie-chart"></i>
-                            </span>
+                                    <i class="fa fa-fw fa-pie-chart"></i>
+                                </span>
                                 <?php endif; ?>
                                 <?php echo $view['content']->getCustomContent('email.name', $mauticTemplateVars); ?>
                             </a>
@@ -156,24 +155,37 @@ if (count($items)):
                         <?php $category = $item->getCategory(); ?>
                         <?php $catName  = ($category) ? $category->getTitle() : $view['translator']->trans('mautic.core.form.uncategorized'); ?>
                         <?php $color    = ($category) ? '#'.$category->getColor() : 'inherit'; ?>
-                        <span style="white-space: nowrap;"><span class="label label-default pa-4" style="border: 1px solid #d5d5d5; background: <?php echo $color; ?>;"> </span> <span><?php echo $catName; ?></span></span>
+                        <span style="white-space: nowrap;">
+                            <span class="label label-default pa-4" style="border: 1px solid #d5d5d5; background: <?php echo $color; ?>;"> </span> <span><?php echo $catName; ?></span>
+                        </span>
                     </td>
-                    <td class="visible-sm visible-md visible-lg col-stats">
-                        <?php if ($type == 'list'): ?>
-                            <span class="mt-xs label label-info"><?php echo $view['translator']->trans(
-                                    'mautic.email.stat.leadcount',
-                                    ['%count%' => $model->getPendingLeads($item, null, true)]
-                                ); ?></span>
-                        <?php endif; ?>
-                        <span class="mt-xs label label-warning"><?php echo $view['translator']->trans(
-                                'mautic.email.stat.sentcount',
-                                ['%count%' => $item->getSentCount(true)]
-                            ); ?></span>
-                        <span class="mt-xs label label-success"><?php echo $view['translator']->trans(
-                                'mautic.email.stat.readcount',
-                                ['%count%' => $item->getReadCount(true)]
-                            ); ?></span>
-			<span class="mt-xs label label-primary"><?php echo $view['translator']->trans('mautic.email.stat.readpercent', ['%count%' => $item->getReadPercentage(true)]); ?></span>
+                    <td class="visible-sm visible-md visible-lg col-stats" data-stats="<?php echo $item->getId(); ?>">
+                        <?php  ?>
+                        <span class="mt-xs label label-default hide"
+                              id="pending-<?php echo $item->getId(); ?>"
+                              data-toggle="tooltip"
+                              title="<?php echo $view['translator']->trans('mautic.email.stat.leadcount.tooltip'); ?>">
+                        </span>
+                        <span class="mt-xs label label-default hide"
+                              id="queued-<?php echo $item->getId(); ?>"
+                              data-toggle="tooltip"
+                              title="<?php echo $view['translator']->trans('mautic.email.stat.queued.tooltip'); ?>">
+                        </span>
+                        <span class="mt-xs label label-warning" id="sent-count-<?php echo $item->getId(); ?>">
+                            <div style="width: 50px;">
+                                <i class="fa fa-spin fa-spinner"></i>
+                            </div>
+                        </span>
+                        <span class="mt-xs label label-success" id="read-count-<?php echo $item->getId(); ?>">
+                            <div style="width: 50px;">
+                                <i class="fa fa-spin fa-spinner"></i>
+                            </div>
+                        </span>
+                        <span class="mt-xs label label-primary" id="read-percent-<?php echo $item->getId(); ?>">
+                            <div style="width: 50px;">
+                                <i class="fa fa-spin fa-spinner"></i>
+                            </div>
+                        </span>
                         <?php echo $view['content']->getCustomContent('email.stats', $mauticTemplateVars); ?>
                     </td>
                     <td class="visible-md visible-lg"><?php echo $item->getId(); ?></td>

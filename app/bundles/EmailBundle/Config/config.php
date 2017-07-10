@@ -155,7 +155,10 @@ return [
                 ],
             ],
             'mautic.email.webhook.subscriber' => [
-                'class' => 'Mautic\EmailBundle\EventListener\WebhookSubscriber',
+                'class'       => 'Mautic\EmailBundle\EventListener\WebhookSubscriber',
+                'methodCalls' => [
+                    'setWebhookModel' => ['mautic.webhook.model.webhook'],
+                ],
             ],
             'mautic.email.configbundle.subscriber' => [
                 'class'     => 'Mautic\EmailBundle\EventListener\ConfigSubscriber',
@@ -206,6 +209,10 @@ return [
                 'class'     => 'Mautic\EmailBundle\Form\Type\EmailType',
                 'arguments' => 'mautic.factory',
                 'alias'     => 'emailform',
+            ],
+            'mautic.form.type.email.utm_tags' => [
+                'class' => 'Mautic\EmailBundle\Form\Type\EmailUtmTagsType',
+                'alias' => 'utm_tags',
             ],
             'mautic.form.type.emailvariant' => [
                 'class'     => 'Mautic\EmailBundle\Form\Type\VariantType',
@@ -410,6 +417,7 @@ return [
         'show_contact_segments'               => false,
         'mailer_mailjet_sandbox'              => false,
         'mailer_mailjet_sandbox_default_mail' => null,
+        'disable_trackable_urls'              => false,
 
     ],
 ];
