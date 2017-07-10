@@ -222,6 +222,15 @@ class CampaignSubscriber extends CommonSubscriber
             'channelIdField' => 'campaign_id',
         ];
         $event->addAction('extendedconditions.campaign_logs_remove', $action);
+
+        $action = [
+            'label' => 'plugin.extended.conditions.campaign.event.campaign.activation',
+            'eventName' => ExtendedConditionsEvents::ON_CAMPAIGN_TRIGGER_ACTION,
+            'formType' => 'extendedconditionsnevent_campaign_activation',
+            'channel' => 'campaign',
+            'channelIdField' => 'campaign_id',
+        ];
+        $event->addAction('extendedconditions.campaign_activation', $action);
     }
 
     /**
@@ -237,6 +246,7 @@ class CampaignSubscriber extends CommonSubscriber
             if ($eventDetails == true) {
                 return $event->setResult(true);
             }
+
             return $event->setResult(false);
         } else {
             if ($event->checkContext('extendedconditions.on_change_segment')) {
@@ -516,6 +526,7 @@ class CampaignSubscriber extends CommonSubscriber
         $lead = $event->getLead();
         $eventConfig = $event->getConfig();
         $eventDetails = $event->getEventDetails();
+
         if ($event->checkContext('extendedconditions.dynamic_stop')) {
             $slots = $eventConfig['slots'];
             if ($slots) {
@@ -541,6 +552,19 @@ class CampaignSubscriber extends CommonSubscriber
                     ]
                 );
             }
+        } elseif ($event->checkContext('extendedconditions.campaign_activation')) {
+            $ids = [1 => $eventConfig['enable'], 0 => $eventConfig['disable']];
+            foreach ($ids as $state => $campaignIds) {
+                if (!empty($campaignIds)) {
+                    foreach ($campaignIds as $campaignId) {
+                        $campaign = $this->campaignModel->getEntity($campaignId);
+                        $campaign->setIsPublished((bool) $state);
+                        $this->campaignModel->saveEntity($campaign);
+                    }
+                }
+            }
         }
+
+        return $event->setResult(true);
     }
 }

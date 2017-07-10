@@ -56,6 +56,11 @@ return [
             ],
         ],
         'forms' => [
+            'mautic.campaign.type.allcampaignlist' => [
+                'class'     => 'MauticPlugin\MauticExtendedConditionsBundle\Form\Type\AllCampaignListType',
+                'arguments' => 'mautic.factory',
+                'alias'     => 'all_campaign_list',
+            ],
             'mautic.plugin.extendedconditions.type.last_active.campaign_trigger' => [
                 'class' => 'MauticPlugin\MauticExtendedConditionsBundle\Form\Type\CampaignEventLastActiveConditionType',
                 'alias' => 'extendedconditionsnevent_last_active',
@@ -79,6 +84,10 @@ return [
             'mautic.plugin.extendedconditions.type.remove.logs.campaign_action' => [
                 'class' => 'MauticPlugin\MauticExtendedConditionsBundle\Form\Type\CampaignEventRemoveLogsActionType',
                 'alias' => 'extendedconditionsnevent_remove_logs',
+            ],
+            'mautic.plugin.extendedconditions.type.campaign.activation.campaign_action' => [
+                'class' => 'MauticPlugin\MauticExtendedConditionsBundle\Form\Type\CampaignEventCampaignActivationActionType',
+                'alias' => 'extendedconditionsnevent_campaign_activation',
             ],
             'mautic.plugin.extendedconditions.type.contat.identified.campaign_decision' => [
                 'class' => 'MauticPlugin\MauticExtendedConditionsBundle\Form\Type\CampaignEventIdentifiedDecisionType',
