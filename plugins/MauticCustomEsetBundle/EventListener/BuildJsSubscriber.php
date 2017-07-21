@@ -64,10 +64,10 @@ var utmSource =   getQuery('utm_source');
 var utmMedium =   getQuery('utm_medium');
 
 if(utmMedium == 'email' && utmSource != null){
-      if (typeof parms.resellerid === 'undefined') {
+      if (typeof parms === 'undefined') {
             var  parms = {'resellerid': utmSource};
        }else{
-            parms.push('resellerid', utmSource);
+              parms = mergeObjects(parms, {'resellerid': utmSource});
         }    
 }
 
