@@ -153,7 +153,6 @@ class PublicController extends CommonFormController
         } elseif (!empty($formTemplate)) {
             $template = $formTemplate;
         }
-
         $theme = $this->factory->getTheme($template);
         if ($theme->getTheme() != $template) {
             $template = $theme->getTheme();
@@ -321,9 +320,8 @@ class PublicController extends CommonFormController
             $message = $this->translator->trans('mautic.email.stat_record.not_found');
         }
 
-        $template = ($email !== null) ? $email->getTemplate() : $this->coreParametersHelper->getParameter('theme');
+        $template = ($email !== null && 'mautic_code_mode' !== $email->getTemplate()) ? $email->getTemplate() : $this->coreParametersHelper->getParameter('theme');
         $theme    = $this->factory->getTheme($template);
-
         if ($theme->getTheme() != $template) {
             $template = $theme->getTheme();
         }
