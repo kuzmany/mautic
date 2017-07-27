@@ -11,7 +11,6 @@
 
 namespace MauticPlugin\MauticCustomEsetBundle\EventListener;
 
-use Guzzle\Plugin\Cookie\Cookie;
 use Mautic\CoreBundle\EventListener\CommonSubscriber;
 use Mautic\LeadBundle\Model\LeadModel;
 use Mautic\PageBundle\Event as Events;
@@ -21,6 +20,7 @@ use Mautic\PageBundle\Event\PageHitEvent;
 use Mautic\PageBundle\Event\PageEvent;
 use Mautic\CampaignBundle\Model\EventModel;
 use Mautic\UserBundle\Security\Provider\UserProvider;
+use Mautic\CoreBundle\Helper\CookieHelper;
 
 
 /**
@@ -46,18 +46,28 @@ class PageSubscriber extends CommonSubscriber
     protected $userProvider;
 
     /**
+     * @var CookieHelper
+     */
+    protected $cookieHelper;
+
+    /**
      * CampaignSubscriber constructor.
      *
      * @param EventModel $campaignEventModel
+     * @param LeadModel $leadModel
+     * @param UserProvider $userProvider
+     * @param CookieHelper $cookieHelper
      */
     public function __construct(
         EventModel $campaignEventModel,
         LeadModel $leadModel,
-        UserProvider $userProvider
+        UserProvider $userProvider,
+        CookieHelper $cookieHelper
     ) {
         $this->campaignEventModel = $campaignEventModel;
         $this->leadModel = $leadModel;
         $this->userProvider = $userProvider;
+        $this->cookieHelper = $cookieHelper;
     }
 
     /**
@@ -105,7 +115,7 @@ class PageSubscriber extends CommonSubscriber
                 $lead->adjustPoints((int)$request->get('points'));
             }    // change points
 
-            if ($request->get('owner')) {
+            if ($request->get('owner') && $lead->isAnonymous()) {
                 if ($request->get('owner') == 'mt2') {
                     $lead->addUpdatedField('preferred_locale', 'de');
 
@@ -116,9 +126,13 @@ class PageSubscriber extends CommonSubscriber
                 }
             }
 
-
             if ($lead->getChanges()) {
                 $this->leadModel->saveEntity($lead);
+            }
+
+            if ($lead && $lead->getId()) {
+                //create a tracking cookie with a expire of two years
+                $this->cookieHelper->setCookie('mtc_id', $lead->getId(), 31536000, '/', '.eset.com');
             }
         }
     }

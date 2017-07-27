@@ -17,7 +17,8 @@ return [
                 'arguments' => [
                     'mautic.campaign.model.event',
                     'mautic.lead.model.lead',
-                    'mautic.user.provider'
+                    'mautic.user.provider',
+                    'mautic.helper.cookie',
                 ],
             ],
         ],
