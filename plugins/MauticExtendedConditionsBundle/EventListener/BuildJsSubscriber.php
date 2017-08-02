@@ -126,6 +126,15 @@ JS;
         );
 
         $js = <<<JS
+        
+          if (window.localStorage) {
+            if (mtcId  = localStorage.getItem('mtc_id')) {
+              if (typeof ga !== 'undefined') {
+                     ga('set','userId', mtcId);
+               }
+             }       
+           }       
+        
            // call variable if doesnt exist
             if (typeof MauticDomain == 'undefined') {
                 var MauticDomain = '{$this->request->getSchemeAndHttpHost()}';
