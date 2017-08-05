@@ -126,14 +126,19 @@ JS;
         );
 
         $js = <<<JS
-        
-          if (window.localStorage) {
-            if (mtcId  = localStorage.getItem('mtc_id')) {
-              if (typeof ga !== 'undefined') {
-                     ga('set','userId', mtcId);
-               }
-             }       
-           }       
+        MauticJS.readCookie = function(name) {
+    return (name = new RegExp('(?:^|;\\s*)' + ('' + name).replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&') + '=([^;]*)').exec(document.cookie)) && name[1];
+};
+          mtcId = MauticJS.readCookie('mtc_id');
+          if (!mtcId && window.localStorage ) {
+               mtcId  = localStorage.getItem('mtc_id')  
+           }    
+           setTimeout(function(){
+             if (mtcId && typeof ga !== 'undefined') {
+                ga('set','userId', mtcId);
+             }
+           }, 200);
+           
         
            // call variable if doesnt exist
             if (typeof MauticDomain == 'undefined') {
