@@ -59,13 +59,14 @@ class EmailSubscriber extends CommonSubscriber
     {
         // Get content
         $content = $event->getContent();
-        $content = $this->findFormTokens($content);
+        $lead = $event->getLead();
+        $content = $this->findFormTokens($content, $lead);
         // Set updated content
         $event->setContent($content);
     }
 
 
-    private function findFormTokens($content)
+    private function findFormTokens($content, $lead)
     {
         $tokens = [];
 
@@ -88,6 +89,17 @@ class EmailSubscriber extends CommonSubscriber
                     $tokens[$token] = '';
                 }
 
+            }
+        }
+        preg_match_all('/{base64decode=(.*?)}/', $content, $matches);
+        if (count($matches[0])) {
+            foreach ($matches[1] as $k => $id) {
+                $token = $matches[0][$k];
+
+                if (isset($tokens[$token])) {
+                    continue;
+                }
+                $tokens[$token] =  (!empty($lead[$id])) ? base64_decode($lead[$id]) : '';
             }
         }
         $content = str_replace(array_keys($tokens), $tokens, $content);
