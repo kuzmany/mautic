@@ -55,6 +55,7 @@
 !/media/images/.htaccess
 
 /plugins/*
+!/plugins/MauticXMLSlotBundle
 !/plugins/MauticCitrixBundle
 !/plugins/MauticClearbitBundle
 !/plugins/MauticCloudStorageBundle
