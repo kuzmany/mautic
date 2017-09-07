@@ -9,8 +9,9 @@
  * @license     -
  */
 ?>
+<div class="row xmlslot">
 
-<table class="row xmlslot">
+<table class="preview">
     <tbody>
     <tr class="xmlslottr">
         <th class="small-12 large-4 columns first">
@@ -32,6 +33,7 @@
     </tr>
     </tbody>
 </table>
+</div>
 
 <div style="clear:both"></div>
 <?php echo $view['assets']->includeScript(

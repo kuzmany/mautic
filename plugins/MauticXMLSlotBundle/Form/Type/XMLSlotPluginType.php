@@ -11,10 +11,8 @@
 
 namespace MauticPlugin\MauticXMLSlotBundle\Form\Type;
 
-use Symfony\Component\Form\Extension\Core\ChoiceList\ChoiceList;
-use Symfony\Component\Form\Extension\Core\Type\TextType;
-use Symfony\Component\Form\FormBuilderInterface;
 use Mautic\CoreBundle\Form\Type\SlotType;
+use Symfony\Component\Form\FormBuilderInterface;
 
 /**
  * Class SlotESNPluginType.
@@ -23,21 +21,34 @@ class XMLSlotPluginType extends SlotType
 {
     /**
      * @param FormBuilderInterface $builder
-     * @param array $options
+     * @param array                $options
      */
     public function buildForm(FormBuilderInterface $builder, array $options)
     {
-
+        $builder->add(
+            'slotname',
+            'text',
+            [
+                'label'      => 'plugin.xmlslotplugin.builder.slot.name',
+                'label_attr' => ['class' => 'control-label'],
+                'required'   => false,
+                'attr'       => [
+                    'class'           => 'form-control',
+                    'data-slot-param' => 'slotname',
+                ],
+                'data' => isset($options['slotname']) ? $options['slotname'] : 'slotname',
+            ]
+        );
 
         $builder->add(
             'xmlfile',
             'text',
             [
-                'label' => 'plugin.xmlslotplugin.builder.xml.file',
+                'label'      => 'plugin.xmlslotplugin.builder.xml.file',
                 'label_attr' => ['class' => 'control-label'],
-                'required' => false,
-                'attr' => [
-                    'class' => 'form-control',
+                'required'   => false,
+                'attr'       => [
+                    'class'           => 'form-control',
                     'data-slot-param' => 'xmlfile',
                 ],
             ]
@@ -47,11 +58,11 @@ class XMLSlotPluginType extends SlotType
             'tablecols',
             'text',
             [
-                'label' => 'plugin.xmlslotplugin.builder.table.cols',
+                'label'      => 'plugin.xmlslotplugin.builder.table.cols',
                 'label_attr' => ['class' => 'control-label'],
-                'required' => false,
-                'attr' => [
-                    'class' => 'form-control',
+                'required'   => false,
+                'attr'       => [
+                    'class'           => 'form-control',
                     'data-slot-param' => 'tablecols',
                 ],
             ]
@@ -61,11 +72,11 @@ class XMLSlotPluginType extends SlotType
             'tablerows',
             'text',
             [
-                'label' => 'plugin.xmlslotplugin.builder.table.rows',
+                'label'      => 'plugin.xmlslotplugin.builder.table.rows',
                 'label_attr' => ['class' => 'control-label'],
-                'required' => false,
-                'attr' => [
-                    'class' => 'form-control',
+                'required'   => false,
+                'attr'       => [
+                    'class'           => 'form-control',
                     'data-slot-param' => 'tablerows',
                 ],
             ]
@@ -75,29 +86,27 @@ class XMLSlotPluginType extends SlotType
             'customcss',
             'text',
             [
-                'label' => 'plugin.xmlslotplugin.builder.custom.css',
+                'label'      => 'plugin.xmlslotplugin.builder.custom.css',
                 'label_attr' => ['class' => 'control-label'],
-                'required' => false,
-                'attr' => [
-                    'class' => 'form-control',
+                'required'   => false,
+                'attr'       => [
+                    'class'           => 'form-control',
                     'data-slot-param' => 'customcss',
                 ],
             ]
         );
 
-
-
         $builder->add(
             'hideimages',
             'yesno_button_group',
             [
-                'label' => 'plugin.xmlslotplugin.builder.images.hide',
+                'label'      => 'plugin.xmlslotplugin.builder.images.hide',
                 'label_attr' => ['class' => 'control-label'],
-                'attr' => [
-                    'class' => 'form-control',
+                'attr'       => [
+                    'class'           => 'form-control',
                     'data-slot-param' => 'hideimages',
                 ],
-                'data' => true,
+                'data'     => true,
                 'required' => false,
             ]
         );
@@ -106,13 +115,13 @@ class XMLSlotPluginType extends SlotType
             'hidebuttons',
             'yesno_button_group',
             [
-                'label' => 'plugin.xmlslotplugin.builder.buttons.hide',
+                'label'      => 'plugin.xmlslotplugin.builder.buttons.hide',
                 'label_attr' => ['class' => 'control-label'],
-                'attr' => [
-                    'class' => 'form-control',
+                'attr'       => [
+                    'class'           => 'form-control',
                     'data-slot-param' => 'hidebuttons',
                 ],
-                'data' => true,
+                'data'     => true,
                 'required' => false,
             ]
         );
@@ -121,19 +130,16 @@ class XMLSlotPluginType extends SlotType
             'buttonstext',
             'text',
             [
-                'label' => 'plugin.xmlslotplugin.builder.buttons.text',
+                'label'      => 'plugin.xmlslotplugin.builder.buttons.text',
                 'label_attr' => ['class' => 'control-label'],
-                'required' => false,
-                'attr' => [
-                    'class' => 'form-control',
+                'required'   => false,
+                'attr'       => [
+                    'class'           => 'form-control',
                     'data-slot-param' => 'link-text',
-                    'data-show-on' => '{"xmlslot_plugin_hidebuttons_1":"checked"}',
+                    'data-show-on'    => '{"xmlslot_plugin_hidebuttons_1":"checked"}',
                 ],
             ]
         );
-
-
-
 
         parent::buildForm($builder, $options);
     }
