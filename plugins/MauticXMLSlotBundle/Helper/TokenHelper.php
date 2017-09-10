@@ -9,7 +9,7 @@
  * @license     GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
  */
 
-namespace MauticPlugin\MauticFocusBundle\Helper;
+namespace MauticPlugin\MauticXMLSlotBundle\Helper;
 
 use MauticPlugin\MauticFocusBundle\Model\FocusModel;
 use Symfony\Component\Routing\RouterInterface;
@@ -19,7 +19,7 @@ use Symfony\Component\Routing\RouterInterface;
  */
 class TokenHelper
 {
-    private $regex = '{focus=(.*?)}';
+    private $regex = '{xmlslot=(.*?)}';
 
     /**
      * @var FocusModel
@@ -48,34 +48,44 @@ class TokenHelper
      */
     public function findFocusTokens($content)
     {
-        $regex = '/'.$this->regex.'/i';
+        $properties = [
+            'xmlfile' => 'https://mautic-last.madesimple.cloud/test.xml',
+        ];
 
-        preg_match_all($regex, $content, $matches);
+        $xml = simplexml_load_file('note.xml');
+        echo $xml->to.'<br>';
+        echo $xml->from.'<br>';
+        echo $xml->heading.'<br>';
+        echo $xml->body;
 
-        $tokens = [];
+//        $regex = '/'.$this->regex.'/i';
 
-        if (count($matches[0])) {
-            foreach ($matches[1] as $k => $id) {
-                $token = '{focus='.$id.'}';
-                $focus = $this->model->getEntity($id);
-                if ($focus !== null
-                    && (
-                        $focus->isPublished()
-                        || $this->security->hasEntityAccess(
-                            'plugin:focus:items:viewown',
-                            'plugin:focus:items:viewother',
-                            $focus->getCreatedBy()
-                        )
-                    )
-                ) {
-                    $script = '<script src="'.$this->router->generate('mautic_focus_generate', ['id' => $id], true)
-                        .'" type="text/javascript" charset="utf-8" async="async"></script>';
-                    $tokens[$token] = $script;
-                } else {
-                    $tokens[$token] = '';
-                }
-            }
-        }
+//        preg_match_all($regex, $content, $matches);
+
+//        $tokens = [];
+
+//        if (count($matches[0])) {
+//            foreach ($matches[1] as $k => $id) {
+//                $token = '{focus='.$id.'}';
+//                $focus = $this->model->getEntity($id);
+//                if ($focus !== null
+//                    && (
+//                        $focus->isPublished()
+//                        || $this->security->hasEntityAccess(
+//                            'plugin:focus:items:viewown',
+//                            'plugin:focus:items:viewother',
+//                            $focus->getCreatedBy()
+//                        )
+//                    )
+//                ) {
+//                    $script = '<script src="'.$this->router->generate('mautic_focus_generate', ['id' => $id], true)
+//                        .'" type="text/javascript" charset="utf-8" async="async"></script>';
+//                    $tokens[$token] = $script;
+//                } else {
+//                    $tokens[$token] = '';
+//                }
+//            }
+//        }
 
         return $tokens;
     }

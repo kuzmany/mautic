@@ -55,6 +55,17 @@ class EmailSubscriber extends CommonSubscriber
         $content .= $event->getPlainText();
         $lead = $event->getLead();
 
+        $properties = [
+            'xmlfile' => 'https://mautic-last.madesimple.cloud/test.xml',
+        ];
+
+        $xml = simplexml_load_file($properties['xmlfile']);
+        die(print_r((string) $xml->SHOPITEM[0]->ITEM_ID));
+
+//        preg_match_all('/<div class=\"(.*?)xmlslot(.*?)\">(.*?)<\/div>/s',$content,$vv,PREG_SET_ORDER);
+//        die(print_r($vv));
+//        exit();
+
         $tokenList = ['{xmlslot=slotname}' => 'test'];
         if (count($tokenList)) {
             $event->addTokens($tokenList);
