@@ -618,7 +618,7 @@ class ReportModel extends FormModel
                 $query->select('COUNT(*) as count');
 
                 $result       = $query->execute()->fetchAll();
-                $totalResults = (!empty($result[0]['count'])) ? count($result) : 0;
+                $totalResults = (!empty($result[0]['count'])) ? $result[0]['count'] : 0;
 
                 // Set the limit and get the results
                 if ($limit > 0) {
