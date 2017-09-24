@@ -31,7 +31,6 @@ class AjaxController extends CommonAjaxController
         /* @type \Mautic\ReportBundle\Model\ReportModel $model */
         $model   = $this->getModel('report');
         $context = $request->get('context');
-
         $graphs  = $model->getGraphList($context);
         $columns = $model->getColumnList($context);
         $filters = $model->getFilterList($context);

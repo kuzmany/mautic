@@ -584,7 +584,6 @@ class CommonController extends Controller implements MauticController
                         'strict' => false,
                     ];
                 }
-
                 $session->set("$name.filters", $filters);
             }
         }

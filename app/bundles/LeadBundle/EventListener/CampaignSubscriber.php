@@ -20,6 +20,7 @@ use Mautic\LeadBundle\Entity\PointsChangeLog;
 use Mautic\LeadBundle\LeadEvents;
 use Mautic\LeadBundle\Model\FieldModel;
 use Mautic\LeadBundle\Model\LeadModel;
+use Mautic\LeadBundle\Model\ListModel;
 
 /**
  * Class CampaignSubscriber.
@@ -41,6 +42,12 @@ class CampaignSubscriber extends CommonSubscriber
      */
     protected $leadFieldModel;
 
+
+    /**
+     * @var ListModel
+     */
+    protected $listModel;
+
     /**
      * CampaignSubscriber constructor.
      *
@@ -48,11 +55,12 @@ class CampaignSubscriber extends CommonSubscriber
      * @param LeadModel $leadModel
      * @param FieldModel $leadFieldModel
      */
-    public function __construct(IpLookupHelper $ipLookupHelper, LeadModel $leadModel, FieldModel $leadFieldModel)
+    public function __construct(IpLookupHelper $ipLookupHelper, LeadModel $leadModel, FieldModel $leadFieldModel, ListModel $listModel)
     {
         $this->ipLookupHelper = $ipLookupHelper;
         $this->leadModel = $leadModel;
         $this->leadFieldModel = $leadFieldModel;
+        $this->listModel      = $listModel;
     }
 
     /**
@@ -154,6 +162,22 @@ class CampaignSubscriber extends CommonSubscriber
             'eventName' => LeadEvents::ON_CAMPAIGN_TRIGGER_CONDITION,
         ];
         $event->addCondition('lead.field_value', $trigger);
+
+
+        $trigger = [
+            'label'       => 'mautic.lead.lead.events.tags',
+            'description' => 'mautic.lead.lead.events.tags_descr',
+            'formType'    => 'campaignevent_lead_tags',
+            'eventName'   => LeadEvents::ON_CAMPAIGN_TRIGGER_CONDITION,
+        ];
+        $event->addCondition('lead.tags', $trigger);
+        $trigger = [
+            'label'       => 'mautic.lead.lead.events.segments',
+            'description' => 'mautic.lead.lead.events.segments_descr',
+            'formType'    => 'campaignevent_lead_segments',
+            'eventName'   => LeadEvents::ON_CAMPAIGN_TRIGGER_CONDITION,
+        ];
+        $event->addCondition('lead.segments', $trigger);
 
         $trigger = [
             'label' => 'mautic.lead.lead.events.owner',
@@ -325,8 +349,13 @@ class CampaignSubscriber extends CommonSubscriber
         if (!$lead || !$lead->getId()) {
             return $event->setResult(false);
         }
-
-        if ($event->checkContext('lead.owner')) {
+        if ($event->checkContext('lead.tags')) {
+            $tagRepo = $this->leadModel->getTagRepository();
+            $result  = $tagRepo->checkLeadByTags($lead, $event->getConfig()['tags']);
+        } elseif ($event->checkContext('lead.segments')) {
+            $listRepo = $this->listModel->getRepository();
+            $result = $listRepo->checkLeadSegmentsByIds($lead, $event->getConfig()['segments']);
+        }elseif ($event->checkContext('lead.owner')) {
             $result = $this->leadModel->getRepository()->checkLeadOwner($lead, $event->getConfig()['owner']);
         } elseif ($event->checkContext('lead.field_value')) {
             if ($event->getConfig()['operator'] === 'date') {

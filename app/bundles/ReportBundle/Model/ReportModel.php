@@ -552,6 +552,7 @@ class ReportModel extends FormModel
             'dateTo'         => (isset($options['dateTo'])) ? $options['dateTo'] : null,
             'dynamicFilters' => (isset($options['dynamicFilters'])) ? $options['dynamicFilters'] : [],
         ];
+
         /** @var \Doctrine\DBAL\Query\QueryBuilder $query */
         $query                 = $reportGenerator->getQuery($dataOptions);
         $options['translator'] = $this->translator;
