@@ -50,12 +50,13 @@ class DynamicFiltersType extends AbstractType
                         [
                             'mautic.core.form.no'    => false,
                             'mautic.core.form.yes'   => true,
-                            'mautic.core.form.reset' => '',
+                           // 'mautic.core.form.reset' => '',
                         ],
                     ];
-
                     if (isset($options['data'][$definition['alias']])) {
-                        $args['data'] = ((int) $options['data'][$definition['alias']] == 1);
+                        $args['data'] = ((int) $options['data'][$definition['alias']] === 1);
+                    }else{
+                        $args['data'] = $filter['value'];
                     }
                     break;
                 case 'datetime':

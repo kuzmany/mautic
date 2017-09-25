@@ -553,10 +553,10 @@ class ReportModel extends FormModel
             'dynamicFilters' => (isset($options['dynamicFilters'])) ? $options['dynamicFilters'] : [],
         ];
 
+
         /** @var \Doctrine\DBAL\Query\QueryBuilder $query */
         $query                 = $reportGenerator->getQuery($dataOptions);
         $options['translator'] = $this->translator;
-
         $contentTemplate = $reportGenerator->getContentTemplate();
 
         //set what page currently on so that we can return here after form submission/cancellation
@@ -566,6 +566,7 @@ class ReportModel extends FormModel
         $parts = $query->getQueryParts();
         $order = $parts['orderBy'];
        // $query->resetQueryPart('orderBy');
+
 
         if (empty($options['ignoreGraphData'])) {
             $chartQuery            = new ChartQuery($this->em->getConnection(), $chartDateFrom, $chartDateTo);
@@ -616,11 +617,15 @@ class ReportModel extends FormModel
                 $select = $parts['select'];
 
                 // Get the count
-                $query->select('COUNT(*) as count');
-
-                $result       = $query->execute()->fetchAll();
+                if($entity->getSource() == 'leads'){
+                    $query->select('COUNT(DISTINCT l.id) as count');
+                }else {
+                    $query->select('COUNT(*) as count');
+                }
+                $queryc =  clone $query;      // $query->resetQueryPart('orderBy');
+                $queryc->resetQueryPart('groupBy');
+                $result       = $queryc->execute()->fetchAll();
                 $totalResults = (!empty($result[0]['count'])) ? $result[0]['count'] : 0;
-
                 // Set the limit and get the results
                 if ($limit > 0) {
                     $query->setFirstResult($start)
@@ -644,7 +649,7 @@ class ReportModel extends FormModel
             }
 
             if (!$paginate) {
-                $totalResults = count($data);
+          //      $totalResults = count($data);
             }
 
             // Allow plugin to manipulate the data

@@ -173,15 +173,20 @@ final class MauticReportBuilder implements ReportBuilderInterface
         // Set Content Template
         $this->contentTemplate = $event->getContentTemplate();
 
-        // Build WHERE clause
         $filtersApplied = false;
-        if (isset($options['dynamicFilters'])) {
-            $filtersApplied = $this->applyFilters($options['dynamicFilters'], $queryBuilder, $options['filters']);
+        $standardFilters = $this->entity->getFilters();
+        foreach($standardFilters as $k=>$f){
+            if($f['dynamic'] && !empty($options['dynamicFilters'][$f['column']])){
+                $standardFilters[$k] = $options['dynamicFilters'][$f['column']];
+            }
         }
 
+//        if (isset($options['dynamicFilters'])) {
+//            $filtersApplied = $this->applyFilters($options['dynamicFilters'], $queryBuilder, $options['filters']);
+//        }
         if (!$filtersApplied) {
             if (!$filterExpr = $event->getFilterExpression()) {
-                $this->applyFilters($this->entity->getFilters(), $queryBuilder, $options['filters']);
+                $this->applyFilters($standardFilters, $queryBuilder, $options['filters']);
             } else {
                 $queryBuilder->andWhere($filterExpr);
             }

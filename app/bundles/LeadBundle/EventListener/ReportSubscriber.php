@@ -314,7 +314,8 @@ class ReportSubscriber extends CommonSubscriber
 
         switch ($context) {
             case 'leads':
-                $qb->from(MAUTIC_TABLE_PREFIX.'leads', 'l');
+                $qb->from(MAUTIC_TABLE_PREFIX.'leads', 'l')
+                ->groupBy('l.id');
 
                 if ($event->hasColumn(['u.first_name', 'u.last_name']) || $event->hasFilter(['u.first_name', 'u.last_name'])) {
                     $qb->leftJoin('l', MAUTIC_TABLE_PREFIX.'users', 'u', 'u.id = l.owner_id');
