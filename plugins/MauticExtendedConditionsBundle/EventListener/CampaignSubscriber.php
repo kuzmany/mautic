@@ -523,6 +523,9 @@ class CampaignSubscriber extends CommonSubscriber
     public function onCampaignTriggerAction(
         CampaignExecutionEvent $event
     ) {
+
+        static $alreadyRemoved = [];
+
         $lead = $event->getLead();
         $eventConfig = $event->getConfig();
         $eventDetails = $event->getEventDetails();
@@ -541,16 +544,27 @@ class CampaignSubscriber extends CommonSubscriber
             }
 
         } elseif ($event->checkContext('extendedconditions.campaign_logs_remove')) {
+            $removeAllLogs = $eventConfig['all'];
             $campaigns = $eventConfig['campaigns'];
             foreach ($campaigns as $campaign) {
                 $qb = $this->db;
-                $qb->delete(
-                    MAUTIC_TABLE_PREFIX.'campaign_lead_event_log',
-                    [
-                        'lead_id' => (int)$lead->getId(),
-                        'campaign_id' => $campaign,
-                    ]
-                );
+                if($removeAllLogs && !isset($alreadyRemoved[$campaign])){
+                    $qb->delete(
+                        MAUTIC_TABLE_PREFIX.'campaign_lead_event_log',
+                        [
+                            'campaign_id' => $campaign,
+                        ]
+                    );
+                    $alreadyRemoved[$campaign] = true;
+                }else {
+                    $qb->delete(
+                        MAUTIC_TABLE_PREFIX.'campaign_lead_event_log',
+                        [
+                            'lead_id' => (int)$lead->getId(),
+                            'campaign_id' => $campaign,
+                        ]
+                    );
+                }
             }
         } elseif ($event->checkContext('extendedconditions.campaign_activation')) {
             $ids = [1 => $eventConfig['enable'], 0 => $eventConfig['disable']];

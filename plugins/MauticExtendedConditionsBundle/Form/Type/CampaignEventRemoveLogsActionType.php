@@ -29,7 +29,7 @@ class CampaignEventRemoveLogsActionType extends AbstractType
 
         $builder->add(
             'campaigns',
-            'campaign_list', [
+            'all_campaign_list', [
             'label'      => 'plugin.extended.conditions.camapign.from',
             'attr'       => [
                 'class'   => 'form-control',
@@ -37,6 +37,15 @@ class CampaignEventRemoveLogsActionType extends AbstractType
             'multiple'   => true,
             'required' => false,
         ]);
+
+        $builder->add(
+            'all',
+            'yesno_button_group',
+            [
+                'label' => 'plugin.extended.conditions.camapign.remove.all',
+                'data'       => !empty($options['data']['all']) ? true : false,
+            ]
+        );
 
     }
     /**

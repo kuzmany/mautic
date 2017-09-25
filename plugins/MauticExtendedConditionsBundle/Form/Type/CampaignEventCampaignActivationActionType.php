@@ -49,6 +49,8 @@ class CampaignEventCampaignActivationActionType extends AbstractType
             'required' => false,
         ]);
 
+
+
     }
     /**
      * {@inheritdoc}
