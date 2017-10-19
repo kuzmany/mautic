@@ -134,6 +134,11 @@ class PageSubscriber extends CommonSubscriber
                 //create a tracking cookie with a expire of two years
               //  $this->cookieHelper->setCookie('mtc_id1', $lead->getId(), 31536000, '/', '.eset.com', 0);
                 setcookie("mtc_id", $lead->getId(), time()+31536000, "/", ".eset.com", 0);
+                $identified = 1;
+                if($lead->isAnonymous()){
+                    $identified = 0;
+                }
+                setcookie("mtc_ident", $identified, time()+31536000, "/", ".eset.com", 0);
             }
         }
     }
