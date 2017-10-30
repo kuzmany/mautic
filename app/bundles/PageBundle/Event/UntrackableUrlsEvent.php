@@ -24,6 +24,7 @@ class UntrackableUrlsEvent extends Event
     private $doNotTrack = [
         '{webview_url}',
         '{unsubscribe_url}',
+        '|URL|',
         '{trackable=(.*?)}',
         // Ignore lead fields with URLs for tracking since each is unique
         '^{leadfield=(.*?)}',
