@@ -55,10 +55,9 @@ class NameToVocativeConverter
      */
     public function findAndReplace($value)
     {
-        //$tokens = $this->vocalizeByShortCodes($value);
+        $tokens = $this->vocalizeByShortCodes($value);
+        // this lines is not necessary now
       //  $value = $this->removeEmptyShortCodes($value);
-   print_r($this->vocalizeByShortCodes($value));
-        die(print_r($this->removeEmptyShortCodes($value)));
         return $tokens;
     }
 
