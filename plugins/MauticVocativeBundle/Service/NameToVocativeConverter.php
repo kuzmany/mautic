@@ -1,4 +1,5 @@
 <?php
+
 namespace MauticPlugin\MauticVocativeBundle\Service;
 
 use MauticPlugin\MauticVocativeBundle\CzechVocative\CzechName;
@@ -18,8 +19,9 @@ class NameToVocativeConverter
     }
 
     /**
-     * @param string $name
+     * @param string                     $name
      * @param NameToVocativeOptions|null $options
+     *
      * @return string
      */
     public function toVocative($name, NameToVocativeOptions $options = null)
@@ -29,9 +31,9 @@ class NameToVocativeConverter
                 if ($options->hasEmptyNameAlias()) {
                     $name = $options->getEmptyNameAlias();
                 }
-            } else if ($options->hasMaleAlias() && $this->name->isMale($name)) {
+            } elseif ($options->hasMaleAlias() && $this->name->isMale($name)) {
                 $name = $options->getMaleAlias();
-            } else if ($options->hasFemaleAlias() && !$this->name->isMale($name)) {
+            } elseif ($options->hasFemaleAlias() && !$this->name->isMale($name)) {
                 $name = $options->getFemaleAlias();
             }
         }
@@ -49,14 +51,16 @@ class NameToVocativeConverter
 
     /**
      * Searching for [name|vocative] (enclosed by native or URL encoded square brackets,
-     * with name optionally enclosed by [square brackets] as well to match email preview
+     * with name optionally enclosed by [square brackets] as well to match email preview.
+     *
      * @param string $value
+     *
      * @return string
      */
     public function findAndReplace($value)
     {
         $tokens = $this->vocalizeByShortCodes($value);
-        // this lines is not necessary now
+        // this lines is not necessary now, hope :)
       //  $value = $this->removeEmptyShortCodes($value);
         return $tokens;
     }
@@ -65,6 +69,7 @@ class NameToVocativeConverter
      * Used regexp is split to parts only because of logical grouping to easier read.
      *
      * @param string $value
+     *
      * @return string
      */
     private function vocalizeByShortCodes($value)
@@ -80,12 +85,12 @@ class NameToVocativeConverter
                         [ // first
                             '[\[]\s*', // enclosed by brackets
                             '(?<toVocative1>', $toVocativeRegexp = '(?:[^\[\]]*[^\s\[\]]|)', ')', // without any bracket, ending by non-bracket and non-white-character, or emptiness
-                            '\s*[\]]', // enclosed by brackets
+                            '\s*[\]]'// enclosed by brackets
                         ],
                         '|', // or
                         [ // second
                             '(?<toVocative2>', $toVocativeRegexp, ')' // without enclosing brackets
-                        ]
+                        ],
                     ],
                     ')', // end of combinations group
                     '\s*', // trailing white characters are trimmed
@@ -101,20 +106,20 @@ class NameToVocativeConverter
                 ],
                 '(?:\]|%5D)', // closing bracket, native or URL encoded
             ],
-            ')'
+            ')',
         ];
-        $regexp = '~' . RecursiveImplode::implode($regexpParts) . '~u'; // u = UTF-8
+        $regexp = '~'.RecursiveImplode::implode($regexpParts).'~u'; // u = UTF-8
         $tokens = [];
         if (preg_match_all($regexp, $value, $matches) > 0) {
             foreach ($matches['toReplace'] as $index => $toReplace) {
                 $toVocative = '';
                 if ($matches['toVocative1'][$index] !== '') {
                     $toVocative = $matches['toVocative1'][$index];
-                } else if ($matches['toVocative2'][$index] !== '') {
+                } elseif ($matches['toVocative2'][$index] !== '') {
                     $toVocative = $matches['toVocative2'][$index];
                 }
-                $stringOptions = $matches['options'][$index];
-                $tokens[$toReplace] =  $this->toVocative($toVocative, NameToVocativeOptions::createFromString($stringOptions));
+                $stringOptions      = $matches['options'][$index];
+                $tokens[$toReplace] = $this->toVocative($toVocative, NameToVocativeOptions::createFromString($stringOptions));
 //                $value = str_replace(
 //                    $toReplace,
 //                    $this->toVocative($toVocative, NameToVocativeOptions::createFromString($stringOptions)),
@@ -122,6 +127,7 @@ class NameToVocativeConverter
 //                );
             }
         }
+
         return $tokens;
     }
 
@@ -136,15 +142,15 @@ class NameToVocativeConverter
                 '\s*\|\s*vocative\s*', // pipe and "vocative" keyword, optionally surrounded by white characters
                 '(?:\s*\([^)]*\))?', // optional options
                 '\s*', // optional trailing white character(s)
-                '(?:\]|%5D)' // closing bracket, native or URL encoded
+                '(?:\]|%5D)', // closing bracket, native or URL encoded
             ],
-            ')'
+            ')',
         ];
-        $regexp = '~' . RecursiveImplode::implode($regexpParts) . '~u'; // u = UTF-8
+        $regexp = '~'.RecursiveImplode::implode($regexpParts).'~u'; // u = UTF-8
         $tokens = [];
         if (preg_match_all($regexp, $value, $matches) > 0) {
             foreach ($matches['toReplace'] as $index => $toReplace) {
-                $toKeep = $matches['toKeep'][$index];
+                $toKeep             = $matches['toKeep'][$index];
                 $tokens[$toReplace] = $toKeep;
                // $value = str_replace($toReplace, $toKeep, $value);
             }
