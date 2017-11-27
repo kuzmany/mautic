@@ -1372,7 +1372,7 @@ class LeadModel extends FormModel
         $fields = $this->leadFieldModel->getFieldListWithProperties($mergeFrom);
         foreach ($fields as $alias => $field) {
             if (empty($field['defaultValue']) && !empty($field['value'])) {
-                $mergeWith->addUpdatedField($alias, $field['value']);
+                 $mergeWith->addUpdatedField($alias, $field['value']);
                 $this->logger->debug('LEAD: Updated '.$alias.' = '.$field['value']);
             }
         }
