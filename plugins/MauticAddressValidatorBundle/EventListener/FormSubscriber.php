@@ -18,6 +18,7 @@ use Mautic\FormBundle\Event as Events;
 use Mautic\LeadBundle\Model\LeadModel;
 use Mautic\FormBundle\Event\SubmissionEvent;
 use Mautic\CoreBundle\Helper\CoreParametersHelper;
+use MauticPlugin\MauticAddressValidatorBundle\AddressValidatorEvents;
 use MauticPlugin\MauticAddressValidatorBundle\Helper\AddressValidatorHelper;
 
 
@@ -38,7 +39,7 @@ class FormSubscriber extends CommonSubscriber
     protected $coreParametersHelper;
 
     /**
-     * @var AddressValidatorHelper $addressValidatorHelper;
+     * @var AddressValidatorHelper $addressValidatorHelper ;
      */
     protected $addressValidatorHelper;
 
@@ -47,8 +48,11 @@ class FormSubscriber extends CommonSubscriber
      *
      * @param LeadModel $leadModel
      */
-    public function __construct(LeadModel $leadModel, CoreParametersHelper $coreParametersHelper, AddressValidatorHelper $addressValidatorHelper)
-    {
+    public function __construct(
+        LeadModel $leadModel,
+        CoreParametersHelper $coreParametersHelper,
+        AddressValidatorHelper $addressValidatorHelper
+    ) {
         $this->leadModel = $leadModel;
         $this->coreParametersHelper = $coreParametersHelper;
         $this->addressValidatorHelper = $addressValidatorHelper;
@@ -62,6 +66,7 @@ class FormSubscriber extends CommonSubscriber
         return [
             FormEvents::FORM_ON_BUILD => ['onFormBuilder', 0],
             FormEvents::FORM_ON_SUBMIT => ['onFormSubmit', 0],
+            AddressValidatorEvents::ON_FORM_VALIDATE_ACTION => ['onFormValidate', 0],
         ];
     }
 
@@ -128,7 +133,6 @@ class FormSubscriber extends CommonSubscriber
                 'template' => 'MauticAddressValidatorBundle:SubscribedEvents\Field:addressvalidator.html.php',
                 'builderOptions' => [
                     'addLeadFieldList' => false,
-                    'addIsRequired' => false,
                     'addDefaultValue' => false,
                     'addSaveResult' => true,
                     'addShowLabel' => true,
@@ -143,6 +147,41 @@ class FormSubscriber extends CommonSubscriber
             ];
 
             $event->addFormField('plugin.addressvalidator', $action);
+
+            $validator = [
+                'eventName' => AddressValidatorEvents::ON_FORM_VALIDATE_ACTION,
+                'fieldType' => 'plugin.addressvalidator',
+            ];
+
+            $event->addValidator('plugin.addressvalidator.validate', $validator);
+
+        }
+    }
+
+    /**
+     * @param Events\ValidationEvent $event
+     *
+     * @throws \Symfony\Component\DependencyInjection\Exception\ServiceCircularReferenceException
+     * @throws \Symfony\Component\DependencyInjection\Exception\ServiceNotFoundException
+     */
+    public function onFormValidate(Events\ValidationEvent $event)
+    {
+        $field = $event->getField();
+        if ($field->getType() == 'plugin.addressvalidator') {
+            $values = $this->addressValidatorHelper->parseDataFromRequest($event->getValue());
+            $result = $this->addressValidatorHelper->validation(false, null, $values);
+            if (!empty($result)) {
+                $result = \GuzzleHttp\json_decode($result, true);
+                if (empty($result['status'])) {
+                    $result['status'] = '';
+                }
+
+                if ($result['status'] == 'INVALID' || $result['status'] == 'SUSPECT') {
+                    $event->failedValidation(
+                        'bleeee'
+                    );
+                }
+            }
         }
     }
 

@@ -249,8 +249,6 @@ class FormFieldAddressValidatordType extends AbstractType
             ]
         );
 
-
-
         $builder->add(
             'labelCountry',
             'text',
@@ -355,7 +353,17 @@ class FormFieldAddressValidatordType extends AbstractType
         );
 
 
-
+        $builder->add(
+            'labelCorrectedAddress',
+            'text',
+            [
+                'label' => 'plugin.addressvalidator.field.label.corrected.address',
+                'label_attr' => ['class' => 'control-label'],
+                'attr' => [
+                    'class' => 'form-control',
+                ],
+            ]
+        );
 
     }
 

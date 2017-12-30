@@ -45,7 +45,14 @@ class AddressValidatorHelper
     }
 
 
-    public function validation($check = false, $value = null)
+    /**
+     * Validation
+     * @param bool $check
+     * @param null $value
+     * @param array $data
+     * @return bool|string|void
+     */
+    public function validation($check = false, $value = null, $data = [])
     {
 
         $integration = $this->integrationHelper->getIntegrationObject('AddressValidator');
@@ -66,7 +73,7 @@ class AddressValidatorHelper
         try {
             $data = $this->connector->post(
                 $featureSettings['apiUrl'],
-                $this->request->request->all(),
+                !empty($data) ? $data : $this->request->request->all(),
                 array(
                     'Authorization' => 'Token '.($value ? $value : $featureSettings['validatorApiKey']
 
@@ -93,6 +100,20 @@ class AddressValidatorHelper
         } else {
             return json_encode(['address_validated' => false]);
         }
+    }
 
+    /**
+     * @param array $data
+     * @return array
+     */
+    public function parseDataFromRequest(array $data){
+
+        $requestData = [];
+        $requestData['StreetAddress']=  (isset($data['address1'])? $data['address1'] :'').' '.(isset($data['address2'])? $data['address2'] :'');
+        $requestData['City'] = (isset($data['city'])? $data['city'] :'');
+        $requestData['State'] = (isset($data['state'])? $data['state'] :'');
+        $requestData['PostalCode'] = (isset($data['zip'])? $data['zip'] :'');
+        $requestData['CountryCode'] = (isset($data['country'])? $data['country'] :'');
+        return $requestData;
     }
 }

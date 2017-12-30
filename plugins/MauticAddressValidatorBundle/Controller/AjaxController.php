@@ -57,7 +57,7 @@ $(document).ready(function () {
 
     var baseUrl = "{$apiUrl}";
     var mauticUrl =   "{$url}";
-    $('.addressvalidatorid').each(function () {
+    $('.addressvalidatoridd').each(function () {
 
 
         var formName = $(this).next().val();

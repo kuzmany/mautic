@@ -24,7 +24,17 @@ foreach ($field['properties'] as $key => $property) {
 }
 $inputs = '';
 foreach ($props as $key => $field2) {
-    $inputAttr = 'class="mauticform-input " type="text"';
+
+    if($key=='correctedaddress'){
+        $inputType=$containerType='checkbox';
+        $prefix = 'checkboxgrp-';
+
+    }else{
+        $prefix = '';
+        $inputType='input';
+    }
+
+    $inputAttr = 'class="mauticform-'.$prefix.$inputType.'" type="'.$containerType.'"';
     if (empty($inForm)) {
         $inputAttr .= 'name="mauticform['.$field['alias'].']['.$key.']"';
     }
@@ -45,7 +55,7 @@ foreach ($props as $key => $field2) {
 HTML;
         if ($field['showLabel']) {
             $inputs .= <<<HTML
-<label class="mauticform-label" for="{$idAttr}" >{$view->escape($field2['label'])}</label>
+<label class="mauticform-{$prefix}label" for="{$idAttr}" >{$view->escape($field2['label'])}</label>
 HTML;
         }
 
@@ -68,7 +78,6 @@ HTML;
 
         } else {
             $inputs .= <<<HTML
-
            <input placeholder="{$placeholderAttr}" id="{$idAttr}"  {$inputAttr} type="$containerType" />
 HTML;
         }
