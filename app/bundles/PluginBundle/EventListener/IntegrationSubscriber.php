@@ -42,35 +42,31 @@ class IntegrationSubscriber extends CommonSubscriber
      */
     public function onRequest(PluginIntegrationRequestEvent $event)
     {
-        $headers = (count($event->getHeaders())) ? implode(PHP_EOL, array_map(function ($k, $v) {
-            return "$k: $v";
-        }, array_keys($event->getHeaders()), array_values($event->getHeaders()))) : '';
+        $name     = strtoupper($event->getIntegrationName());
+        $headers  = var_export($event->getHeaders(), true);
+        $params   = var_export($event->getParameters(), true);
+        $settings = var_export($event->getSettings(), true);
 
-        $params = (count($event->getParameters())) ? implode(PHP_EOL, array_map(function ($k, $v) {
-            if (is_object($v)) {
-                return "$k=(object)";
-            }
-
-            return "$k=$v";
-        }, array_keys($event->getParameters()), array_values($event->getParameters()))) : '';
-
-        if (defined('IN_MAUTIC_CONSOLE') && defined('MAUTIC_CONSOLE_VERBOSITY') && MAUTIC_CONSOLE_VERBOSITY >= ConsoleOutput::VERBOSITY_VERY_VERBOSE) {
+        if (defined('IN_MAUTIC_CONSOLE') && defined('MAUTIC_CONSOLE_VERBOSITY')
+            && MAUTIC_CONSOLE_VERBOSITY >= ConsoleOutput::VERBOSITY_VERY_VERBOSE) {
             $output = new ConsoleOutput();
             $output->writeln('<fg=magenta>REQUEST:</>');
             $output->writeln('<fg=white>'.$event->getMethod().' '.$event->getUrl().'</>');
             $output->writeln('<fg=cyan>'.$headers.'</>');
             $output->writeln('');
             $output->writeln('<fg=cyan>'.$params.'</>');
-        } elseif ('dev' === MAUTIC_ENV) {
-            $this->logger->debug('INTEGRATION REQUEST: '.$event->getMethod().' '.$event->getUrl());
+            $output->writeln('');
+            $output->writeln('<fg=cyan>'.$settings.'</>');
+        } else {
+            $this->logger->debug("$name REQUEST URL: ".$event->getMethod().' '.$event->getUrl());
             if ('' !== $headers) {
-                $this->logger->debug("REQUEST HEADERS: \n".$headers.PHP_EOL);
+                $this->logger->debug("$name REQUEST HEADERS: \n".$headers.PHP_EOL);
             }
             if ('' !== $params) {
-                $this->logger->debug("REQUEST PARAMS: \n".$params.PHP_EOL);
+                $this->logger->debug("$name REQUEST PARAMS: \n".$params.PHP_EOL);
             }
-            if (!empty($event->getSettings())) {
-                $this->logger->debug("REQUEST SETTINGS: \n".json_encode($event->getSettings(), JSON_PRETTY_PRINT).PHP_EOL);
+            if ('' !== $settings) {
+                $this->logger->debug("$name REQUEST SETTINGS: \n".$settings.PHP_EOL);
             }
         }
     }
@@ -82,6 +78,8 @@ class IntegrationSubscriber extends CommonSubscriber
     {
         /** @var Response $response */
         $response = $event->getResponse();
+        $headers  = var_export($response->headers, true);
+        $name     = strtoupper($event->getIntegrationName());
         $isJson   = isset($response->headers['Content-Type']) && preg_match('/application\/json/', $response->headers['Content-Type']);
         $json     = $isJson ? str_replace('    ', '  ', json_encode(json_decode($response->body), JSON_PRETTY_PRINT)) : '';
         $xml      = '';
@@ -94,11 +92,8 @@ class IntegrationSubscriber extends CommonSubscriber
             $xml = $doc->saveXML();
         }
 
-        $headers = implode(PHP_EOL, array_map(function ($k, $v) {
-            return "$k: $v";
-        }, array_keys($response->headers), array_values($response->headers)));
-
-        if (defined('IN_MAUTIC_CONSOLE') && defined('MAUTIC_CONSOLE_VERBOSITY') && MAUTIC_CONSOLE_VERBOSITY >= ConsoleOutput::VERBOSITY_VERY_VERBOSE) {
+        if (defined('IN_MAUTIC_CONSOLE') && defined('MAUTIC_CONSOLE_VERBOSITY')
+            && MAUTIC_CONSOLE_VERBOSITY >= ConsoleOutput::VERBOSITY_VERY_VERBOSE) {
             $output = new ConsoleOutput();
             $output->writeln(sprintf('<fg=magenta>RESPONSE: %d</>', $response->code));
             $output->writeln('<fg=cyan>'.$headers.'</>');
@@ -111,20 +106,22 @@ class IntegrationSubscriber extends CommonSubscriber
             } else {
                 $output->writeln('<fg=cyan>'.$response->body.'</>');
             }
-        } elseif ('dev' === MAUTIC_ENV) {
-            $this->logger->debug('RESPONSE CODE: '.$response->code);
+        } else {
+            $this->logger->debug("$name RESPONSE CODE: {$response->code}");
             if ('' !== $headers) {
-                $this->logger->debug("RESPONSE HEADERS: \n".$headers.PHP_EOL);
+                $this->logger->debug("$name RESPONSE HEADERS: \n".$headers.PHP_EOL);
             }
             if ('' !== $json || '' !== $xml || '' !== $response->body) {
-                $this->logger->debug('RESPONSE BODY:');
+                $body = "$name RESPONSE BODY: ";
                 if ($isJson) {
-                    $this->logger->debug($json."\n");
+                    $body .= $json;
                 } elseif ($isXml) {
-                    $this->logger->debug($xml."\n");
+                    $body .= $xml;
                 } else {
-                    $this->logger->debug($response->body."\n");
+                    $body = $response->body;
                 }
+
+                $this->logger->debug($body);
             }
         }
     }

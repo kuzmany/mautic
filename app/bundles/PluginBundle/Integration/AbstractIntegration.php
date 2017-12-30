@@ -19,6 +19,7 @@ use Mautic\CoreBundle\Helper\CacheStorageHelper;
 use Mautic\CoreBundle\Helper\EncryptionHelper;
 use Mautic\CoreBundle\Helper\PathsHelper;
 use Mautic\CoreBundle\Model\NotificationModel;
+use Mautic\LeadBundle\Entity\DoNotContact;
 use Mautic\LeadBundle\Entity\Lead;
 use Mautic\LeadBundle\Model\CompanyModel;
 use Mautic\LeadBundle\Model\FieldModel;
@@ -32,7 +33,9 @@ use Mautic\PluginBundle\Event\PluginIntegrationFormDisplayEvent;
 use Mautic\PluginBundle\Event\PluginIntegrationKeyEvent;
 use Mautic\PluginBundle\Event\PluginIntegrationRequestEvent;
 use Mautic\PluginBundle\Exception\ApiErrorException;
+use Mautic\PluginBundle\Helper\Cleaner;
 use Mautic\PluginBundle\Helper\oAuthHelper;
+use Mautic\PluginBundle\Model\IntegrationEntityModel;
 use Mautic\PluginBundle\PluginEvents;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
@@ -50,14 +53,16 @@ use Symfony\Component\Translation\TranslatorInterface;
  *
  * @method pushLead(Lead $lead, array $config = [])
  * @method pushLeadToCampaign(Lead $lead, mixed $integrationCampaign, mixed $integrationMemberStatus)
- * @method getLeads(array $params, string $query, &$executed, array $result = [],  $object = 'Lead')
+ * @method getLeads(array $params, string $query, &$executed, array $result = [], $object = 'Lead')
  * @method getCompanies(array $params)
  */
 abstract class AbstractIntegration
 {
-    const FIELD_TYPE_STRING = 'string';
-    const FIELD_TYPE_BOOL   = 'boolean';
-    const FIELD_TYPE_NUMBER = 'number';
+    const FIELD_TYPE_STRING   = 'string';
+    const FIELD_TYPE_BOOL     = 'boolean';
+    const FIELD_TYPE_NUMBER   = 'number';
+    const FIELD_TYPE_DATETIME = 'datetime';
+    const FIELD_TYPE_DATE     = 'date';
 
     /**
      * @var bool
@@ -187,6 +192,16 @@ abstract class AbstractIntegration
     protected $persistIntegrationEntities = [];
 
     /**
+     * @var IntegrationEntityModel
+     */
+    protected $integrationEntityModel;
+
+    /**
+     * @var array
+     */
+    protected $commandParameters = [];
+
+    /**
      * AbstractIntegration constructor.
      */
     public function __construct(MauticFactory $factory = null)
@@ -198,21 +213,22 @@ abstract class AbstractIntegration
          *            integration pass to set all of these properties
          */
         if ($factory) {
-            $this->factory           = $factory;
-            $this->dispatcher        = $factory->getDispatcher();
-            $this->cache             = $factory->getHelper('cache_storage')->getCache($this->getName());
-            $this->em                = $factory->getEntityManager();
-            $this->session           = (!defined('IN_MAUTIC_CONSOLE')) ? $factory->getSession() : null;
-            $this->request           = $factory->getRequest();
-            $this->router            = $factory->getRouter();
-            $this->translator        = $factory->getTranslator();
-            $this->logger            = $factory->getLogger();
-            $this->encryptionHelper  = $factory->getHelper('encryption');
-            $this->leadModel         = $factory->getModel('lead');
-            $this->companyModel      = $factory->getModel('lead.company');
-            $this->pathsHelper       = $factory->getHelper('paths');
-            $this->notificationModel = $factory->getModel('core.notification');
-            $this->fieldModel        = $factory->getModel('lead.field');
+            $this->factory                = $factory;
+            $this->dispatcher             = $factory->getDispatcher();
+            $this->cache                  = $factory->getHelper('cache_storage')->getCache($this->getName());
+            $this->em                     = $factory->getEntityManager();
+            $this->session                = (!defined('IN_MAUTIC_CONSOLE')) ? $factory->getSession() : null;
+            $this->request                = $factory->getRequest();
+            $this->router                 = $factory->getRouter();
+            $this->translator             = $factory->getTranslator();
+            $this->logger                 = $factory->getLogger();
+            $this->encryptionHelper       = $factory->getHelper('encryption');
+            $this->leadModel              = $factory->getModel('lead');
+            $this->companyModel           = $factory->getModel('lead.company');
+            $this->pathsHelper            = $factory->getHelper('paths');
+            $this->notificationModel      = $factory->getModel('core.notification');
+            $this->fieldModel             = $factory->getModel('lead.field');
+            $this->integrationEntityModel = $factory->getModel('plugin.integration_entity');
         }
 
         $this->init();
@@ -342,6 +358,19 @@ abstract class AbstractIntegration
     }
 
     /**
+     * @param IntegrationEntityModel $integrationModel
+     */
+    public function setIntegrationEntityModel(IntegrationEntityModel $integrationEntityModel)
+    {
+        $this->integrationEntityModel = $integrationEntityModel;
+    }
+
+    public function setCommandParameters(array $params)
+    {
+        $this->commandParameters = $params;
+    }
+
+    /**
      * @return CacheStorageHelper
      */
     public function getCache()
@@ -383,6 +412,16 @@ abstract class AbstractIntegration
     public function getPriority()
     {
         return 9999;
+    }
+
+    /**
+     * Determines if DNC records should be updated by date or by priority.
+     *
+     * @return int
+     */
+    public function updateDncByDate()
+    {
+        return false;
     }
 
     /**
@@ -639,9 +678,15 @@ abstract class AbstractIntegration
 
         $serialized = serialize($keys);
         if (empty($decryptedKeys[$serialized])) {
+            $decrypted = $this->decryptApiKeys($keys, true);
+            if (count($keys) !== 0 && count($decrypted) === 0) {
+                $decrypted = $this->decryptApiKeys($keys);
+                $this->encryptAndSetApiKeys($decrypted, $entity);
+                $this->em->flush($entity);
+            }
             $decryptedKeys[$serialized] = $this->dispatchIntegrationKeyEvent(
                 PluginEvents::PLUGIN_ON_INTEGRATION_KEYS_DECRYPT,
-                $this->decryptApiKeys($keys)
+                $decrypted
             );
         }
 
@@ -671,15 +716,19 @@ abstract class AbstractIntegration
      * Decrypts API keys.
      *
      * @param array $keys
+     * @param bool  $mainDecryptOnly
      *
      * @return array
      */
-    public function decryptApiKeys(array $keys)
+    public function decryptApiKeys(array $keys, $mainDecryptOnly = false)
     {
         $decrypted = [];
 
         foreach ($keys as $name => $key) {
-            $key              = $this->encryptionHelper->decrypt($key);
+            $key = $this->encryptionHelper->decrypt($key, $mainDecryptOnly);
+            if ($key === false) {
+                return [];
+            }
             $decrypted[$name] = $key;
         }
 
@@ -944,7 +993,7 @@ abstract class AbstractIntegration
         // Check for custom content-type header
         if (!empty($settings['content_type'])) {
             $settings['encoding_headers_set'] = true;
-            $headers[]                        = "Content-type: {$settings['content_type']}";
+            $headers[]                        = "Content-Type: {$settings['content_type']}";
         }
 
         if ($method !== 'GET') {
@@ -961,6 +1010,8 @@ abstract class AbstractIntegration
                         }
                     }
                 }
+            } elseif (isset($settings['post_data'])) {
+                $parameters = $settings['post_data'];
             }
         }
 
@@ -973,8 +1024,8 @@ abstract class AbstractIntegration
             CURLOPT_USERAGENT      => $this->getUserAgent(),
         ];
 
-        if (isset($settings['curl_options'])) {
-            $options = array_merge($options, $settings['curl_options']);
+        if (isset($settings['curl_options']) && is_array($settings['curl_options'])) {
+            $options = $settings['curl_options'] + $options;
         }
 
         if (isset($settings['ssl_verifypeer'])) {
@@ -1267,7 +1318,7 @@ abstract class AbstractIntegration
         $defaultUrl = $this->router->generate(
             'mautic_integration_auth_callback',
             ['integration' => $this->getName()],
-            true //absolute
+            UrlGeneratorInterface::ABSOLUTE_URL //absolute
         );
 
         /** @var PluginIntegrationAuthCallbackUrlEvent $event */
@@ -1301,7 +1352,7 @@ abstract class AbstractIntegration
 
                     if ($state && $state !== $givenState) {
                         $this->session->remove($this->getName().'_csrf_token');
-                        throw new ApiErrorException('mautic.integration.auth.invalid.state');
+                        throw new ApiErrorException($this->translator->trans('mautic.integration.auth.invalid.state'));
                     }
                 }
 
@@ -1647,7 +1698,8 @@ abstract class AbstractIntegration
         $missingRequiredFields  = [];
 
         // add special case in order to prevent it from being removed
-        $mauticLeadFields['mauticContactTimelineLink'] = '';
+        $mauticLeadFields['mauticContactTimelineLink']         = '';
+        $mauticLeadFields['mauticContactIsContactableByEmail'] = '';
 
         //make sure now non-existent aren't saved
         $settings = [
@@ -1728,14 +1780,15 @@ abstract class AbstractIntegration
     }
 
     /**
-     * @param array $fields
+     * @param array  $fields
+     * @param string $fieldType
      *
      * @return array
      */
-    public function getRequiredFields(array $fields, $fieldType)
+    public function getRequiredFields(array $fields, $fieldType = '')
     {
-        //use $fieldType to determine is email should be required. we use email as unique identifier for contacts only,
-        // if any other fieldtype use integrations own field types
+        //use $fieldType to determine if email should be required. we use email as unique identifier for contacts only,
+        // if any other fieldType use integrations own field types
         $requiredFields = [];
         foreach ($fields as $field => $details) {
             if ('leadFields' === $fieldType) {
@@ -1790,6 +1843,8 @@ abstract class AbstractIntegration
 
         if ($object) {
             $availableFields = $availableFields[$config['object']];
+        } else {
+            $availableFields = (isset($availableFields[0])) ? $availableFields[0] : $availableFields;
         }
 
         $unknown = $this->translator->trans('mautic.integration.form.lead.unknown');
@@ -1809,9 +1864,17 @@ abstract class AbstractIntegration
 
                     continue;
                 }
+                if ('mauticContactIsContactableByEmail' === $leadFields[$integrationKey]) {
+                    $matched[$integrationKey] = $this->getLeadDoNotContact($leadId);
+
+                    continue;
+                }
                 $mauticKey = $leadFields[$integrationKey];
                 if (isset($fields[$mauticKey]) && $fields[$mauticKey]['value'] !== '' && $fields[$mauticKey]['value'] !== null) {
-                    $matched[$matchIntegrationKey] = $this->cleanPushData($fields[$mauticKey]['value'], (isset($field['type'])) ? $field['type'] : 'string');
+                    $matched[$matchIntegrationKey] = $this->cleanPushData(
+                        $fields[$mauticKey]['value'],
+                        (isset($field['type'])) ? $field['type'] : 'string'
+                    );
                 }
             }
 
@@ -1824,14 +1887,14 @@ abstract class AbstractIntegration
     }
 
     /**
-     * Match lead data with integration fields.
+     * Match Company data with integration fields.
      *
-     * @param $lead
+     * @param $entity
      * @param $config
      *
      * @return array
      */
-    public function populateCompanyData($lead, $config = [])
+    public function populateCompanyData($entity, $config = [])
     {
         if (!isset($config['companyFields'])) {
             $config = $this->mergeConfigToFeatureSettings($config);
@@ -1841,10 +1904,10 @@ abstract class AbstractIntegration
             }
         }
 
-        if ($lead instanceof Lead) {
-            $fields = $lead->getPrimaryCompany();
+        if ($entity instanceof Lead) {
+            $fields = $entity->getPrimaryCompany();
         } else {
-            $fields = $lead['primaryCompany'];
+            $fields = $entity['primaryCompany'];
         }
 
         $companyFields   = $config['companyFields'];
@@ -2458,16 +2521,7 @@ abstract class AbstractIntegration
      */
     public function cleanPushData($value, $fieldType = self::FIELD_TYPE_STRING)
     {
-        $clean = strip_tags(html_entity_decode($value, ENT_QUOTES));
-
-        switch ($fieldType) {
-            case self::FIELD_TYPE_BOOL:
-                return (bool) $clean;
-            case self::FIELD_TYPE_NUMBER:
-                return (float) $clean;
-            default:
-                return $clean;
-        }
+        return Cleaner::clean($value, $fieldType);
     }
 
     /**
@@ -2571,8 +2625,8 @@ abstract class AbstractIntegration
                     [],
                     false
                 );
-
                 $entity->setLastSyncDate($this->getLastSyncDate($internalEntityObject, $params, false));
+                $integrationEntities[$internalEntityId] = $entity;
             } else {
                 $integrationEntities[$internalEntityId]->setLastSyncDate($this->getLastSyncDate($internalEntityObject, $params, false));
             }
@@ -2591,7 +2645,8 @@ abstract class AbstractIntegration
      */
     protected function getLastSyncDate($entity = null, $params = [], $ignoreEntityChanges = true)
     {
-        if (!$ignoreEntityChanges && isset($params['start']) && $entity && method_exists($entity, 'getChanges')) {
+        $isNew = method_exists($entity, 'isNew') && $entity->isNew();
+        if (!$isNew && !$ignoreEntityChanges && isset($params['start']) && $entity && method_exists($entity, 'getChanges')) {
             // Check to see if this contact was modified prior to the fetch so that the push catches it
             /** @var FormEntity $entity */
             $changes = $entity->getChanges(true);
@@ -2648,7 +2703,7 @@ abstract class AbstractIntegration
                 if (isset($fields['i_'.$i]) && isset($fields['m_'.$i])) {
                     $formattedFields[$fields['i_'.$i]] = $fields['m_'.$i];
                 } else {
-                    break;
+                    continue;
                 }
             }
         }
@@ -2658,5 +2713,76 @@ abstract class AbstractIntegration
         }
 
         return $fields;
+    }
+
+    /**
+     * @param        $leadId
+     * @param string $channel
+     *
+     * @return int
+     */
+    public function getLeadDoNotContact($leadId, $channel = 'email')
+    {
+        $isDoNotContact = 0;
+        if ($lead = $this->leadModel->getEntity($leadId)) {
+            $isContactableReason = $this->leadModel->isContactable($lead, $channel);
+            if (DoNotContact::IS_CONTACTABLE !== $isContactableReason) {
+                $isDoNotContact = 1;
+            }
+        }
+
+        return $isDoNotContact;
+    }
+
+    /**
+     * Get pseudo fields from mautic, these are lead properties we want to map to integration fields.
+     *
+     * @param $lead
+     *
+     * @return mixed
+     */
+    public function getCompoundMauticFields($lead)
+    {
+        if ($lead['internal_entity_id']) {
+            $lead['mauticContactTimelineLink']         = $this->getContactTimelineLink($lead['internal_entity_id']);
+            $lead['mauticContactIsContactableByEmail'] = $this->getLeadDoNotContact($lead['internal_entity_id']);
+        }
+
+        return $lead;
+    }
+
+    /**
+     * @param $fieldName
+     *
+     * @return bool
+     */
+    public function isCompoundMauticField($fieldName)
+    {
+        $compoundFields = [
+            'mauticContactTimelineLink' => 'mauticContactTimelineLink',
+        ];
+
+        if ($this->updateDncByDate() === true) {
+            $compoundFields['mauticContactIsContactableByEmail'] = 'mauticContactIsContactableByEmail';
+        }
+
+        return isset($compoundFields[$fieldName]);
+    }
+
+    /**
+     * Update the record in each system taking the last modified record.
+     *
+     * @param $leadId
+     * @param string $channel
+     * @param string $sfObject
+     * @param array  $sfIds
+     *
+     * @return int
+     *
+     * @throws ApiErrorException
+     */
+    public function getLeadDoNotContactByDate($channel, $records, $object, $lead, $integrationData, $params = [])
+    {
+        return $records;
     }
 }

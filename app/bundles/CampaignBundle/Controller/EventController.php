@@ -329,7 +329,6 @@ class EventController extends CommonFormController
 
             if ($closeModal) {
                 if ($success) {
-
                     //prevent undefined errors
                     $entity = new Event();
                     $blank  = $entity->convertToArray();
@@ -437,8 +436,17 @@ class EventController extends CommonFormController
 
             // Add the field to the delete list
             if (!in_array($objectId, $deletedEvents)) {
-                $deletedEvents[] = $objectId;
-                $session->set('mautic.campaign.'.$campaignId.'.events.deleted', $deletedEvents);
+                //If event is new don't add to deleted list
+                if (strpos($objectId, 'new') === false) {
+                    $deletedEvents[] = $objectId;
+                    $session->set('mautic.campaign.'.$campaignId.'.events.deleted', $deletedEvents);
+                }
+
+                //Always remove from modified list if deleted
+                if (isset($modifiedEvents[$objectId])) {
+                    unset($modifiedEvents[$objectId]);
+                    $session->set('mautic.campaign.'.$campaignId.'.events.modified', $modifiedEvents);
+                }
             }
 
             $dataArray = [

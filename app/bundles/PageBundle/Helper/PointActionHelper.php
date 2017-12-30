@@ -92,7 +92,7 @@ class PointActionHelper
             }
 
             if (isset($hitStats['sum'])) {
-                if ($now->getTimestamp() - $latestHit->getTimestamp() == $hitStats['sum']) {
+                if ($action['properties']['accumulative_time'] <= $hitStats['sum']) {
                     $changePoints['accumulative_time'] = true;
                 } else {
                     $changePoints['accumulative_time'] = false;
@@ -105,7 +105,7 @@ class PointActionHelper
             if (!isset($hitStats)) {
                 $hitStats = $hitRepository->getDwellTimesForUrl($urlWithSqlWC, ['leadId' => $lead->getId()]);
             }
-            if (isset($hitStats['count']) && $hitStats['count'] === $action['properties']['page_hits']) {
+            if (isset($hitStats['count']) && $hitStats['count'] >= $action['properties']['page_hits']) {
                 $changePoints['page_hits'] = true;
             } else {
                 $changePoints['page_hits'] = false;

@@ -171,13 +171,14 @@ MauticJS.makeCORSRequest = function(method, url, data, callbackSuccess, callback
         }
     };
    
-    if (method.toUpperCase() === 'POST') {
-        xhr.setRequestHeader('Content-Type','application/x-www-form-urlencoded');
+    if (typeof xhr.setRequestHeader !== "undefined"){
+        if (method.toUpperCase() === 'POST') {
+            xhr.setRequestHeader('Content-Type','application/x-www-form-urlencoded');
+        }
+    
+        xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+        xhr.withCredentials = true;
     }
-
-    xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
-    xhr.withCredentials = true;
- 
     xhr.send(query);
 };
 
@@ -288,18 +289,31 @@ MauticJS.firstDeliveryMade      = false;
 MauticJS.onFirstEventDelivery = function(f) {
     MauticJS.postEventDeliveryQueue.push(f);
 };
+MauticJS.preEventDeliveryQueue = [];
+MauticJS.beforeFirstDeliveryMade = false;
+MauticJS.beforeFirstEventDelivery = function(f) {
+    MauticJS.preEventDeliveryQueue.push(f);
+};
 document.addEventListener('mauticPageEventDelivered', function(e) {
-    var detail = e.detail;
-    if (detail.image && !MauticJS.mtcSet) {
+    var detail   = e.detail;
+    var isImage = detail.image;
+    if (isImage && !MauticJS.mtcSet) {
         MauticJS.getTrackedContact();
     } else if (detail.response && detail.response.id) {
         MauticJS.setTrackedContact(detail.response);
     }
     
+    if (!isImage && typeof detail.event[3] === 'object' && typeof detail.event[3].onload === 'function') {
+       // Execute onload since this is ignored if not an image
+       detail.event[3].onload(detail)       
+    }
+    
     if (!MauticJS.firstDeliveryMade) {
         MauticJS.firstDeliveryMade = true;
         for (var i in MauticJS.postEventDeliveryQueue) {
-            MauticJS.postEventDeliveryQueue[i](e.detail);
+            if (typeof MauticJS.postEventDeliveryQueue[i] == 'function') {
+                MauticJS.postEventDeliveryQueue[i](detail);
+            }
             delete MauticJS.postEventDeliveryQueue[i];
         }
     }

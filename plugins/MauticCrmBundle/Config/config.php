@@ -71,31 +71,31 @@ return [
             'mautic.integration.salesforce' => [
                 'class'     => \MauticPlugin\MauticCrmBundle\Integration\SalesforceIntegration::class,
                 'arguments' => [
-
                 ],
             ],
             'mautic.integration.sugarcrm' => [
                 'class'     => \MauticPlugin\MauticCrmBundle\Integration\SugarcrmIntegration::class,
                 'arguments' => [
-
                 ],
             ],
             'mautic.integration.vtiger' => [
                 'class'     => \MauticPlugin\MauticCrmBundle\Integration\VtigerIntegration::class,
                 'arguments' => [
-
                 ],
             ],
             'mautic.integration.zoho' => [
                 'class'     => \MauticPlugin\MauticCrmBundle\Integration\ZohoIntegration::class,
                 'arguments' => [
-
+                ],
+            ],
+            'mautic.integration.dynamics' => [
+                'class'     => \MauticPlugin\MauticCrmBundle\Integration\DynamicsIntegration::class,
+                'arguments' => [
                 ],
             ],
             'mautic.integration.connectwise' => [
                 'class'     => \MauticPlugin\MauticCrmBundle\Integration\ConnectwiseIntegration::class,
                 'arguments' => [
-
                 ],
             ],
         ],
@@ -138,6 +138,12 @@ return [
                 'arguments' => [
                     'doctrine.orm.entity_manager',
                 ],
+            ],
+        ],
+        'forms' => [
+            'mautic.form.type.connectwise.campaignaction' => [
+                'class' => MauticPlugin\MauticCrmBundle\Form\Type\IntegrationCampaignsTaskType::class,
+                'alias' => 'integration_campaign_task',
             ],
         ],
     ],

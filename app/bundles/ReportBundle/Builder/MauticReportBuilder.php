@@ -164,7 +164,7 @@ final class MauticReportBuilder implements ReportBuilderInterface
      *
      * @return \Doctrine\DBAL\Query\QueryBuilder
      */
-    protected function configureBuilder(array $options)
+    private function configureBuilder(array $options)
     {
         // Trigger the REPORT_ON_GENERATE event to initialize the QueryBuilder
         /** @var ReportGeneratorEvent $event */
@@ -338,23 +338,27 @@ final class MauticReportBuilder implements ReportBuilderInterface
         $queryBuilder->addSelect($selectColumns);
 
         // Add Aggregators
-        $aggregators = $this->entity->getAggregators();
+        $aggregators      = $this->entity->getAggregators();
+        $aggregatorSelect = [];
+
         if ($aggregators && $groupByOptions) {
             foreach ($aggregators as $aggregator) {
-                $column = '';
-                if (isset($options['columns'][$aggregator['column']])) {
-                    $fieldOptions = $options['columns'][$aggregator['column']];
-                    if ($aggregator['function'] == 'AVG') {
-                        $field = (isset($fieldOptions['formula'])) ? 'ROUND('.$aggregator['function'].'(DISTINCT '.$fieldOptions['formula'].'))' : 'ROUND('.$aggregator['function'].'(DISTINCT '.$aggregator['column'].'))';
-                    } else {
-                        $field = (isset($fieldOptions['formula'])) ? $aggregator['function'].'(DISTINCT '.$fieldOptions['formula'].')' : $aggregator['function'].'(DISTINCT '.$aggregator['column'].')';
-                    }
-                    $column .= $field;
+                if (isset($options['columns'][$aggregator['column']]) && isset($options['columns'][$aggregator['column']]['formula'])) {
+                    $columnSelect = $options['columns'][$aggregator['column']]['formula'];
+                } else {
+                    $columnSelect = $aggregator['column'];
                 }
 
-                $formula = $column." as '".$aggregator['function'].' '.$aggregator['column']."'";
-                $queryBuilder->addSelect($formula);
+                $selectText = sprintf('%s(%s)', $aggregator['function'], $columnSelect);
+
+                if ($aggregator['function'] === 'AVG') {
+                    $selectText = sprintf('ROUND(%s)', $selectText);
+                }
+
+                $aggregatorSelect[] = sprintf("%s AS '%s %s'", $selectText, $aggregator['function'], $aggregator['column']);
             }
+
+            $queryBuilder->addSelect($aggregatorSelect);
         }
 
         return $queryBuilder;
@@ -439,7 +443,7 @@ final class MauticReportBuilder implements ReportBuilderInterface
                             case 'boolean':
                                 if ((int) $filter['value'] > 1) {
                                     // Ignore the "reset" value of "2"
-                                    break;
+                                    continue 2;
                                 }
 
                                 $queryBuilder->setParameter($paramName, $filter['value'], 'boolean');

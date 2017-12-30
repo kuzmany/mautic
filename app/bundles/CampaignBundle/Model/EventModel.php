@@ -210,14 +210,18 @@ class EventModel extends CommonFormModel
                 unset($deletedEvents[$k]);
             }
 
-            $deletedKeys[] = $deleteMe;
+            if (isset($deletedEvents[$k])) {
+                $deletedKeys[] = $deleteMe;
+            }
         }
 
-        // wipe out any references to these events to prevent restraint violations
-        $this->getRepository()->nullEventRelationships($deletedKeys);
+        if (count($deletedEvents)) {
+            // wipe out any references to these events to prevent restraint violations
+            $this->getRepository()->nullEventRelationships($deletedKeys);
 
-        // delete the events
-        $this->deleteEntities($deletedEvents);
+            // delete the events
+            $this->deleteEntities($deletedEvents);
+        }
     }
 
     /**
@@ -250,8 +254,15 @@ class EventModel extends CommonFormModel
             return false;
         }*/
 
-        //get the current lead
-        $lead   = $this->leadModel->getCurrentLead();
+        // get the current lead
+        $lead = $this->leadModel->getCurrentLead();
+
+        if (!$lead instanceof Lead) {
+            $this->logger->debug('CAMPAIGN: unidentifiable contact; abort');
+
+            return false;
+        }
+
         $leadId = $lead->getId();
         $this->logger->debug('CAMPAIGN: Current Lead ID# '.$leadId);
 
@@ -1178,7 +1189,6 @@ class EventModel extends CommonFormModel
 
                         // Prevent path if lead has already gone down this path
                         if (!isset($leadLog[$lead->getId()]) || !array_key_exists($parentId, $leadLog[$lead->getId()])) {
-
                             // Get date to compare against
                             $utcDateString = ($grandParentId) ? $leadLog[$lead->getId()][$grandParentId]['date_triggered']
                                 : $campaignLeadDates[$lead->getId()];
@@ -1232,7 +1242,6 @@ class EventModel extends CommonFormModel
                             }
 
                             if ($max && ($totalEventCount + count($nonActionEvents)) >= $max) {
-
                                 // Hit the max or will hit the max while mid-process for the lead
                                 if ($output && isset($progress)) {
                                     $progress->finish();
@@ -1765,7 +1774,7 @@ class EventModel extends CommonFormModel
                     // Conditions will need child event processed
                     $decisionPath = ($response === true) ? 'yes' : 'no';
 
-                    if (!$response) {
+                    if (true !== $response) {
                         // Note that a condition took non action path so we can generate a visual stat
                         $log->setNonActionPathTaken(true);
                     }
