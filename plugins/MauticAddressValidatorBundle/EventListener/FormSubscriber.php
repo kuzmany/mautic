@@ -178,7 +178,7 @@ class FormSubscriber extends CommonSubscriber
 
                 if ($result['status'] == 'INVALID' || $result['status'] == 'SUSPECT') {
                     $event->failedValidation(
-                        'bleeee'
+                        'fail'
                     );
                 }
             }
