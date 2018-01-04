@@ -9,7 +9,7 @@
  * @license     GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
  */
 
-$containerType = (isset($type)) ? $type : 'text';
+$containerType     = (isset($type)) ? $type : 'text';
 $defaultInputClass = (isset($inputClass)) ? $inputClass : 'input';
 include __DIR__.'/../../../../../app/bundles/FormBundle/Views/Field/field_helper.php';
 
@@ -24,13 +24,11 @@ foreach ($field['properties'] as $key => $property) {
 }
 $inputs = '';
 foreach ($props as $key => $field2) {
-
-    if($key=='correctedaddress'){
+    if ($key == 'correctedaddress') {
         $inputType=$containerType='checkbox';
-        $prefix = 'checkboxgrp-';
-
-    }else{
-        $prefix = '';
+        $prefix   = 'checkboxgrp-';
+    } else {
+        $prefix   = '';
         $inputType='input';
     }
 
@@ -43,8 +41,8 @@ foreach ($props as $key => $field2) {
         ['address_line_1', 'address_line_2', 'town_or_city', 'zip_or_postal_code', 'state_or_province', 'address_validated'],
         $key
     );
-    $idAttr = 'mauticform_input'.$formName.'_'.$idBcKey;
-    $placeholderAttr = "";
+    $idAttr          = 'mauticform_input'.$formName.'_'.$idBcKey;
+    $placeholderAttr = '';
     if (isset($field['properties']['placeholderAddress']) && $field['properties']['placeholderAddress']) {
         $placeholderAttr = $view->escape($field2['label']);
     }
@@ -59,14 +57,14 @@ HTML;
 HTML;
         }
 
-        if ($idBcKey == "country" && !empty($field['properties']['optionsCountry'])) {
+        if ($idBcKey == 'country' && !empty($field['properties']['optionsCountry'])) {
             $countryOptions = explode(chr(10), $field['properties']['optionsCountry']);
             $inputs .= <<<HTML
             <select id="{$idAttr}"  {$inputAttr}>
 <option>{$field2['label']}</option>
 HTML;
-            foreach($countryOptions as $option){
-                if($option) {
+            foreach ($countryOptions as $option) {
+                if ($option) {
                     $inputs .= <<<HTML
                     <option value="$option">$option</option>
 HTML;
@@ -75,7 +73,6 @@ HTML;
             $inputs .= <<<HTML
                     </select>
 HTML;
-
         } else {
             $inputs .= <<<HTML
            <input placeholder="{$placeholderAttr}" id="{$idAttr}"  {$inputAttr} type="$containerType" />
@@ -85,10 +82,10 @@ HTML;
         </div>
 HTML;
     }
-    if( $key=='addressvalidated') {
+    if ($key == 'addressvalidated') {
         $inputAttr = str_replace('"text"', '"hidden"', $inputAttr);
         $inputs .= <<<HTML
-           <input  id="{$idAttr}"  {$inputAttr}  value="Yes" />
+           <input  id="{$idAttr}"  {$inputAttr}  value="" />
 HTML;
     }
 }

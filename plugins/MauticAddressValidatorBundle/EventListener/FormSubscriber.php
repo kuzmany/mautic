@@ -12,24 +12,22 @@
 namespace MauticPlugin\MauticAddressValidatorBundle\EventListener;
 
 use Mautic\CoreBundle\EventListener\CommonSubscriber;
-use Mautic\FormBundle\Event\FormBuilderEvent;
-use Mautic\FormBundle\FormEvents;
-use Mautic\FormBundle\Event as Events;
-use Mautic\LeadBundle\Model\LeadModel;
-use Mautic\FormBundle\Event\SubmissionEvent;
 use Mautic\CoreBundle\Helper\CoreParametersHelper;
+use Mautic\FormBundle\Event as Events;
+use Mautic\FormBundle\Event\FormBuilderEvent;
+use Mautic\FormBundle\Event\SubmissionEvent;
+use Mautic\FormBundle\FormEvents;
+use Mautic\LeadBundle\Model\LeadModel;
 use MauticPlugin\MauticAddressValidatorBundle\AddressValidatorEvents;
 use MauticPlugin\MauticAddressValidatorBundle\Helper\AddressValidatorHelper;
-
 
 /**
  * Class FormSubscriber.
  */
 class FormSubscriber extends CommonSubscriber
 {
-
     /**
-     * @var LeadModel $leadModel
+     * @var LeadModel
      */
     protected $leadModel;
 
@@ -39,7 +37,7 @@ class FormSubscriber extends CommonSubscriber
     protected $coreParametersHelper;
 
     /**
-     * @var AddressValidatorHelper $addressValidatorHelper ;
+     * @var AddressValidatorHelper ;
      */
     protected $addressValidatorHelper;
 
@@ -53,8 +51,8 @@ class FormSubscriber extends CommonSubscriber
         CoreParametersHelper $coreParametersHelper,
         AddressValidatorHelper $addressValidatorHelper
     ) {
-        $this->leadModel = $leadModel;
-        $this->coreParametersHelper = $coreParametersHelper;
+        $this->leadModel              = $leadModel;
+        $this->coreParametersHelper   = $coreParametersHelper;
         $this->addressValidatorHelper = $addressValidatorHelper;
     }
 
@@ -64,8 +62,8 @@ class FormSubscriber extends CommonSubscriber
     public static function getSubscribedEvents()
     {
         return [
-            FormEvents::FORM_ON_BUILD => ['onFormBuilder', 0],
-            FormEvents::FORM_ON_SUBMIT => ['onFormSubmit', 0],
+            FormEvents::FORM_ON_BUILD                       => ['onFormBuilder', 0],
+            FormEvents::FORM_ON_SUBMIT                      => ['onFormSubmit', 0],
             AddressValidatorEvents::ON_FORM_VALIDATE_ACTION => ['onFormValidate', 0],
         ];
     }
@@ -77,17 +75,15 @@ class FormSubscriber extends CommonSubscriber
      */
     public function onFormSubmit(SubmissionEvent $event)
     {
-        $form = $event->getSubmission()->getForm();
+        $form   = $event->getSubmission()->getForm();
         $fields = $form->getFields();
-        $lead = $event->getLead();
-        $props = [];
-
+        $lead   = $event->getLead();
+        $props  = [];
         foreach ($event->getFields() as $field) {
             if ($field['type'] == 'plugin.addressvalidator') {
                 $addressValidatorFieldAlias = $field['alias'];
-                $data = $event->getRequest()->get('mauticform')[$addressValidatorFieldAlias];
-                /** @var \Mautic\FormBundle\Entity\Field $f */
-
+                $data                       = $event->getRequest()->get('mauticform')[$addressValidatorFieldAlias];
+                /* @var \Mautic\FormBundle\Entity\Field $f */
                 if (!empty($data)) {
                     foreach ($fields as $f) {
                         if ($f->getAlias() == $addressValidatorFieldAlias) {
@@ -128,21 +124,22 @@ class FormSubscriber extends CommonSubscriber
     {
         if ($this->addressValidatorHelper->validation(true)) {
             $action = [
-                'label' => 'mautic.plugin.field.addressvalidator',
-                'formType' => 'addressvalidator',
-                'template' => 'MauticAddressValidatorBundle:SubscribedEvents\Field:addressvalidator.html.php',
+                'label'          => 'mautic.plugin.field.addressvalidator',
+                'formType'       => 'addressvalidator',
+                'template'       => 'MauticAddressValidatorBundle:SubscribedEvents\Field:addressvalidator.html.php',
                 'builderOptions' => [
-                    'addLeadFieldList' => false,
-                    'addDefaultValue' => false,
-                    'addSaveResult' => true,
-                    'addShowLabel' => true,
-                    'addHelpMessage' => false,
-                    'addLabelAttributes' => false,
-                    'addInputAttributes' => false,
-                    'addBehaviorFields' => false,
+                    'addLeadFieldList'       => false,
+                    'addDefaultValue'        => false,
+                    'addSaveResult'          => true,
+                    'addShowLabel'           => true,
+                    'addHelpMessage'         => false,
+                    'addLabelAttributes'     => false,
+                    'addInputAttributes'     => false,
+                    'addBehaviorFields'      => false,
                     'addContainerAttributes' => false,
-                    'allowCustomAlias' => true,
-                    'labelText' => false,
+                    'allowCustomAlias'       => true,
+                    'labelText'              => false,
+                    'addIsRequired'          => false,
                 ],
             ];
 
@@ -154,7 +151,6 @@ class FormSubscriber extends CommonSubscriber
             ];
 
             $event->addValidator('plugin.addressvalidator.validate', $validator);
-
         }
     }
 
@@ -167,22 +163,52 @@ class FormSubscriber extends CommonSubscriber
     public function onFormValidate(Events\ValidationEvent $event)
     {
         $field = $event->getField();
+
         if ($field->getType() == 'plugin.addressvalidator') {
+            $data = $event->getValue();
+
+            // spam detection
+            if (!empty($data['addressvalidated'])) {
+                return $event->failedValidation(
+                    $this->translator->trans('plugin.addressvalidator.detect.spam')
+                );
+            }
             $values = $this->addressValidatorHelper->parseDataFromRequest($event->getValue());
             $result = $this->addressValidatorHelper->validation(false, null, $values);
-            if (!empty($result)) {
-                $result = \GuzzleHttp\json_decode($result, true);
-                if (empty($result['status'])) {
-                    $result['status'] = '';
-                }
 
-                if ($result['status'] == 'INVALID' || $result['status'] == 'SUSPECT') {
-                    $event->failedValidation(
-                        'fail'
+            // force validation, not continue anyway
+            $forceValidation = false;
+            if (!empty($field->getProperties()['validatorRequired'])) {
+                $forceValidation = true;
+            } elseif (!empty($field->getProperties()['validatorToogle']) && !empty($data['validatorToogle'])) {
+                $forceValidation = true;
+            }
+
+            // empty address
+            if ($forceValidation && empty($data)) {
+                return $event->failedValidation(
+                    $this->translator->trans('plugin.addressvalidator.form.empty')
+                );
+            }
+
+            if ($forceValidation) {
+                if (!empty($result)) {
+                    $result = \GuzzleHttp\json_decode($result, true);
+                    if (empty($result['status'])) {
+                        $result['status'] = '';
+                    }
+
+                    if ($result['status'] == 'INVALID' || $result['status'] == 'SUSPECT') {
+                        $event->failedValidation(
+                            $this->translator->trans('plugin.addressvalidator.address.is.not.valid')
+                        );
+                    }
+                } else {
+                    return $event->failedValidation(
+                        $this->translator->trans('plugin.addressvalidator.form.error')
                     );
                 }
             }
         }
     }
-
 }
