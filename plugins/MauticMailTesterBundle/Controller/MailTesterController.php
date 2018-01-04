@@ -52,14 +52,10 @@ class MailTesterController extends FormController
             ],
         ];
 
-        // Send to current user
-        $error = $model->sendSampleEmailToUser($entity, $users, $fields, [], [], false);
-        if (count($error)) {
-            array_push($errors, $error[0]);
-        }
+        // send test email
+        $model->sendSampleEmailToUser($entity, $users, $fields, [], [], false);
 
-        $this->addFlash('mautic.email.notice.test_sent_multiple.success');
-
+        // redirect to mail-tester
         return $this->postActionRedirect(
             [
                 'returnUrl' => 'https://www.mail-tester.com/'.$uniqueId,

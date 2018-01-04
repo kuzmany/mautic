@@ -15,9 +15,26 @@ use Mautic\CoreBundle\CoreEvents;
 use Mautic\CoreBundle\Event\CustomButtonEvent;
 use Mautic\CoreBundle\EventListener\CommonSubscriber;
 use Mautic\CoreBundle\Templating\Helper\ButtonHelper;
+use Mautic\PluginBundle\Helper\IntegrationHelper;
+use MauticPlugin\MauticMailTesterBundle\Integration\MailTesterIntegration;
 
 class ButtonSubscriber extends CommonSubscriber
 {
+    /**
+     * @var IntegrationHelper
+     */
+    protected $integrationHelper;
+
+    /**
+     * ButtonSubscriber constructor.
+     *
+     * @param IntegrationHelper $helper
+     */
+    public function __construct(IntegrationHelper $integrationHelper)
+    {
+        $this->integrationHelper = $integrationHelper;
+    }
+
     public static function getSubscribedEvents()
     {
         return [
@@ -30,6 +47,13 @@ class ButtonSubscriber extends CommonSubscriber
      */
     public function injectViewButtons(CustomButtonEvent $event)
     {
+        /** @var MailTesterIntegration $myIntegration */
+        $myIntegration = $this->integrationHelper->getIntegrationObject('MailTester');
+
+        if (false === $myIntegration || !$myIntegration->getIntegrationSettings()->getIsPublished()) {
+            return;
+        }
+
         if (0 === strpos($event->getRoute(), 'mautic_email_action') && $event->getRequest()->get('objectAction') == 'view') {
             $mailTestRoute = $this->router->generate(
                 'mautic_plugin_mail_tester_action',

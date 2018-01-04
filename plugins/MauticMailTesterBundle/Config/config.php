@@ -16,7 +16,10 @@ return [
     'services' => [
         'events' => [
             'mautic.plugin.mail.tester.button.subscriber' => [
-                'class' => \MauticPlugin\MauticMailTesterBundle\EventListener\ButtonSubscriber::class,
+                'class'     => \MauticPlugin\MauticMailTesterBundle\EventListener\ButtonSubscriber::class,
+                'arguments' => [
+                    'mautic.helper.integration',
+                ],
             ],
         ],
     ],

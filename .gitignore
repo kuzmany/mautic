@@ -69,6 +69,7 @@
 !/plugins/MauticGmailBundle
 !/plugins/MauticOutlookBundle
 !/plugins/MauticSocialBundle
+!/plugins/MauticMailTesterBundle
 !/plugins/index.html
 
 /themes/*
