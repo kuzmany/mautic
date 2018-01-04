@@ -2,7 +2,7 @@
 
 return [
     'name'        => 'Mail Tester',
-    'description' => 'Newsletters spam test by mail-tester.com',
+    'description' => 'Email spam test by mail-tester.com',
     'author'      => 'kuzmany.biz',
     'version'     => '1.0.0',
     'routes'      => [
