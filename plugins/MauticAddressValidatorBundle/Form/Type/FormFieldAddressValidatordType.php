@@ -51,6 +51,7 @@ class FormFieldAddressValidatordType extends AbstractType
 
             $choices[$field['group_label']][$alias] = $field['label'];
         }
+
         $options['leadFields']          = $choices;
         $options['leadFieldProperties'] = $fields;
 
@@ -63,10 +64,38 @@ class FormFieldAddressValidatordType extends AbstractType
         );
 
         $builder->add(
-            'labelAddressValidated',
-            'hidden',
+            'placeholderAddress',
+            'yesno_button_group',
             [
-                'label'      => 'plugin.addressvalidator.field.label.address_validated',
+                'label' => 'plugin.addressvalidator.field.label.placeholder',
+            ]
+        );
+
+        $builder->add(
+            'validatorToogle',
+            'yesno_button_group',
+            [
+                'label' => 'plugin.addressvalidator.field.toggle'.print_r($options['data'], true),
+            ]
+        );
+
+        $builder->add(
+            'labelToogle',
+            'text',
+            [
+                'label'      => 'plugin.addressvalidator.field.label.toogle',
+                'label_attr' => ['class' => 'control-label'],
+                'attr'       => [
+                    'class' => 'form-control',
+                ],
+            ]
+        );
+
+        $builder->add(
+            'labelAddressValidated',
+            'text',
+            [
+                'label'      => 'plugin.addressvalidator.field.label.corrected.address',
                 'label_attr' => ['class' => 'control-label'],
                 'attr'       => [
                     'class' => 'form-control',
@@ -97,51 +126,6 @@ class FormFieldAddressValidatordType extends AbstractType
                     'tooltip' => 'mautic.form.field.help.lead_field',
                 ],
                 'required' => false,
-            ]
-        );
-
-        $builder->add(
-            'validatorToogle',
-            'yesno_button_group',
-            [
-                'label' => 'plugin.addressvalidator.field.toggle',
-                'attr'  => [
-                    'data-show-on' => '{"formfield_properties_validatorRequired_0":"checked"}',
-                ],
-            ]
-        );
-
-        $builder->add(
-            'labelToogle',
-            'text',
-            [
-                'label'      => 'plugin.addressvalidator.field.label.toogle',
-                'label_attr' => ['class' => 'control-label'],
-                'attr'       => [
-                    'class'        => 'form-control',
-                    'data-show-on' => '{"formfield_properties_validatorToogle_1": "checked"}',
-                    'data-hide-on' => '{"formfield_properties_validatorRequired_1": "checked"}',
-                ],
-            ]
-        );
-
-        $builder->add(
-            'placeholderAddress',
-            'yesno_button_group',
-            [
-                'label' => 'plugin.addressvalidator.field.label.placeholder',
-            ]
-        );
-
-        $builder->add(
-            'labelCorrectedAddress',
-            'text',
-            [
-                'label'      => 'plugin.addressvalidator.field.label.corrected.address',
-                'label_attr' => ['class' => 'control-label'],
-                'attr'       => [
-                    'class' => 'form-control',
-                ],
             ]
         );
 
@@ -384,6 +368,14 @@ class FormFieldAddressValidatordType extends AbstractType
                     'rows'    => 5,
                     'tooltip' => 'plugin.addressvalidator.field.label.country.options.tooltip',
                 ],
+            ]
+        );
+
+        $builder->add(
+            'labelAddress4',
+            'hidden',
+            [
+                'label' => 'plugin.addressvalidator.field.label.toogle',
             ]
         );
     }

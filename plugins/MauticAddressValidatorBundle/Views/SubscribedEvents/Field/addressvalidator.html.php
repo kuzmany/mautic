@@ -24,15 +24,32 @@ foreach ($field['properties'] as $key => $property) {
 }
 $inputs = '';
 foreach ($props as $key => $field2) {
-    if ($key == 'correctedaddress') {
+    $addAttr  = '';
+    $inputType=$containerType='text';
+    $prefix   = '';
+    if ($key == 'addressvalidated') {
         $inputType=$containerType='checkbox';
         $prefix   = 'checkboxgrp-';
+        $addAttr  = ' data-disabled="1" data-correctedaddress="1" ';
     } else {
         $prefix   = '';
         $inputType='input';
+        // just compatibility with validator repsonse
+        $serviceReponseKey = str_replace(['address1', 'zip'], ['addressline1', 'postalcode'], $key);
+        $addAttr           = 'data-validate-type="'.$serviceReponseKey.'" data data-disabled="1" ';
+        if ($key == 'toogle') {
+            if (empty($field['properties']['validatorToogle'])) {
+                continue;
+            }
+            $inputType=$containerType='checkbox';
+            $prefix   = 'checkboxgrp-';
+            $addAttr  = 'data-validate-type="'.$serviceReponseKey.'" ';
+        } elseif ($key == 'address4') {
+            $addAttr = '';
+        }
     }
 
-    $inputAttr = 'class="mauticform-'.$prefix.$inputType.'" type="'.$containerType.'"';
+    $inputAttr = 'class="mauticform-'.$prefix.$inputType.'" type="'.$containerType.'"'.$addAttr;
     if (empty($inForm)) {
         $inputAttr .= 'name="mauticform['.$field['alias'].']['.$key.']"';
     }
@@ -82,7 +99,7 @@ HTML;
         </div>
 HTML;
     }
-    if ($key == 'addressvalidated') {
+    if ($key == 'address4') {
         $inputAttr = str_replace('"text"', '"hidden"', $inputAttr);
         $inputs .= <<<HTML
            <input  id="{$idAttr}"  {$inputAttr}  value="" />
@@ -102,10 +119,11 @@ if (!empty($inForm)):
 HTML;
 else:
     $html = <<<HTML
-<div class="mauticform-row"><div {$containerAttr}>{$inputs}<span class="mauticform-errormsg" style="display: none;">$validationMessage</span></div></div>
+<div class="mauticform-row"><div  data-validation-type="plugin.addressvalidator" data-validate-id="{$field['id']}"  data-validate-alias="{$field['alias']}" data-validate-form-id="{$field['form']->getId()}" data-validate-form-name="{$formNameWithout_}" {$containerAttr}>{$inputs}<p class="mauticform-errormsg" style="display: none;">$validationMessage</p></div></div>
 <div id="mauticformmessage-wrap"><div class="mauticform-error" id="mauticform{$formName}_error"></div><div class="mauticform-message" id="mauticform{$formName}_message"></div></div>
  <input  class="addressvalidatorid" name="addressvalidatorid" value="{$field['form']->getId()}" type="hidden" /> 
  <input  class="addressvalidatorname" name="addressvalidatorname" value="{$formNameWithout_}" type="hidden" />
+<script type="text/javascript" src="{$view['router']->url('mautic_addressvalidator_js')}"></script>
 HTML;
 
 endif;

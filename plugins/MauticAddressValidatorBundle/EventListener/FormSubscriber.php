@@ -17,6 +17,7 @@ use Mautic\FormBundle\Event as Events;
 use Mautic\FormBundle\Event\FormBuilderEvent;
 use Mautic\FormBundle\Event\SubmissionEvent;
 use Mautic\FormBundle\FormEvents;
+use Mautic\FormBundle\Model\SubmissionModel;
 use Mautic\LeadBundle\Model\LeadModel;
 use MauticPlugin\MauticAddressValidatorBundle\AddressValidatorEvents;
 use MauticPlugin\MauticAddressValidatorBundle\Helper\AddressValidatorHelper;
@@ -42,18 +43,28 @@ class FormSubscriber extends CommonSubscriber
     protected $addressValidatorHelper;
 
     /**
+     * @var SubmissionModel
+     */
+    protected $submissionModel;
+
+    /**
      * FormSubscriber constructor.
      *
-     * @param LeadModel $leadModel
+     * @param LeadModel              $leadModel
+     * @param CoreParametersHelper   $coreParametersHelper
+     * @param AddressValidatorHelper $addressValidatorHelper
+     * @param SubmissionModel        $submissionModel
      */
     public function __construct(
         LeadModel $leadModel,
         CoreParametersHelper $coreParametersHelper,
-        AddressValidatorHelper $addressValidatorHelper
+        AddressValidatorHelper $addressValidatorHelper,
+        SubmissionModel $submissionModel
     ) {
         $this->leadModel              = $leadModel;
         $this->coreParametersHelper   = $coreParametersHelper;
         $this->addressValidatorHelper = $addressValidatorHelper;
+        $this->submissionModel        = $submissionModel;
     }
 
     /**
@@ -75,20 +86,34 @@ class FormSubscriber extends CommonSubscriber
      */
     public function onFormSubmit(SubmissionEvent $event)
     {
-        $form   = $event->getSubmission()->getForm();
-        $fields = $form->getFields();
-        $lead   = $event->getLead();
-        $props  = [];
+        $form       = $event->getSubmission()->getForm();
+        $fields     = $form->getFields();
+        $lead       = $event->getLead();
+        $submission = $event->getSubmission();
+        $results    = $event->getResults();
+        $props      = [];
+
+        // update form results
+        /** @var SubmissionRepository $repo */
+        $repo             = $this->submissionModel->getRepository();
+        $resultsTableName = $repo->getResultsTableName($form->getId(), $form->getAlias());
+        $tableKeys        = ['submission_id' => $submission->getId()];
+
         foreach ($event->getFields() as $field) {
             if ($field['type'] == 'plugin.addressvalidator') {
                 $addressValidatorFieldAlias = $field['alias'];
                 $data                       = $event->getRequest()->get('mauticform')[$addressValidatorFieldAlias];
+                $data['addressvalidated']   = 'Yes';
                 /* @var \Mautic\FormBundle\Entity\Field $f */
                 if (!empty($data)) {
                     foreach ($fields as $f) {
                         if ($f->getAlias() == $addressValidatorFieldAlias) {
                             $props = [];
                             foreach ($f->getProperties() as $key => $property) {
+                                if ($key == 'validatorToogle' && !empty($property) && empty($data['toogle'])) {
+                                    // update empty addresy
+                                    $data['addressvalidated'] = 'No';
+                                }
                                 if (strpos($key, 'label') !== false || strpos($key, 'leadField') !== false) {
                                     $newKey = strtolower(str_ireplace(['label', 'leadField'], ['', ''], $key));
                                     if ($newKey) {
@@ -110,6 +135,11 @@ class FormSubscriber extends CommonSubscriber
                     if (!empty($lead->getChanges())) {
                         $this->leadModel->saveEntity($lead);
                     }
+                    // update addres field
+                    $results[$addressValidatorFieldAlias] = $results[$addressValidatorFieldAlias] = http_build_query($data, ',', '|');
+                    $this->em
+                        ->getConnection()
+                        ->update($resultsTableName, $results, $tableKeys);
                 }
             }
         }
@@ -166,9 +196,8 @@ class FormSubscriber extends CommonSubscriber
 
         if ($field->getType() == 'plugin.addressvalidator') {
             $data = $event->getValue();
-
             // spam detection
-            if (!empty($data['addressvalidated'])) {
+            if (!empty($data['address4'])) {
                 return $event->failedValidation(
                     $this->translator->trans('plugin.addressvalidator.detect.spam')
                 );
@@ -180,7 +209,7 @@ class FormSubscriber extends CommonSubscriber
             $forceValidation = false;
             if (!empty($field->getProperties()['validatorRequired'])) {
                 $forceValidation = true;
-            } elseif (!empty($field->getProperties()['validatorToogle']) && !empty($data['validatorToogle'])) {
+            } elseif (!empty($field->getProperties()['validatorToogle']) && !empty($data['toogle'])) {
                 $forceValidation = true;
             }
 
@@ -197,15 +226,20 @@ class FormSubscriber extends CommonSubscriber
                     if (empty($result['status'])) {
                         $result['status'] = '';
                     }
-
-                    if ($result['status'] == 'INVALID' || $result['status'] == 'SUSPECT') {
-                        $event->failedValidation(
+                    if ($result['status'] == 'INVALID') {
+                        return $event->failedValidation(
                             $this->translator->trans('plugin.addressvalidator.address.is.not.valid')
                         );
+                    } elseif ($result['status'] == 'SUSPECT') {
+                        if (!isset($data['correctedaddress'])) {
+                            return $event->failedValidation(
+                                \GuzzleHttp\json_encode($result)
+                            );
+                        }
                     }
                 } else {
                     return $event->failedValidation(
-                        $this->translator->trans('plugin.addressvalidator.form.error')
+                        $this->translator->trans('plugin.addressvalidator.form.empty')
                     );
                 }
             }
