@@ -7,7 +7,14 @@ $serializerMappings =
 $ipLookupServices   = [];
 
 //Note Mautic specific bundles so they can be applied as needed without having to specify them individually
-$buildBundles = function ($namespace, $bundle) use ($container, $paths, $root, &$ormMappings, &$serializerMappings, &$ipLookupServices) {
+$buildBundles = function ($namespace, $bundle) use (
+    $container,
+    $paths,
+    $root,
+    &$ormMappings,
+    &$serializerMappings,
+    &$ipLookupServices
+) {
     $isPlugin = $isMautic = false;
 
     if (strpos($namespace, 'MauticPlugin\\') !== false) {
@@ -51,7 +58,8 @@ $buildBundles = function ($namespace, $bundle) use ($container, $paths, $root, &
                 $subFolder = $file->getRelativePath();
 
                 // Just check first file for the loadMetadata function
-                $reflectionClass = new \ReflectionClass('\\'.$baseNamespace.'\\Entity\\'.(!empty($subFolder) ? $subFolder.'\\' : '').basename($file->getFilename(), '.php'));
+                $reflectionClass = new \ReflectionClass('\\'.$baseNamespace.'\\Entity\\'.(!empty($subFolder) ? $subFolder.'\\' : '').basename($file->getFilename(),
+                        '.php'));
 
                 if (!$reflectionClass->implementsInterface(\Mautic\CoreBundle\Entity\DeprecatedInterface::class)) {
                     // Register API metadata
@@ -154,7 +162,8 @@ $container->loadFromExtension('mautic_core');
 $engines = ['php', 'twig'];
 
 // Decide on secure cookie based on site_url setting
-$secureCookie = $container->hasParameter('mautic.site_url') && substr(ltrim($container->getParameter('mautic.site_url')), 0, 5) === 'https';
+$secureCookie = $container->hasParameter('mautic.site_url') && substr(ltrim($container->getParameter('mautic.site_url')),
+        0, 5) === 'https';
 
 // Generate session name
 // Cannot use $parameters here directly because that fails spectaculary if parameters_local file exists
@@ -250,24 +259,42 @@ $container->loadFromExtension('doctrine_migrations', [
 
 // Swiftmailer Configuration
 $mailerSettings = [
-    'transport'  => '%mautic.mailer_transport%',
-    'host'       => '%mautic.mailer_host%',
-    'port'       => '%mautic.mailer_port%',
-    'username'   => '%mautic.mailer_user%',
-    'password'   => '%mautic.mailer_password%',
-    'encryption' => '%mautic.mailer_encryption%',
-    'auth_mode'  => '%mautic.mailer_auth_mode%',
+    'default_mailer' => 'mailer',
+    'mailers'        => [
+        'mailer' => [
+            'transport'  => '%mautic.mailer_transport%',
+            'host'       => '%mautic.mailer_host%',
+            'port'       => '%mautic.mailer_port%',
+            'username'   => '%mautic.mailer_user%',
+            'password'   => '%mautic.mailer_password%',
+            'encryption' => '%mautic.mailer_encryption%',
+            'auth_mode'  => '%mautic.mailer_auth_mode%',
+        ],
+    ],
 ];
 
+$mailerSettings['mailers']['smailer'] = $mailerSettings['mailers']['mailer'];
 // Only spool if using file as otherwise emails are not sent on redirects
 $spoolType = $container->getParameter('mautic.mailer_spool_type');
 if ($spoolType == 'file') {
-    $mailerSettings['spool'] = [
+    $mailerSettings['mailers']['mailer']['spool'] = [
         'type' => '%mautic.mailer_spool_type%',
         'path' => '%mautic.mailer_spool_path%',
     ];
 }
 $container->loadFromExtension('swiftmailer', $mailerSettings);
+/*
+$container->loadFromExtension('swiftmailer', array(
+    'default_mailer' => 'second_mailer',
+    'mailers' => array(
+        'first_mailer' => array(
+            // ...
+        ),
+        'second_mailer' => array(
+            // ...
+        ),
+    ),
+));*/
 
 //KnpMenu Configuration
 $container->loadFromExtension('knp_menu', [
