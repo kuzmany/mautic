@@ -72,24 +72,35 @@ $(document).ready(function () {
                             if($(this).is(':checked')){
                                 objDisbledInputs.each(function(){
                                     objDisbledInputs.parent().show();
+                                    $(this).val($(this).data('empty-value'));
+
                                 })
                                   if(!obj.is('.mauticform-has-error')){
                                         correctedAddress.parent().hide();
+                                            obj.find('.mauticform-errormsg').css('display','block')
                                     }else{
                                         correctedAddress.parent().show();
-                                        obj.find('.mauticform-errormsg').show();
+                                         correctedAddress.parent('.mauticform-row-validated ').css('display','inline');
+                           
+                                        
+                                        obj.find('.mauticform-errormsg').css('display','inline-block');
 
                                     }
                             }else{
                                  objDisbledInputs.each(function(){
                                      objDisbledInputs.parent().hide();
+                                     $(this).data('empty-value',  $(this).val());
+                                     $(this).val('');
+                                     
+
                                 })
                                 obj.find('.mauticform-errormsg').hide();
                             }
                 })
         }
         correctedAddress.parent().hide();
-        obj.find('.mauticform-errormsg').detach().insertAfter(correctedAddress.parent())
+        // no move error elements  - stay at the bottom
+        //obj.find('.mauticform-errormsg').detach().insertAfter(correctedAddress.parent())
         MauticFormCallback[formName] = {
              onResponseStart: function (response) {
                 correctedAddress.parent().hide();
@@ -103,7 +114,8 @@ $(document).ready(function () {
              correctedAddress.attr('checked','checked');
              correctedAddress.click();
              if(json.status=="SUSPECT"){
-              correctedAddress.parent().show();
+                 correctedAddress.parent().css('display','inline');
+              obj.find('.mauticform-errormsg').css('display','inline');
               obj.find('.mauticform-errormsg').text(json.formattedaddress);
               correctedAddress.on('click',function() {
                     if($(this).is(':checked')){
@@ -116,11 +128,16 @@ $(document).ready(function () {
                             $(this).val( $(this).data('old-value'));
                         })
                     }
-                
+                $(this).val( $(this).data('old-value'));
+
               })
+               correctedAddress.click();
              }
             } catch (exception) {
             }
+            }   else if (response.success == 1){
+                           console.log(response);
+                             obj.find('.mauticform-errormsg').hide();
             }
             }
         };

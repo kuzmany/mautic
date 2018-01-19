@@ -103,17 +103,15 @@ class FormSubscriber extends CommonSubscriber
             if ($field['type'] == 'plugin.addressvalidator') {
                 $addressValidatorFieldAlias = $field['alias'];
                 $data                       = $event->getRequest()->get('mauticform')[$addressValidatorFieldAlias];
-                $data['addressvalidated']   = 'Yes';
+                if (empty($data['addressvalidated'])) {
+                    $data['addressvalidated'] = 'No';
+                }
                 /* @var \Mautic\FormBundle\Entity\Field $f */
                 if (!empty($data)) {
                     foreach ($fields as $f) {
                         if ($f->getAlias() == $addressValidatorFieldAlias) {
                             $props = [];
                             foreach ($f->getProperties() as $key => $property) {
-                                if ($key == 'validatorToogle' && !empty($property) && empty($data['toogle'])) {
-                                    // update empty addresy
-                                    $data['addressvalidated'] = 'No';
-                                }
                                 if (strpos($key, 'label') !== false || strpos($key, 'leadField') !== false) {
                                     $newKey = strtolower(str_ireplace(['label', 'leadField'], ['', ''], $key));
                                     if ($newKey) {
@@ -136,7 +134,8 @@ class FormSubscriber extends CommonSubscriber
                         $this->leadModel->saveEntity($lead);
                     }
                     // update addres field
-                    $results[$addressValidatorFieldAlias] = $results[$addressValidatorFieldAlias] = http_build_query($data, ',', '|');
+                    $results[$addressValidatorFieldAlias] = $results[$addressValidatorFieldAlias] = http_build_query($data,
+                        ',', '|');
                     $this->em
                         ->getConnection()
                         ->update($resultsTableName, $results, $tableKeys);
@@ -196,31 +195,37 @@ class FormSubscriber extends CommonSubscriber
 
         if ($field->getType() == 'plugin.addressvalidator') {
             $data = $event->getValue();
+
             // spam detection
             if (!empty($data['address4'])) {
                 return $event->failedValidation(
                     $this->translator->trans('plugin.addressvalidator.detect.spam')
                 );
             }
-            $values = $this->addressValidatorHelper->parseDataFromRequest($event->getValue());
-            $result = $this->addressValidatorHelper->validation(false, null, $values);
+
+            $dataValues = array_filter($data);
 
             // force validation, not continue anyway
             $forceValidation = false;
             if (!empty($field->getProperties()['validatorRequired'])) {
                 $forceValidation = true;
-            } elseif (!empty($field->getProperties()['validatorToogle']) && !empty($data['toogle'])) {
+            } elseif (empty($field->getProperties()['validatorRequired']) &&
+                !empty($data['toogle']) && !empty($dataValues)
+            ) {
+                $forceValidation = true;
+            } elseif (empty($field->getProperties()['validatorRequired']) && !empty($dataValues)) {
                 $forceValidation = true;
             }
-
             // empty address
-            if ($forceValidation && empty($data)) {
+            if ($forceValidation && empty($dataValues)) {
                 return $event->failedValidation(
                     $this->translator->trans('plugin.addressvalidator.form.empty')
                 );
             }
 
             if ($forceValidation) {
+                $values = $this->addressValidatorHelper->parseDataFromRequest($event->getValue());
+                $result = $this->addressValidatorHelper->validation(false, null, $values);
                 if (!empty($result)) {
                     $result = \GuzzleHttp\json_decode($result, true);
                     if (empty($result['status'])) {
