@@ -64,7 +64,7 @@ $(document).ready(function () {
         var correctedAddress =    $(this).find('input[data-correctedaddress="1"]');
         
         
-        var objDisbledInputs = obj.find('input[data-disabled="1"]');
+        var objDisbledInputs = obj.find('*[data-disabled="1"]');
         if(obj.find('input[data-validate-type=toogle]').length){
              objDisbledInputs.parent().hide();
              

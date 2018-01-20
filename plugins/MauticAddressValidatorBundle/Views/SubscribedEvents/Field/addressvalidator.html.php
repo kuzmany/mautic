@@ -84,7 +84,7 @@ foreach ($props as $key => $field2) {
 <div class="{$classContainer}">
 HTML;
 
-        if ($field['showLabel']) {
+        if ($field['showLabel'] || $key == 'toogle') {
             $inputs .= <<<HTML
 <label class="mauticform-{$prefix}label" for="{$idAttr}" >{$view->escape($field2['label'])}</label>
 HTML;
@@ -94,8 +94,12 @@ HTML;
             $countryOptions = explode(chr(10), $field['properties']['optionsCountry']);
             $inputs .= <<<HTML
             <select id="{$idAttr}"  {$inputAttr}>
-<option>{$field2['label']}</option>
 HTML;
+            if (empty($field['properties']['placeholderAddress'])) {
+                $inputs .= <<<HTML
+<option value="">{$field2['label']}</option>
+HTML;
+            }
             foreach ($countryOptions as $option) {
                 if ($option) {
                     $inputs .= <<<HTML
