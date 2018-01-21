@@ -12,7 +12,6 @@
 namespace Mautic\LeadBundle\Model;
 
 use DeviceDetector\DeviceDetector;
-use Doctrine\ORM\NonUniqueResultException;
 use Mautic\CategoryBundle\Entity\Category;
 use Mautic\CategoryBundle\Model\CategoryModel;
 use Mautic\ChannelBundle\Helper\ChannelListHelper;
@@ -31,7 +30,6 @@ use Mautic\CoreBundle\Model\FormModel;
 use Mautic\EmailBundle\Helper\EmailValidator;
 use Mautic\LeadBundle\Entity\Company;
 use Mautic\LeadBundle\Entity\CompanyChangeLog;
-use Mautic\LeadBundle\Entity\CompanyLead;
 use Mautic\LeadBundle\Entity\DoNotContact;
 use Mautic\LeadBundle\Entity\FrequencyRule;
 use Mautic\LeadBundle\Entity\Lead;
@@ -509,7 +507,6 @@ class LeadModel extends FormModel
             $this->companyModel->addLeadToCompany($companyEntity, $entity);
             $this->setPrimaryCompany($companyEntity->getId(), $entity->getId());
         }
-
         $this->em->clear(CompanyChangeLog::class);
     }
 
@@ -1027,6 +1024,35 @@ class LeadModel extends FormModel
     }
 
     /**
+     * Get existing duplicated contact based on unique fields and the request data.
+     *
+     * @param array $parameters
+     * @param null  $id
+     *
+     * @return null|Lead
+     */
+    public function getExistingLead(array $parameters, $id = null)
+    {
+        // Check to see if contacts exist based on unique identifiers
+        $uniqueLeadFields    = $this->leadFieldModel->getUniqueIdentiferFields();
+        $uniqueLeadFieldData = [];
+
+        foreach ($parameters as $k => $v) {
+            if (array_key_exists($k, $uniqueLeadFields) && !empty($v)) {
+                $uniqueLeadFieldData[$k] = $v;
+            }
+        }
+
+        if (count($uniqueLeadFieldData)) {
+            $leads = $this->getRepository()->getLeadsByUniqueFields($uniqueLeadFieldData, $id, 1);
+
+            return ($leads) ? $leads[0] : null;
+        }
+
+        return null;
+    }
+
+    /**
      * @param array     $queryFields
      * @param Lead|null $lead
      * @param bool      $returnWithQueryFields
@@ -1333,7 +1359,7 @@ class LeadModel extends FormModel
      *
      * @return Lead
      */
-    public function mergeLeads(Lead $lead, Lead $lead2, $autoMode = true)
+    public function mergeLeads(Lead $lead, Lead $lead2, $autoMode = true, $onlyFields = [])
     {
         $this->logger->debug('LEAD: Merging leads');
 
@@ -1372,11 +1398,13 @@ class LeadModel extends FormModel
         }
 
         //merge fields
-        $fields = $this->leadFieldModel->getFieldListWithProperties($mergeFrom);
-        foreach ($fields as $alias => $field) {
-            if (empty($field['defaultValue']) && !empty($field['value'])) {
-                $mergeWith->addUpdatedField($alias, $field['value']);
-                $this->logger->debug('LEAD: Updated '.$alias.' = '.$field['value']);
+        $mergeFromFields = $this->leadFieldModel->getFieldListWithProperties($mergeFrom);
+        foreach ($mergeFromFields as $mergeFromAlias => $mergeFromfield) {
+            //overwrite old lead's data with new lead's if new lead's is not empty
+            if (!empty($mergeFromfield['value']) && (empty($onlyFields) || (!empty($onlyFields) && in_array($mergeFromAlias, array_keys($onlyFields))))) {
+                $mergeWith->addUpdatedField($mergeFromAlias, $mergeFromfield['value']);
+
+                $this->logger->debug('LEAD: Updated '.$mergeFromAlias.' = '.$mergeFromfield['value']);
             }
         }
 
@@ -1685,7 +1713,7 @@ class LeadModel extends FormModel
         foreach ($fields as $leadField => $importField) {
             // Prevent overwriting existing data with empty data
             if (array_key_exists($importField, $data) && !is_null($data[$importField]) && $data[$importField] != '') {
-                $fieldData[$leadField] = InputHelper::_($data[$importField], 'string');
+                $fieldData[$leadField] = InputHelper::clean($data[$importField]);
             }
         }
 
@@ -1814,13 +1842,11 @@ class LeadModel extends FormModel
         unset($fieldData['doNotEmail']);
 
         if (!empty($fields['ownerusername']) && !empty($data[$fields['ownerusername']])) {
-            try {
-                $newOwner = $this->userProvider->loadUserByUsername($data[$fields['ownerusername']]);
+            $newOwner = $this->userProvider->loadUserByUsername($data[$fields['ownerusername']], $data[$fields['ownerusername']]);
+            if ($newOwner) {
                 $lead->setOwner($newOwner);
                 //reset default import owner if exists owner for contact
                 $owner = null;
-            } catch (NonUniqueResultException $exception) {
-                // user not found
             }
         }
         unset($fieldData['ownerusername']);
@@ -2671,7 +2697,6 @@ class LeadModel extends FormModel
 
         $companyLeads = $this->companyModel->getCompanyLeadRepository()->getEntitiesByLead($lead);
 
-        /** @var CompanyLead $companyLead */
         foreach ($companyLeads as $companyLead) {
             $company = $companyLead->getCompany();
 
@@ -2702,9 +2727,6 @@ class LeadModel extends FormModel
             $this->em->getRepository('MauticLeadBundle:Lead')->saveEntity($lead);
             $this->companyModel->getCompanyLeadRepository()->saveEntities($companyArray, false);
         }
-
-        // Clear CompanyLead entities from Doctrine memory
-        $this->em->clear(CompanyLead::class);
 
         return ['oldPrimary' => $oldPrimaryCompany, 'newPrimary' => $companyId];
     }

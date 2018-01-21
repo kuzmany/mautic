@@ -946,9 +946,9 @@ class SubmissionModel extends CommonFormModel
                 }
             } else {
                 $this->logger->debug('FORM: Merging contacts '.$lead->getId().' and '.$foundLead->getId());
-
                 // Merge the found lead with currently tracked lead
-                $lead = $this->leadModel->mergeLeads($lead, $foundLead);
+                print_r($data);
+                $lead = $this->leadModel->mergeLeads($lead, $foundLead, true, $data);
             }
 
             // Update unique fields data for comparison with submitted data
