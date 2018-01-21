@@ -1357,7 +1357,7 @@ class EmailModel extends FormModel implements AjaxLookupModelInterface
         array $lead = null,
         array $tokens = [],
         array $assetAttachments = [],
-        $saveStat = true,
+        $saveStat = false,
         array $to = [],
         array $cc = [],
         array $bcc = []
@@ -1575,6 +1575,8 @@ class EmailModel extends FormModel implements AjaxLookupModelInterface
 
     /**
      * Processes the callback response from a mailer for bounces and unsubscribes.
+     *
+     * @deprecated 2.13.0 to be removed in 3.0; use TransportWebhook::processCallback() instead
      *
      * @param array $response
      *
