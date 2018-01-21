@@ -1353,9 +1353,10 @@ class LeadModel extends FormModel
     /**
      * Merge two leads; if a conflict of data occurs, the newest lead will get precedence.
      *
-     * @param Lead $lead
-     * @param Lead $lead2
-     * @param bool $autoMode If true, the newest lead will be merged into the oldes then deleted; otherwise, $lead will be merged into $lead2 then deleted
+     * @param Lead  $lead
+     * @param Lead  $lead2
+     * @param bool  $autoMode   If true, the newest lead will be merged into the oldes then deleted; otherwise, $lead will be merged into $lead2 then deleted
+     * @param array $onlyFields Fields for merge, If empty all Lead entity will be merged
      *
      * @return Lead
      */
