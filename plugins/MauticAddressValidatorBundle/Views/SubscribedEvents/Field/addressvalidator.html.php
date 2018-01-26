@@ -95,7 +95,7 @@ HTML;
             $inputs .= <<<HTML
             <select id="{$idAttr}"  {$inputAttr}>
 HTML;
-            if (empty($field['properties']['placeholderAddress'])) {
+            if (!empty($field['properties']['placeholderAddress'])) {
                 $inputs .= <<<HTML
 <option value="">{$field2['label']}</option>
 HTML;
@@ -113,7 +113,7 @@ HTML;
         } else {
             if ($key == 'addressvalidated') {
                 $inputs .= <<<HTML
-<label style="display:block" class="mauticform-{$prefix}label" for="{$idAttr}" >{$view['translator']->trans('plugin.addressvalidator.field.label.corrected.address')}</label><input placeholder="{$placeholderAttr}" id="{$idAttr}"  {$inputAttr} type="$containerType" data-old-value="Yes" data-empty-value="Yes" value="Yes" />
+<label style="display:block" class="mauticform-{$prefix}label" for="{$idAttr}" >{$view['translator']->trans('plugin.addressvalidator.field.label.corrected.address')}:</label><input placeholder="{$placeholderAttr}" id="{$idAttr}"  {$inputAttr} type="$containerType" data-old-value="Yes" data-empty-value="Yes" value="Yes" />
 HTML;
             } else {
                 $inputs .= <<<HTML
