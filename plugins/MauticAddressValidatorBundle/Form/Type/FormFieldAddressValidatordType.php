@@ -15,6 +15,7 @@ use Mautic\LeadBundle\Helper\FormFieldHelper;
 use Mautic\LeadBundle\Model\FieldModel as LeadFieldModel;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\FormBuilderInterface;
+use Symfony\Component\Validator\Constraints\NotBlank;
 
 /**
  * Class FormFieldAddressValidatordType.
@@ -103,6 +104,9 @@ class FormFieldAddressValidatordType extends AbstractType
                 'attr'       => [
                     'class' => 'form-control',
                 ],
+                'constraints' => [
+                    new NotBlank(),
+                ],
             ]
         );
 
@@ -179,6 +183,9 @@ class FormFieldAddressValidatordType extends AbstractType
                 'attr'       => [
                     'class' => 'form-control',
                 ],
+                'constraints' => [
+                    new NotBlank(),
+                ],
             ]
         );
 
@@ -204,7 +211,10 @@ class FormFieldAddressValidatordType extends AbstractType
                     'class'   => 'form-control',
                     'tooltip' => 'mautic.form.field.help.lead_field',
                 ],
-                'required' => false,
+                'required' => true,
+                'constraints' => [
+                    new NotBlank(),
+                ],
             ]
         );
 
@@ -216,6 +226,9 @@ class FormFieldAddressValidatordType extends AbstractType
                 'label_attr' => ['class' => 'control-label'],
                 'attr'       => [
                     'class' => 'form-control',
+                ],
+                'constraints' => [
+                    new NotBlank(),
                 ],
             ]
         );
@@ -254,6 +267,9 @@ class FormFieldAddressValidatordType extends AbstractType
                 'label_attr' => ['class' => 'control-label'],
                 'attr'       => [
                     'class' => 'form-control',
+                ],
+                'constraints' => [
+                    new NotBlank(),
                 ],
             ]
         );
@@ -318,7 +334,9 @@ class FormFieldAddressValidatordType extends AbstractType
                     'class'   => 'form-control',
                     'tooltip' => 'mautic.form.field.help.lead_field',
                 ],
-                'required' => false,
+                'constraints' => [
+                    new NotBlank(),
+                ],
             ]
         );
 
