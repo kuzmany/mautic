@@ -212,6 +212,15 @@ class CampaignSubscriber extends CommonSubscriber
             'channelIdField' => 'campaign_id',
         ];
         $event->addAction('extendedconditions.campaign_logs_remove', $action);
+
+        $action = [
+            'label' => 'plugin.extended.conditions.campaign.event.session.count.update',
+            'eventName' => ExtendedConditionsEvents::ON_CAMPAIGN_TRIGGER_ACTION,
+            'formType' => 'extendedconditionsnevent_remove_logs',
+            'channel' => 'campaign',
+            'channelIdField' => 'campaign_id',
+        ];
+        $event->addAction('extendedconditions.campaign_logs_remove', $action);
     }
 
     /**
@@ -276,7 +285,7 @@ class CampaignSubscriber extends CommonSubscriber
                 $hit = $eventDetails;
                 $lead = $hit->getLead();
                 // just one time
-                if (!$this->request->cookies->get('page_session_check') || 1==1) {
+                if (!$this->request->cookies->get('page_session_check') || 1 == 1) {
                     $sessionTimeLimit = $eventConfig['page_session_time_limit'] ?: 30;
                     // is session
                     $qb = $this->db->createQueryBuilder();
@@ -441,11 +450,12 @@ class CampaignSubscriber extends CommonSubscriber
                     return $event->setResult(true);
                 }
             }
+
             return $event->setResult(false);
         } elseif ($event->checkContext('extendedconditions.click_condition')) {
             if (is_object($eventDetails)) {
                 $hit = $eventDetails;
-                if ($eventConfig['source'] == $hit->getSource() && $eventConfig['source_id'] == $hit->getSourceId()) {
+                if ($eventConfig['source'] == $hit->getSource() && (!$eventConfig['source_id'] || $eventConfig['source_id'] == $hit->getSourceId())) {
                     return $event->setResult(true);
                 } else {
                     return $event->setResult(false);
@@ -463,16 +473,21 @@ class CampaignSubscriber extends CommonSubscriber
             }
 
             if ($slot) {
-                $limitToUrl = str_replace(['\|','\$','\^'],['|','$','^'], preg_quote(trim($eventConfig['url']), '/'));
+                $limitToUrl = str_replace(
+                    ['\|', '\$', '\^'],
+                    ['|', '$', '^'],
+                    preg_quote(trim($eventConfig['url']), '/')
+                );
                 $currentUrl = $this->request->server->get('HTTP_REFERER');
                 // if url match
                 preg_match('/'.$limitToUrl.'/', $currentUrl, $matches);
                 if (!$limitToUrl || !empty($matches[0])) {
                     $this->session->set('dynamic.id.'.$slot.$lead->getId(), $eventConfig['dynamic_id']);
-                }else{
+                } else {
                     $this->session->remove('dynamic.id.'.$slot.$lead->getId());
                 }
             }
+
             return $event->setResult(false);
         }
     }
@@ -501,14 +516,17 @@ class CampaignSubscriber extends CommonSubscriber
             }
 
         } elseif ($event->checkContext('extendedconditions.campaign_logs_remove')) {
-            $qb = $this->db;
-            $qb->delete(
-                MAUTIC_TABLE_PREFIX.'campaign_lead_event_log',
-                [
-                    'lead_id' => (int)$lead->getId(),
-                    'campaign_id' => (int)$event->getEvent()['campaign']['id'],
-                ]
-            );
+            $campaigns = $eventConfig['campaigns'];
+            foreach ($campaigns as $campaign) {
+                $qb = $this->db;
+                $qb->delete(
+                    MAUTIC_TABLE_PREFIX.'campaign_lead_event_log',
+                    [
+                        'lead_id' => (int)$lead->getId(),
+                        'campaign_id' => $campaign,
+                    ]
+                );
+            }
         }
     }
 }

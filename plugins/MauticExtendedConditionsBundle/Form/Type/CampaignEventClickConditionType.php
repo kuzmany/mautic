@@ -50,6 +50,20 @@ class CampaignEventClickConditionType extends AbstractType
             ]
         );
 
+
+        $builder->add(
+            'url',
+            'text',
+            [
+                'label'      => 'plugin.extended.conditions.click.url',
+                'label_attr' => ['class' => 'control-label'],
+                'attr'       => [
+                    'class'   => 'form-control',
+                ],
+                'required'    => false,
+            ]
+        );
+
     }
     /**
      * {@inheritdoc}

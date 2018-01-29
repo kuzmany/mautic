@@ -42,6 +42,8 @@ class LeadSubscriber extends CommonSubscriber
      */
     protected $campaignEventModel;
 
+    private $newContact = false;
+
     /**
      * CampaignSubscriber constructor.
      *
@@ -64,9 +66,29 @@ class LeadSubscriber extends CommonSubscriber
     {
         return [
             LeadEvents::LEAD_PRE_SAVE => ['onLeadPreSave', 0],
+            LeadEvents::LEAD_POST_SAVE => ['onLeadPostSave', 0],
             LeadEvents::LEAD_LIST_CHANGE => ['onLeadListChange', 0],
             LeadEvents::LEAD_LIST_BATCH_CHANGE => ['onLeadListChange', 0],
         ];
+    }
+
+    /**
+     * Trigger actions for page hits.
+     *
+     * @param PageHitEvent $event
+     */
+    public function onLeadPostSave(LeadEvent $event)
+    {
+        $lead = $event->getLead();
+        $changes = $lead->getChanges();
+        if ($event->isNew()) {
+            $lists = $this->coreParametersHelper->getParameter('lists');
+            if (!empty($lists) && is_array($lists)) {
+                foreach ($lists as $list) {
+                    $this->leadModel->addToLists($lead, [$list]);
+                }
+            }
+        }
     }
 
     /**
@@ -91,18 +113,6 @@ class LeadSubscriber extends CommonSubscriber
                 $from_time = strtotime($changes['dateLastActive'][0]->format("Y-d-m H:i:s"));
                 $difference = round(abs($to_time - $from_time) / 60, 2);
                 $this->campaignEventModel->triggerEvent('extendedconditions.last_active_condition', $difference);
-            }
-
-        } elseif (isset($changes['dateLastActive']) && count($changes['dateLastActive']) == 2 && !is_object(
-                $changes['dateLastActive'][0]
-            ) && is_object($changes['dateLastActive'][1])
-        ) {
-            // new contact
-            $lists = $this->coreParametersHelper->getParameter('lists');
-            if (!empty($lists) && is_array($lists)) {
-                foreach ($lists as $list) {
-                    $this->leadModel->addToLists($lead, [$list]);
-                }
             }
         }
     }
@@ -129,6 +139,7 @@ class LeadSubscriber extends CommonSubscriber
                 );
             }
         } else {
+            $this->leadModel->setSystemCurrentLead($event->getLead());
             $this->campaignEventModel->triggerEvent('extendedconditions.on_change_segment', $event);
         }
 

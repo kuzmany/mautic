@@ -38,6 +38,8 @@ return [
                 'arguments' => [
                     'mautic.campaign.model.event',
                     'mautic.lead.model.lead',
+                    'mautic.helper.ip_lookup',
+                    'doctrine.dbal.default_connection',
                 ],
             ],
             'mautic.plugin.extendedconditions.configbundle.subscriber' => [

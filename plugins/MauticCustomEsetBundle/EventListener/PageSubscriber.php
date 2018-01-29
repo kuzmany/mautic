@@ -106,7 +106,7 @@ class PageSubscriber extends CommonSubscriber
                 }
             }
 
-            if (empty($lead->getFieldValue('resellerid')) &&  $request->get('resellerid')) {
+            if ((empty($lead->getFieldValue('resellerid')) || $lead->isAnonymous()) &&  $request->get('resellerid')) {
                 $lead->addUpdatedField('resellerid', $request->get('resellerid'));
             }
 
