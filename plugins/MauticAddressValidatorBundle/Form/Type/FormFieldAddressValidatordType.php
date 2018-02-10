@@ -15,7 +15,9 @@ use Mautic\LeadBundle\Helper\FormFieldHelper;
 use Mautic\LeadBundle\Model\FieldModel as LeadFieldModel;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\FormBuilderInterface;
+use Symfony\Component\Validator\Constraints\Callback;
 use Symfony\Component\Validator\Constraints\NotBlank;
+use Symfony\Component\Validator\Context\ExecutionContextInterface;
 
 /**
  * Class FormFieldAddressValidatordType.
@@ -91,6 +93,16 @@ class FormFieldAddressValidatordType extends AbstractType
                 'label_attr' => ['class' => 'control-label'],
                 'attr'       => [
                     'class' => 'form-control',
+                ],
+                'constraints' => [
+                    new Callback(
+                        function ($validateMe, ExecutionContextInterface $context) {
+                            $data = $context->getRoot()->getData();
+                            if (!empty($data['properties']['validatorToogle']) && empty($validateMe)) {
+                                $context->buildViolation('mautic.core.value.required')->addViolation();
+                            }
+                        }
+                    ),
                 ],
             ]
         );
@@ -308,6 +320,9 @@ class FormFieldAddressValidatordType extends AbstractType
                 'label_attr' => ['class' => 'control-label'],
                 'attr'       => [
                     'class' => 'form-control',
+                ],
+                'constraints' => [
+                    new NotBlank(),
                 ],
             ]
         );

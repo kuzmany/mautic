@@ -116,7 +116,8 @@ $(document).ready(function () {
              if(json.status=="SUSPECT"){
                  correctedAddress.parent().css('display','inline');
               obj.find('.mauticform-errormsg').css('display','inline');
-              obj.find('.mauticform-errormsg').text(json.formattedaddress);
+              var joinedAddress = json.addressline1+", "+json.addressline3+", "+json.city+", "+json.state+", "+json.country;
+              obj.find('.mauticform-errormsg').text(joinedAddress);
               correctedAddress.on('click',function() {
                     if($(this).is(':checked')){
                         objDisbledInputs.each(function(){
