@@ -212,15 +212,6 @@ class CampaignSubscriber extends CommonSubscriber
             'channelIdField' => 'campaign_id',
         ];
         $event->addAction('extendedconditions.campaign_logs_remove', $action);
-
-        $action = [
-            'label' => 'plugin.extended.conditions.campaign.event.session.count.update',
-            'eventName' => ExtendedConditionsEvents::ON_CAMPAIGN_TRIGGER_ACTION,
-            'formType' => 'extendedconditionsnevent_remove_logs',
-            'channel' => 'campaign',
-            'channelIdField' => 'campaign_id',
-        ];
-        $event->addAction('extendedconditions.campaign_logs_remove', $action);
     }
 
     /**
