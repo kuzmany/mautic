@@ -207,7 +207,10 @@ class FormSubscriber extends CommonSubscriber
 
             // force validation, not continue anyway
             $forceValidation = false;
-            if (!empty($field->getProperties()['validatorRequired'])) {
+            // bc compatibility  - validatorRequired set to true by defautl
+            if (!isset($field->getProperties()['validatorRequired'])) {
+                $forceValidation = true;
+            } elseif (!empty($field->getProperties()['validatorRequired'])) {
                 $forceValidation = true;
             } elseif (empty($field->getProperties()['validatorRequired']) &&
                 !empty($data['toogle']) && !empty($dataValues)

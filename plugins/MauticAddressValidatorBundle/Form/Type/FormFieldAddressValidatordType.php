@@ -15,6 +15,7 @@ use Mautic\LeadBundle\Helper\FormFieldHelper;
 use Mautic\LeadBundle\Model\FieldModel as LeadFieldModel;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\FormBuilderInterface;
+use Symfony\Component\OptionsResolver\OptionsResolverInterface;
 use Symfony\Component\Validator\Constraints\Callback;
 use Symfony\Component\Validator\Constraints\NotBlank;
 use Symfony\Component\Validator\Context\ExecutionContextInterface;
@@ -223,7 +224,7 @@ class FormFieldAddressValidatordType extends AbstractType
                     'class'   => 'form-control',
                     'tooltip' => 'mautic.form.field.help.lead_field',
                 ],
-                'required' => true,
+                'required'    => true,
                 'constraints' => [
                     new NotBlank(),
                 ],
@@ -400,6 +401,18 @@ class FormFieldAddressValidatordType extends AbstractType
             'hidden',
             [
                 'label' => 'plugin.addressvalidator.field.label.toogle',
+            ]
+        );
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function setDefaultOptions(OptionsResolverInterface $resolver)
+    {
+        $resolver->setDefaults(
+            [
+                'data' => ['validatorRequired'=>true],
             ]
         );
     }
