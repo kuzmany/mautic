@@ -59,6 +59,10 @@ return [
                 'path'       => '/addressvalidation/validator.js',
                 'controller' => 'MauticAddressValidatorBundle:Ajax:generate',
             ],
+            'mautic_addressvalidator_bc' => [
+                'path'       => '/addressvalidation/generate.js',
+                'controller' => 'MauticAddressValidatorBundle:Ajax:generate',
+            ],
         ],
     ],
     'parameters' => [
