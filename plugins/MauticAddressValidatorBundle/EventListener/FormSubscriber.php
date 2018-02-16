@@ -140,7 +140,7 @@ class FormSubscriber extends CommonSubscriber
                     }
 
                     $matchedFields = [];
-                    foreach ($data as $key => &$value) {
+                    foreach ($data as $key => $value) {
 
                         $serviceReponseKey = str_replace(['address1', 'zip'], ['addressline1', 'postalcode'], $key);
                         if (empty($result[$serviceReponseKey])) {
@@ -148,6 +148,7 @@ class FormSubscriber extends CommonSubscriber
                         }
                         if ($updateSubmittedData && !in_array($key, ['toogle', 'addressvalidated','address4'])) {
                             $value = $result[$serviceReponseKey];
+                            $data[$key] = $result[$serviceReponseKey];
                         }
 
                         if (in_array($key, array_keys($props))) {
@@ -161,6 +162,7 @@ class FormSubscriber extends CommonSubscriber
                     }
 
                     $this->leadModel->setFieldValues($lead, $matchedFields, true);
+                    $this->leadModel->saveEntity($lead);
                     // update addres field
                     $results[$addressValidatorFieldAlias] = $results[$addressValidatorFieldAlias] = http_build_query($data,
                         ',', '|');
