@@ -410,11 +410,7 @@ class FormFieldAddressValidatordType extends AbstractType
      */
     public function setDefaultOptions(OptionsResolverInterface $resolver)
     {
-        $resolver->setDefaults(
-            [
-                'data' => ['validatorRequired'=>true],
-            ]
-        );
+
     }
 
     /**
