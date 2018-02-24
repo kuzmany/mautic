@@ -48,6 +48,7 @@ class FormFieldAddressValidatordType extends AbstractType
     {
         $fields = $this->leadFieldModel->getFieldListWithProperties();
 
+        $choices[]= '';
         foreach ($fields as $alias => $field) {
             if (!isset($choices[$field['group_label']])) {
                 $choices[$field['group_label']] = [];
@@ -202,6 +203,7 @@ class FormFieldAddressValidatordType extends AbstractType
             ]
         );
 
+
         $builder->add(
             'leadFieldCity',
             'choice',
@@ -224,10 +226,7 @@ class FormFieldAddressValidatordType extends AbstractType
                     'class'   => 'form-control',
                     'tooltip' => 'mautic.form.field.help.lead_field',
                 ],
-                'required'    => true,
-                'constraints' => [
-                    new NotBlank(),
-                ],
+                'required' => false,
             ]
         );
 
