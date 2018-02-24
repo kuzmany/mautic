@@ -191,9 +191,6 @@ class FormSubscriber extends CommonSubscriber
                 'label'       => 'mautic.plugin.field.addressvalidator',
                 'formType'    => 'addressvalidator',
                 'template'    => 'MauticAddressValidatorBundle:SubscribedEvents\Field:addressvalidator.html.php',
-                'valueFilter' => function ($field, $data) {
-                    return $this->setValidateAddress($field, $data);
-                },
                 'builderOptions' => [
                     'addLeadFieldList'       => false,
                     'addDefaultValue'        => false,
@@ -333,7 +330,7 @@ class FormSubscriber extends CommonSubscriber
                         return $event->failedValidation(
                             $this->translator->trans('plugin.addressvalidator.address.is.not.valid')
                         );
-                    } elseif ($result['status'] == 'SUSPECT') {
+                    } elseif ($result['status'] == 'SUSPECT' || ($result['status'] == 'VALID' && $data['addressvalidated']!='Yes')) {
                         if (!isset($data['correctedaddress'])) {
                             return $event->failedValidation(
                                 \GuzzleHttp\json_encode($result)

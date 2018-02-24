@@ -113,7 +113,7 @@ $(document).ready(function () {
              correctedAddress.unbind('click');
              correctedAddress.attr('checked','checked');
              correctedAddress.click();
-             if(json.status=="SUSPECT"){
+             if(json.status=="SUSPECT" || json.status=="VALID"){
               correctedAddress.parent().css('display','inline');
               obj.find('.mauticform-errormsg').css('display','inline');
               //var joinedAddress = json.addressline1+", "+json.addressline3+", "+json.city+", "+json.state+", "+json.country;
@@ -133,12 +133,16 @@ $(document).ready(function () {
 
               })
                correctedAddress.click();
+                if(json.status=="VALID"){
+          correctedAddress.parent().hide();
+                obj.find('.mauticform-errormsg').hide();
+                   obj.parents('form').first().submit(); 
+                }
              }
             } catch (exception) {
             }
             }   else if (response.success == 1){
-                           console.log(response);
-                             obj.find('.mauticform-errormsg').hide();
+                   obj.find('.mauticform-errormsg').hide();
             }
             }
         };
