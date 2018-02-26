@@ -19,6 +19,7 @@ use Mautic\FormBundle\Event\SubmissionEvent;
 use Mautic\FormBundle\FormEvents;
 use Mautic\FormBundle\Model\SubmissionModel;
 use Mautic\LeadBundle\Model\LeadModel;
+use Mautic\PluginBundle\PluginEvents;
 use MauticPlugin\MauticAddressValidatorBundle\AddressValidatorEvents;
 use MauticPlugin\MauticAddressValidatorBundle\Helper\AddressValidatorHelper;
 
@@ -78,6 +79,7 @@ class FormSubscriber extends CommonSubscriber
             FormEvents::FORM_ON_BUILD                       => ['onFormBuilder', 0],
             FormEvents::FORM_ON_SUBMIT                      => ['onFormSubmit', 0],
             AddressValidatorEvents::ON_FORM_VALIDATE_ACTION => ['onFormValidate', 0],
+            PluginEvents::ON_FORM_SUBMIT_ACTION_TRIGGERED => ['onPluginFormSubmitActionTriggered', 1000], //  update lead before plugin actions are executed
         ];
     }
 
@@ -167,7 +169,6 @@ class FormSubscriber extends CommonSubscriber
                     }
 
                     $this->leadModel->setFieldValues($lead, $matchedFields, true);
-                    $this->leadModel->saveEntity($lead);
                     // update addres field
                     $results[$addressValidatorFieldAlias] = $results[$addressValidatorFieldAlias] = http_build_query($data,
                         ',', '|');
@@ -176,6 +177,11 @@ class FormSubscriber extends CommonSubscriber
                         ->update($resultsTableName, $results, $tableKeys);
                 }
             }
+        }
+
+        /** Lead $lead */
+        if(!empty($lead->getChanges())) {
+            $this->leadModel->saveEntity($lead);
         }
     }
 
@@ -341,6 +347,58 @@ class FormSubscriber extends CommonSubscriber
                     return $event->failedValidation(
                         $this->translator->trans('plugin.addressvalidator.form.empty')
                     );
+                }
+            }
+        }
+    }
+
+    /**
+     * onFormSubmitActionTriggered - update Lead after address validtor passed
+     *
+     * @param SubmissionEvent $event
+     *
+     * @return mixed
+     */
+    public function onPluginFormSubmitActionTriggered(SubmissionEvent $event)
+    {
+        $form = $event->getSubmission()->getForm();
+        $fields = $form->getFields();
+        $lead = $event->getLead();
+
+        // update form results
+        foreach ($event->getFields() as $field) {
+            if ($field['type'] == 'plugin.addressvalidator') {
+                $addressValidatorFieldAlias = $field['alias'];
+                $data = $event->getRequest()->get('mauticform')[$addressValidatorFieldAlias];
+                if (empty($data['addressvalidated'])) {
+                    $data['addressvalidated'] = 'No';
+                }
+                /* @var \Mautic\FormBundle\Entity\Field $f */
+                if (!empty($data)) {
+                    foreach ($fields as $f) {
+                        if ($f->getAlias() == $addressValidatorFieldAlias) {
+                            $props = [];
+                            foreach ($f->getProperties() as $key => $property) {
+                                if (strpos($key, 'label') !== false || strpos($key, 'leadField') !== false) {
+                                    $newKey = strtolower(str_ireplace(['label', 'leadField'], ['', ''], $key));
+                                    if ($newKey) {
+                                        $props[$newKey][str_ireplace($newKey, '', $key)] = $property;
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    $matchedFields = [];
+                    foreach ($data as $key => $value) {
+                        if (in_array($key, array_keys($props))) {
+                            $matchLeadField = $props[$key]['leadField'];
+                            if ($matchLeadField) {
+                                $matchedFields[$matchLeadField] = $value;
+                            }
+                        }
+                    }
+                    $this->leadModel->setFieldValues($lead, $matchedFields, true);
                 }
             }
         }
