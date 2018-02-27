@@ -68,6 +68,7 @@ class FormFieldAddressValidatordType extends AbstractType
                 'attr'  => [
                     'tooltip' => 'plugin.addressvalidator.field.required.desc',
                 ],
+                'data'=>isset($options['data']['validatorRequired']) ? $options['data']['validatorRequired'] : true
             ]
         );
 
@@ -76,6 +77,7 @@ class FormFieldAddressValidatordType extends AbstractType
             'yesno_button_group',
             [
                 'label' => 'plugin.addressvalidator.field.label.placeholder',
+                'data'=>isset($options['data']['placeholderAddress']) ? $options['data']['placeholderAddress'] : false
             ]
         );
 
@@ -84,6 +86,8 @@ class FormFieldAddressValidatordType extends AbstractType
             'yesno_button_group',
             [
                 'label' => 'plugin.addressvalidator.field.toggle',
+                'data'=>isset($options['data']['validatorToogle']) ? $options['data']['validatorToogle'] : false
+
             ]
         );
 
@@ -402,14 +406,6 @@ class FormFieldAddressValidatordType extends AbstractType
                 'label' => 'plugin.addressvalidator.field.label.toogle',
             ]
         );
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function setDefaultOptions(OptionsResolverInterface $resolver)
-    {
-
     }
 
     /**
