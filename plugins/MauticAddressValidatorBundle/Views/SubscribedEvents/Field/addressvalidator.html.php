@@ -140,7 +140,6 @@ HTML;
 }
 
 $formNameWithout_ = str_replace('_', '', $formName);
-
 if (!empty($inForm)):
     $html = <<<HTML
     
@@ -151,7 +150,7 @@ if (!empty($inForm)):
 HTML;
 else:
     $html = <<<HTML
-<div class="mauticform-row"><div  data-validation-type="plugin.addressvalidator" data-validate-id="{$field['id']}"  data-validate-alias="{$field['alias']}" data-validate-form-id="{$field['form']->getId()}" data-validate-form-name="{$formNameWithout_}" {$containerAttr}>{$inputs}<div class="mauticform-errormsg" style="display: none;">$validationMessage</div></div></div>
+<div class="mauticform-row mauticform-row-address-validator"><div  data-validation-type="plugin.addressvalidator" data-validate-id="{$field['id']}"  data-validate-alias="{$field['alias']}" data-validate-form-id="{$field['form']->getId()}" data-validate-form-name="{$formNameWithout_}" {$containerAttr}>{$inputs}<div class="mauticform-errormsg" style="display: none;">$validationMessage</div></div></div>
 <div id="mauticformmessage-wrap"><div class="mauticform-error" id="mauticform{$formName}_error"></div><div class="mauticform-message" id="mauticform{$formName}_message"></div></div>
  <input  class="addressvalidatorid" name="addressvalidatorid" value="{$field['form']->getId()}" type="hidden" /> 
  <input  class="addressvalidatorname" name="addressvalidatorname" value="{$formNameWithout_}" type="hidden" />
