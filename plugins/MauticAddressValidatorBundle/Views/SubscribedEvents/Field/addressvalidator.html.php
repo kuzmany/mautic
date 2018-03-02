@@ -71,7 +71,7 @@ foreach ($props as $key => $field2) {
         $placeholderAttr = $view->escape($field2['label']);
     }
 
-    if ($field2['label'] || $key == 'addressvalidated') {
+    if (!empty($field2['label']) || $key == 'addressvalidated') {
         $classContainer = 'mauticform-row';
         if (!empty($field['properties']['validatorRequired'])) {
             $classContainer .= ' mauticform-required';
@@ -84,10 +84,17 @@ foreach ($props as $key => $field2) {
 <div class="{$classContainer}">
 HTML;
 
+        $labelAfter = '';
+        $inputsTmp = '';
         if ($field['showLabel'] || $key == 'toogle') {
-            $inputs .= <<<HTML
+            $inputsTmp = <<<HTML
 <label class="mauticform-{$prefix}label" for="{$idAttr}" >{$view->escape($field2['label'])}</label>
 HTML;
+        }
+        if($key == 'toogle'){
+            $labelAfter = $inputsTmp;
+        }else{
+            $inputs.=$inputsTmp;
         }
 
         if ($idBcKey == 'country' && !empty($field['properties']['optionsCountry'])) {
@@ -117,7 +124,7 @@ HTML;
 HTML;
             } else {
                 $inputs .= <<<HTML
-           <input placeholder="{$placeholderAttr}" id="{$idAttr}"  {$inputAttr} type="$containerType" />
+           <input placeholder="{$placeholderAttr}" id="{$idAttr}"  {$inputAttr} type="$containerType" /> {$labelAfter}
 HTML;
             }
         }
