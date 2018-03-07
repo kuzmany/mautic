@@ -1327,13 +1327,14 @@ class LeadModel extends FormModel
     /**
      * Merge two leads; if a conflict of data occurs, the newest lead will get precedence.
      *
-     * @param Lead $lead
-     * @param Lead $lead2
-     * @param bool $autoMode If true, the newest lead will be merged into the oldes then deleted; otherwise, $lead will be merged into $lead2 then deleted
+     * @param Lead  $lead
+     * @param Lead  $lead2
+     * @param bool  $autoMode   If true, the newest lead will be merged into the oldes then deleted; otherwise, $lead will be merged into $lead2 then deleted
+     * @param array $onlyFields Fields for merge, If empty all Lead entity will be merged
      *
      * @return Lead
      */
-    public function mergeLeads(Lead $lead, Lead $lead2, $autoMode = true)
+    public function mergeLeads(Lead $lead, Lead $lead2, $autoMode = true, $onlyFields = [])
     {
         $this->logger->debug('LEAD: Merging leads');
 
@@ -1372,15 +1373,12 @@ class LeadModel extends FormModel
         }
 
         //merge fields
-        $mergeFromFields = $mergeFrom->getFields();
-        foreach ($mergeFromFields as $group => $groupFields) {
-            foreach ($groupFields as $alias => $details) {
-                //overwrite old lead's data with new lead's if new lead's is not empty
-                if (!empty($details['value'])) {
-                    $mergeWith->addUpdatedField($alias, $details['value']);
-
-                    $this->logger->debug('LEAD: Updated '.$alias.' = '.$details['value']);
-                }
+        $mergeFromFields = $this->leadFieldModel->getFieldListWithProperties($mergeFrom);
+        foreach ($mergeFromFields as $mergeFromAlias => $mergeFromfield) {
+            //overwrite old lead's data with new lead's if new lead's is not empty
+            if (!empty($mergeFromfield['value']) && (empty($onlyFields) || (!empty($onlyFields) && in_array($mergeFromAlias, array_keys($onlyFields))))) {
+                $mergeWith->addUpdatedField($mergeFromAlias, $mergeFromfield['value']);
+                $this->logger->debug('LEAD: Updated '.$mergeFromAlias.' = '.$mergeFromfield['value']);
             }
         }
 
@@ -1998,8 +1996,8 @@ class LeadModel extends FormModel
     public function addUTMTags(Lead $lead, $params)
     {
         // known "synonym" fields expected
-        $synonyms = ['useragent' => 'user_agent',
-                    'remotehost' => 'remote_host', ];
+        $synonyms = ['useragent'  => 'user_agent',
+                    'remotehost'  => 'remote_host', ];
 
         // convert 'query' option to an array if necessary
         if (isset($params['query']) && !is_array($params['query'])) {
