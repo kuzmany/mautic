@@ -13,7 +13,11 @@ namespace Mautic\EmailBundle\Controller\Api;
 
 use FOS\RestBundle\Util\Codes;
 use Mautic\ApiBundle\Controller\CommonApiController;
+use Mautic\CoreBundle\Helper\EmojiHelper;
 use Mautic\CoreBundle\Helper\InputHelper;
+use Mautic\EmailBundle\Entity\Email;
+use Mautic\EmailBundle\Entity\Stat;
+use Mautic\EmailBundle\Helper\MailHelper;
 use Mautic\LeadBundle\Controller\LeadAccessTrait;
 use Mautic\LeadBundle\Entity\Lead;
 use Symfony\Component\HttpFoundation\Response;
@@ -32,8 +36,15 @@ class EmailApiController extends CommonApiController
         $this->entityClass      = 'Mautic\EmailBundle\Entity\Email';
         $this->entityNameOne    = 'email';
         $this->entityNameMulti  = 'emails';
-        $this->serializerGroups = ['emailDetails', 'categoryList', 'publishDetails', 'assetList', 'formList', 'leadListList'];
-        $this->dataInputMasks   = [
+        $this->serializerGroups = [
+            'emailDetails',
+            'categoryList',
+            'publishDetails',
+            'assetList',
+            'formList',
+            'leadListList',
+        ];
+        $this->dataInputMasks = [
             'customHtml'     => 'html',
             'dynamicContent' => [
                 'content' => 'html',
@@ -111,6 +122,7 @@ class EmailApiController extends CommonApiController
      */
     public function sendLeadAction($id, $leadId)
     {
+        /** @var Email $entity */
         $entity = $this->model->getEntity($id);
         if (null !== $entity) {
             if (!$this->checkEntityAccess($entity, 'view')) {
@@ -123,9 +135,10 @@ class EmailApiController extends CommonApiController
                 return $lead;
             }
 
-            $post     = $this->request->request->all();
-            $tokens   = (!empty($post['tokens'])) ? $post['tokens'] : [];
-            $response = ['success' => false];
+            $post      = $this->request->request->all();
+            $tokens    = (!empty($post['tokens'])) ? $post['tokens'] : [];
+            $ignoreDNC = isset($post['ignoreDNC']) ? $post['ignoreDNC'] : false;
+            $response  = ['success' => false];
 
             $cleanTokens = [];
 
@@ -146,6 +159,7 @@ class EmailApiController extends CommonApiController
                 [
                     'source'        => ['api', 0],
                     'tokens'        => $cleanTokens,
+                    'ignoreDNC'     => $ignoreDNC,
                     'return_errors' => true,
                 ]
             );
@@ -162,5 +176,137 @@ class EmailApiController extends CommonApiController
         }
 
         return $this->notFound();
+    }
+
+    /**
+     * Sends custom content to a specific lead.
+     *
+     * @param int $contactId
+     *
+     * @return \Symfony\Component\HttpFoundation\Response
+     *
+     * @throws \Symfony\Component\HttpKernel\Exception\NotFoundHttpException
+     */
+    public function sendCustomLeadAction($contactId)
+    {
+        /** @var Lead $lead */
+        $lead = $this->checkLeadAccess($contactId, 'edit');
+        if ($lead instanceof Response) {
+            return $lead;
+        }
+
+        $post         = $this->request->request->all();
+        $fromEmail    = (!empty($post['fromEmail'])) ? $post['fromEmail'] : null;
+        $fromName     = (!empty($post['fromName'])) ? $post['fromName'] : null;
+        $replyToEmail = (!empty($post['replyToEmail'])) ? $post['replyToEmail'] : null;
+        $replyToName  = (!empty($post['replyToName'])) ? $post['replyToName'] : null;
+        $subject      = (!empty($post['subject'])) ? $post['subject'] : '';
+        $content      = (!empty($post['content'])) ? $post['content'] : '';
+
+        $leadFields       = $lead->getProfileFields();
+        $leadFields['id'] = $lead->getId();
+        $leadEmail        = $leadFields['email'];
+        $leadName         = $leadFields['firstname'].' '.$leadFields['lastname'];
+
+        // Set onwer ID to be the current user ID so it will use his signature
+        $leadFields['owner_id'] = $this->get('mautic.helper.user')->getUser()->getId();
+
+        $response = ['success' => false];
+        if ($lead && $lead->getEmail()) {
+            /** @var MailHelper $mailer */
+            $mailer = $this->get('mautic.helper.mailer')->getMailer();
+
+            // To lead
+            $mailer->addTo(
+                $leadEmail,
+                $leadName
+            );
+
+            $mailer->setFrom(
+                $fromEmail,
+                $fromName
+            );
+
+            $mailer->setReplyTo($replyToEmail, $replyToName);
+
+            // Set Content
+            $mailer->setBody($content);
+            $mailer->parsePlainText($content);
+
+            // Set lead
+            $mailer->setLead($leadFields);
+            $mailer->setIdHash();
+
+            // Ensure safe emoji for notification
+            $subject = EmojiHelper::toHtml($subject);
+            $mailer->setSubject($subject);
+
+            if ($mailer->send(true, false, false)) {
+                /** @var Stat $stat */
+                $stat                     = $mailer->createEmailStat();
+                $response['trackingHash'] = ($stat && $stat->getTrackingHash()) ? $stat->getTrackingHash() : 0;
+                $response['success']      = true;
+            }
+
+            $view = $this->view($response, Codes::HTTP_OK);
+
+            return $this->handleView($view);
+        }
+
+        return $this->notFound();
+    }
+
+    /**
+     * Sends custom content to anybody.
+     *
+     * @return \Symfony\Component\HttpFoundation\Response
+     *
+     * @throws \Symfony\Component\HttpKernel\Exception\NotFoundHttpException
+     */
+    public function sendCustomAction()
+    {
+        $post         = $this->request->request->all();
+        $toEmail      = (!empty($post['toEmail'])) ? $post['toEmail'] : null;
+        $toName       = (!empty($post['toName'])) ? $post['toName'] : null;
+        $fromEmail    = (!empty($post['fromEmail'])) ? $post['fromEmail'] : null;
+        $fromName     = (!empty($post['fromName'])) ? $post['fromName'] : null;
+        $replyToEmail = (!empty($post['replyToEmail'])) ? $post['replyToEmail'] : null;
+        $replyToName  = (!empty($post['replyToName'])) ? $post['replyToName'] : null;
+        $subject      = (!empty($post['subject'])) ? $post['subject'] : '';
+        $content      = (!empty($post['content'])) ? $post['content'] : '';
+
+        $response = ['success' => false];
+
+        /** @var MailHelper $mailer */
+        $mailer = $this->get('mautic.helper.mailer')->getMailer();
+
+        // To email
+        $mailer->addTo(
+            $toEmail,
+            $toName
+        );
+
+        $mailer->setFrom(
+            $fromEmail,
+            $fromName
+        );
+
+        $mailer->setReplyTo($replyToEmail, $replyToName);
+
+        // Set Content
+        $mailer->setBody($content);
+        $mailer->parsePlainText($content);
+
+        // Ensure safe emoji for notification
+        $subject = EmojiHelper::toHtml($subject);
+        $mailer->setSubject($subject);
+
+        if ($mailer->send(true, false, false)) {
+            $response['success'] = true;
+        }
+
+        $view = $this->view($response, Codes::HTTP_OK);
+
+        return $this->handleView($view);
     }
 }

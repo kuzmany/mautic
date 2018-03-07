@@ -42,6 +42,16 @@ return [
                 'controller' => 'MauticEmailBundle:Api\EmailApi:sendLead',
                 'method'     => 'POST',
             ],
+            'mautic_api_sendcustomcontactemail' => [
+                'path'       => '/emails/contact/{contactId}/send/custom',
+                'controller' => 'MauticEmailBundle:Api\EmailApi:sendCustomLead',
+                'method'     => 'POST',
+            ],
+            'mautic_api_sendcustomemail' => [
+                'path'       => '/emails/send/custom',
+                'controller' => 'MauticEmailBundle:Api\EmailApi:sendCustom',
+                'method'     => 'POST',
+            ],
 
             // @deprecated 2.6.0 to be removed in 3.0
             'bc_mautic_api_sendcontactemail' => [
