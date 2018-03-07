@@ -121,6 +121,35 @@ class LeadFieldRepository extends CommonRepository
     }
 
     /**
+     * Add company left join.
+     *
+     * @param \Doctrine\ORM\QueryBuilder|\Doctrine\DBAL\Query\QueryBuilder $q
+     */
+    public function addCompanyLeftJoin($q)
+    {
+        $q->leftJoin('l', MAUTIC_TABLE_PREFIX.'companies_leads', 'companies_lead', 'l.id = companies_lead.lead_id');
+        $q->leftJoin('companies_lead', MAUTIC_TABLE_PREFIX.'companies', 'company', 'companies_lead.company_id = company.id');
+    }
+
+    /**
+     * Return column alias and join tables.
+     *
+     * @param string                                                       $field
+     * @param \Doctrine\ORM\QueryBuilder|\Doctrine\DBAL\Query\QueryBuilder $q
+     */
+    public function getColumnAliasByField($field, $q)
+    {
+        $columnAlias = 'l.';
+        // Join company tables If we're trying search by company fields
+        if (strpos($field, 'company.') !== false) {
+            $this->addCompanyLeftJoin($q);
+            $columnAlias = '';
+        }
+
+        return $columnAlias;
+    }
+
+    /**
      * Compare a form result value with defined value for defined lead.
      *
      * @param int    $lead         ID
@@ -159,6 +188,7 @@ class LeadFieldRepository extends CommonRepository
                 return false;
             }
         } else {
+            $columnAlias = $this->getColumnAliasByField($field, $q);
             // Standard field
             if ($operatorExpr === 'empty' || $operatorExpr === 'notEmpty') {
                 $q->where(
@@ -166,22 +196,22 @@ class LeadFieldRepository extends CommonRepository
                         $q->expr()->eq('l.id', ':lead'),
                         ($operatorExpr === 'empty') ?
                             $q->expr()->orX(
-                                $q->expr()->isNull('l.'.$field),
-                                $q->expr()->eq('l.'.$field, $q->expr()->literal(''))
+                                $q->expr()->isNull($columnAlias.$field),
+                                $q->expr()->eq($columnAlias.$field, $q->expr()->literal(''))
                             )
                         :
                         $q->expr()->andX(
-                            $q->expr()->isNotNull('l.'.$field),
-                            $q->expr()->neq('l.'.$field, $q->expr()->literal(''))
+                            $q->expr()->isNotNull($columnAlias.$field),
+                            $q->expr()->neq($columnAlias.$field, $q->expr()->literal(''))
                         )
                     )
                 )
                   ->setParameter('lead', (int) $lead);
             } elseif ($operatorExpr === 'regexp' || $operatorExpr === 'notRegexp') {
                 if ($operatorExpr === 'regexp') {
-                    $where = 'l.'.$field.' REGEXP  :value';
+                    $where = $columnAlias.$field.' REGEXP  :value';
                 } else {
-                    $where = 'l.'.$field.' NOT REGEXP  :value';
+                    $where = $columnAlias.$field.' NOT REGEXP  :value';
                 }
 
                 $q->where(
@@ -201,8 +231,8 @@ class LeadFieldRepository extends CommonRepository
                     // include null
                     $expr->add(
                         $q->expr()->orX(
-                            $q->expr()->$operatorExpr('l.'.$field, ':value'),
-                            $q->expr()->isNull('l.'.$field)
+                            $q->expr()->$operatorExpr($columnAlias.$field, ':value'),
+                            $q->expr()->isNull($columnAlias.$field)
                         )
                     );
                 } else {
@@ -222,7 +252,7 @@ class LeadFieldRepository extends CommonRepository
                     }
 
                     $expr->add(
-                        $q->expr()->$operatorExpr('l.'.$field, ':value')
+                        $q->expr()->$operatorExpr($columnAlias.$field, ':value')
                     );
                 }
 
@@ -248,12 +278,15 @@ class LeadFieldRepository extends CommonRepository
     public function compareDateValue($lead, $field, $value)
     {
         $q = $this->_em->getConnection()->createQueryBuilder();
+
+        $columnAlias = $this->getColumnAliasByField($field, $q);
+
         $q->select('l.id')
             ->from(MAUTIC_TABLE_PREFIX.'leads', 'l')
             ->where(
                 $q->expr()->andX(
                     $q->expr()->eq('l.id', ':lead'),
-                    $q->expr()->eq('l.'.$field, ':value')
+                    $q->expr()->eq($columnAlias.$field, ':value')
                 )
             )
             ->setParameter('lead', (int) $lead)
