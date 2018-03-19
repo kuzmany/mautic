@@ -112,25 +112,42 @@ Mautic.updateFormFields = function () {
             var select = mQuery('#campaignevent_properties_field');
             select.find('option').remove();
             var fieldOptions = {};
+            var fieldCustomOptions = {};
+            var fieldTypes = {};
             mQuery.each(response.fields, function(key, field) {
                 var option = mQuery('<option></option>')
                     .attr('value', field.alias)
                     .text(field.label);
                 select.append(option);
                 fieldOptions[field.alias] = field.options;
+                fieldTypes[field.alias] = field.type;
             });
             select.attr('data-field-options', JSON.stringify(fieldOptions));
+            select.attr('data-field-types', JSON.stringify(fieldTypes));
             select.trigger('chosen:updated');
             Mautic.updateFormFieldValues(select);
+            Mautic.updateLeadFieldValueOptions(mQuery('#campaignevent_properties_value'), true);
         }
         Mautic.removeLabelLoadingIndicator();
     });
 };
 
+Mautic.updateFormOperators = function (operator) {
+        Mautic.updateFormFieldValues(mQuery('#campaignevent_properties_field'));
+};
+Mautic.updateFormValues = function (val) {
+    Mautic.updateLeadFieldValueOptions(mQuery('#campaignevent_properties_value'), true);
+};
+
 Mautic.updateFormFieldValues = function (field) {
+
+    mQuery('.condition-custom-date-row').hide();
+
     field = mQuery(field);
     var fieldValue = field.val();
     var options = jQuery.parseJSON(field.attr('data-field-options'));
+    var types = jQuery.parseJSON(field.attr('data-field-types'));
+    var operatorField = mQuery('#campaignevent_properties_operator');
     var valueField = mQuery('#campaignevent_properties_value');
     var valueFieldAttrs = {
         'class': valueField.attr('class'),
@@ -140,14 +157,25 @@ Mautic.updateFormFieldValues = function (field) {
         'value': valueField.attr('value')
     };
 
-    if (typeof options[fieldValue] !== 'undefined' && !mQuery.isEmptyObject(options[fieldValue])) {
+    // date form field withhout date operat should skip options and display input width date picker
+    var skipOptions = false;
+    var dateFieldType = false;
+    if(typeof types[fieldValue] !== 'undefined'   && (types[fieldValue] == 'date' || types[fieldValue] == 'datetime')){
+        dateFieldType = true;
+        if (operatorField.val() != 'date'){
+            skipOptions = true;
+        }
+    }
+
+    if (skipOptions != true && typeof options[fieldValue] !== 'undefined' && !mQuery.isEmptyObject(options[fieldValue])) {
         var newValueField = mQuery('<select/>')
             .attr('class', valueFieldAttrs['class'])
             .attr('id', valueFieldAttrs['id'])
             .attr('name', valueFieldAttrs['name'])
             .attr('autocomplete', valueFieldAttrs['autocomplete'])
-            .attr('value', valueFieldAttrs['value']);
-        mQuery.each(options[fieldValue], function(key, optionVal) {
+            .attr('value', valueFieldAttrs['value'])
+            .attr('onchange', 'Mautic.updateFormValues(this)');
+        mQuery.each(options[fieldValue], function (key, optionVal) {
             var option = mQuery("<option></option>")
                 .attr('value', optionVal)
                 .text(optionVal);
@@ -163,6 +191,58 @@ Mautic.updateFormFieldValues = function (field) {
             .attr('autocomplete', valueFieldAttrs['autocomplete'])
             .attr('value', valueFieldAttrs['value']);
         valueField.replaceWith(newValueField);
+    }
+
+    // rebuild operators with new operator date for form field date type
+    var operators = {};
+    if (typeof operatorField.data('field-operators') === 'undefined') {
+        operatorField.find('option').each(function () {
+            operators[mQuery(this).val()] = mQuery(this).text();
+        });
+        operatorField.attr('data-field-operators', JSON.stringify(operators));
+    } else {
+        operators = jQuery.parseJSON(operatorField.attr('data-field-operators'));
+    }
+
+    var fieldOptions = {};
+    var selectedOperator = operatorField.val();
+    operatorField.find('option').remove();
+    mQuery.each(operators, function (operator, label) {
+        if (operator != 'date' || (operator == 'date' && dateFieldType)) {
+            var option = mQuery('<option></option>')
+                .attr('value', operator)
+                .text(label);
+            operatorField.append(option);
+        }
+    });
+    operatorField.val(selectedOperator);
+    operatorField.trigger('chosen:updated');
+
+    // date/time picker
+    if(skipOptions) {
+        if (typeof types[fieldValue] !== 'undefined' && types[fieldValue] == 'datetime') {
+            mQuery(newValueField).datetimepicker({
+                format: 'Y-m-d H:i',
+                lazyInit: true,
+                validateOnBlur: false,
+                allowBlank: true,
+                scrollInput: false
+            });
+        } else if (typeof types[fieldValue] !== 'undefined' && types[fieldValue] == 'date') {
+            mQuery(newValueField).datetimepicker({
+                timepicker: false,
+                format: 'Y-m-d',
+                lazyInit: true,
+                validateOnBlur: false,
+                allowBlank: true,
+                scrollInput: false,
+                closeOnDateSelect: true
+            });
+        }
+    }else{
+        // date custom value
+        mQuery('#campaignevent_properties_value').find('option[value=Custom]').attr("data-custom", "1");
+        Mautic.updateLeadFieldValueOptions(mQuery('#campaignevent_properties_value'));
     }
 };
 
