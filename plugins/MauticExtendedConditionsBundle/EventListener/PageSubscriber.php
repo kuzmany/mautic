@@ -11,14 +11,13 @@
 
 namespace MauticPlugin\MauticExtendedConditionsBundle\EventListener;
 
-use Guzzle\Plugin\Cookie\Cookie;
 use Mautic\CoreBundle\EventListener\CommonSubscriber;
+use Mautic\LeadBundle\Entity\Lead;
 use Mautic\LeadBundle\Model\LeadModel;
 use Mautic\PageBundle\Event as Events;
 use Mautic\PageBundle\PageEvents;
 use Mautic\LeadBundle\LeadEvent;
 use Mautic\PageBundle\Event\PageHitEvent;
-use Mautic\PageBundle\Event\PageEvent;
 use Mautic\CampaignBundle\Model\EventModel;
 use Mautic\CoreBundle\Helper\IpLookupHelper;
 use Doctrine\DBAL\Connection;
@@ -88,10 +87,16 @@ class PageSubscriber extends CommonSubscriber
     {
 
         $lead = $event->getLead();
+        if(!$lead instanceof Lead || empty($lead->getId())){
+            return;
+        }
+
         $leadId = $lead->getId();
         $hit = $event->getHit();
         $redirect = $hit->getRedirect();
         $request = $event->getRequest();
+
+
 
         // echo $request->get('page_url');
         //die();
