@@ -452,15 +452,16 @@ abstract class AbstractPermissions
                 'create'      => 32,
                 'deleteown'   => 64,
                 'deleteother' => 128,
-                'full'        => 1024,
             ];
-            if (true === $customPermissions) {
+            if (true === $includePublish) {
                 $this->permissions[$p]['publishown']   = 256;
                 $this->permissions[$p]['publishother'] = 512;
             }
             if (!empty($customPermissions)) {
                 $this->permissions[$p] = array_merge($this->permissions[$p], $customPermissions);
             }
+
+            $this->permissions[$p]['full'] = array_sum(array_values($this->permissions[$p])) + 2;
         }
     }
 
