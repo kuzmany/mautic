@@ -14,10 +14,24 @@ namespace Mautic\LeadBundle\EventListener;
 use Mautic\CoreBundle\CoreEvents;
 use Mautic\CoreBundle\Event\CustomButtonEvent;
 use Mautic\CoreBundle\EventListener\CommonSubscriber;
+use Mautic\CoreBundle\Security\Permissions\CorePermissions;
 use Mautic\CoreBundle\Templating\Helper\ButtonHelper;
 
 class ButtonSubscriber extends CommonSubscriber
 {
+    /** @var CorePermissions */
+    protected $security;
+
+    /**
+     * ButtonSubscriber constructor.
+     *
+     * @param CorePermissions $security
+     */
+    public function __construct(CorePermissions $security)
+    {
+        $this->security = $security;
+    }
+
     public static function getSubscribedEvents()
     {
         return [
@@ -30,7 +44,7 @@ class ButtonSubscriber extends CommonSubscriber
      */
     public function injectViewButtons(CustomButtonEvent $event)
     {
-        if (0 === strpos($event->getRoute(), 'mautic_contact_index')) {
+        if (0 === strpos($event->getRoute(), 'mautic_contact_index') && ($this->security->isAdmin() || !$this->security->isGranted('lead:leads:disableexports', 'MATCH_ONE'))) {
             $exportRoute = $this->router->generate(
                 'mautic_contact_action',
                 ['objectAction' => 'batchExport']

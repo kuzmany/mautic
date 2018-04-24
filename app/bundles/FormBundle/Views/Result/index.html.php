@@ -54,8 +54,8 @@ if (class_exists('PHPExcel')) {
     ];
 }
 
-// Remove buttons if export permissions doesn't exists
-if (!empty($exportPermissions)) {
+// Remove buttons if disable export permission exists
+if (!empty($disableExportPermission)) {
     $buttons = [];
 }
 

@@ -435,8 +435,9 @@ abstract class AbstractPermissions
      *
      * @param array $permissionNames
      * @param bool  $includePublish
+     * @param array $customPermissions
      */
-    protected function addExtendedPermissions($permissionNames, $includePublish = true)
+    protected function addExtendedPermissions($permissionNames, $includePublish = true, $customPermissions = [])
     {
         if (!is_array($permissionNames)) {
             $permissionNames = [$permissionNames];
@@ -453,9 +454,12 @@ abstract class AbstractPermissions
                 'deleteother' => 128,
                 'full'        => 1024,
             ];
-            if ($includePublish) {
+            if (true === $customPermissions) {
                 $this->permissions[$p]['publishown']   = 256;
                 $this->permissions[$p]['publishother'] = 512;
+            }
+            if (!empty($customPermissions)) {
+                $this->permissions[$p] = array_merge($this->permissions[$p], $customPermissions);
             }
         }
     }
@@ -469,22 +473,11 @@ abstract class AbstractPermissions
      * @param FormBuilderInterface $builder
      * @param array                $data
      * @param bool                 $includePublish
+     * @param array                $customChoices
      */
-    protected function addExtendedFormFields($bundle, $level, &$builder, $data, $includePublish = true)
+    protected function addExtendedFormFields($bundle, $level, &$builder, $data, $includePublish = true, $customChoices = [])
     {
-        $choices = $includePublish ?
-            [
-                'viewown'      => 'mautic.core.permissions.viewown',
-                'viewother'    => 'mautic.core.permissions.viewother',
-                'editown'      => 'mautic.core.permissions.editown',
-                'editother'    => 'mautic.core.permissions.editother',
-                'create'       => 'mautic.core.permissions.create',
-                'deleteown'    => 'mautic.core.permissions.deleteown',
-                'deleteother'  => 'mautic.core.permissions.deleteother',
-                'publishown'   => 'mautic.core.permissions.publishown',
-                'publishother' => 'mautic.core.permissions.publishother',
-                'full'         => 'mautic.core.permissions.full',
-            ] :
+        $choices =
             [
                 'viewown'     => 'mautic.core.permissions.viewown',
                 'viewother'   => 'mautic.core.permissions.viewother',
@@ -493,8 +486,17 @@ abstract class AbstractPermissions
                 'create'      => 'mautic.core.permissions.create',
                 'deleteown'   => 'mautic.core.permissions.deleteown',
                 'deleteother' => 'mautic.core.permissions.deleteother',
-                'full'        => 'mautic.core.permissions.full',
             ];
+
+        if ($includePublish) {
+            $choices['publishown']   = 'mautic.core.permissions.publishown';
+            $choices['publishother'] = 'mautic.core.permissions.publishother';
+        }
+        if (!empty($customChoices)) {
+            $choices = array_merge($choices, $customChoices);
+        }
+        // full bottom always
+        $choices['full'] = 'mautic.core.permissions.full';
 
         $builder->add("$bundle:$level", 'permissionlist', [
                 'choices' => $choices,

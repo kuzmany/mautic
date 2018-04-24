@@ -434,7 +434,10 @@ return [
                 ],
             ],
             'mautic.lead.button.subscriber' => [
-                'class' => \Mautic\LeadBundle\EventListener\ButtonSubscriber::class,
+                'class'     => \Mautic\LeadBundle\EventListener\ButtonSubscriber::class,
+                'arguments' => [
+                    'mautic.security',
+                ],
             ],
             'mautic.lead.import.subscriber' => [
                 'class'     => Mautic\LeadBundle\EventListener\ImportSubscriber::class,
