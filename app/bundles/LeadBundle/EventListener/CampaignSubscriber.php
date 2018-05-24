@@ -17,6 +17,7 @@ use Mautic\CampaignBundle\Event\CampaignExecutionEvent;
 use Mautic\CampaignBundle\Model\CampaignModel;
 use Mautic\CoreBundle\EventListener\CommonSubscriber;
 use Mautic\CoreBundle\Helper\IpLookupHelper;
+use Mautic\CoreBundle\Templating\Helper\DateHelper;
 use Mautic\LeadBundle\Entity\Lead;
 use Mautic\LeadBundle\Entity\PointsChangeLog;
 use Mautic\LeadBundle\Form\Type\ChangeOwnerType;
@@ -58,19 +59,34 @@ class CampaignSubscriber extends CommonSubscriber
     protected $campaignModel;
 
     /**
+     * @var DateHelper
+     */
+    private $dateHelper;
+
+    /**
      * CampaignSubscriber constructor.
      *
      * @param IpLookupHelper $ipLookupHelper
      * @param LeadModel      $leadModel
      * @param FieldModel     $leadFieldModel
+     * @param ListModel      $listModel
+     * @param CampaignModel  $campaignModel
+     * @param DateHelper     $dateHelper
      */
-    public function __construct(IpLookupHelper $ipLookupHelper, LeadModel $leadModel, FieldModel $leadFieldModel, ListModel $listModel, CampaignModel $campaignModel)
-    {
+    public function __construct(
+        IpLookupHelper $ipLookupHelper,
+        LeadModel $leadModel,
+        FieldModel $leadFieldModel,
+        ListModel $listModel,
+        CampaignModel $campaignModel,
+        DateHelper $dateHelper
+    ) {
         $this->ipLookupHelper = $ipLookupHelper;
         $this->leadModel      = $leadModel;
         $this->leadFieldModel = $leadFieldModel;
         $this->listModel      = $listModel;
         $this->campaignModel  = $campaignModel;
+        $this->dateHelper     = $dateHelper;
     }
 
     /**
@@ -79,8 +95,8 @@ class CampaignSubscriber extends CommonSubscriber
     public static function getSubscribedEvents()
     {
         return [
-            CampaignEvents::CAMPAIGN_ON_BUILD      => ['onCampaignBuild', 0],
-            LeadEvents::ON_CAMPAIGN_TRIGGER_ACTION => [
+            CampaignEvents::CAMPAIGN_ON_BUILD         => ['onCampaignBuild', 0],
+            LeadEvents::ON_CAMPAIGN_TRIGGER_ACTION    => [
                 ['onCampaignTriggerActionChangePoints', 0],
                 ['onCampaignTriggerActionChangeLists', 1],
                 ['onCampaignTriggerActionUpdateLead', 2],
@@ -300,9 +316,10 @@ class CampaignSubscriber extends CommonSubscriber
             return;
         }
 
-        $lead = $event->getLead();
-
-        $this->leadModel->setFieldValues($lead, $event->getConfig(), false);
+        $lead   = $event->getLead();
+        $values = $event->getConfig();
+        $this->relativeDatesTranslator($lead, $values);
+        $this->leadModel->setFieldValues($lead, $values, false);
         $this->leadModel->saveEntity($lead);
 
         return $event->setResult(true);
@@ -444,7 +461,10 @@ class CampaignSubscriber extends CommonSubscriber
         } elseif ($event->checkContext('lead.owner')) {
             $result = $this->leadModel->getRepository()->checkLeadOwner($lead, $event->getConfig()['owner']);
         } elseif ($event->checkContext('lead.campaigns')) {
-            $result = $this->campaignModel->getCampaignLeadRepository()->checkLeadInCampaigns($lead, $event->getConfig());
+            $result = $this->campaignModel->getCampaignLeadRepository()->checkLeadInCampaigns(
+                $lead,
+                $event->getConfig()
+            );
         } elseif ($event->checkContext('lead.field_value')) {
             if ($event->getConfig()['operator'] === 'date') {
                 // Set the date in system timezone since this is triggered by cron
@@ -463,21 +483,52 @@ class CampaignSubscriber extends CommonSubscriber
                      * ( to integrate with: recursive campaign (future)).
                      */
                     $result = $this->leadFieldModel->getRepository()->compareDateMonthValue(
-                            $lead->getId(), $event->getConfig()['field'], $triggerDate);
+                        $lead->getId(),
+                        $event->getConfig()['field'],
+                        $triggerDate
+                    );
                 }
             } else {
                 $operators = $this->leadModel->getFilterExpressionFunctions();
 
                 $result = $this->leadFieldModel->getRepository()->compareValue(
-                        $lead->getId(),
-                        $event->getConfig()['field'],
-                        $event->getConfig()['value'],
-                        $operators[$event->getConfig()['operator']]['expr']
+                    $lead->getId(),
+                    $event->getConfig()['field'],
+                    $event->getConfig()['value'],
+                    $operators[$event->getConfig()['operator']]['expr']
                 );
             }
         }
 
         return $event->setResult($result);
+    }
+
+    private function relativeDatesTranslator(Lead $lead, &$values)
+    {
+        $fields = $lead->getFields(true);
+        foreach ($fields as $field) {
+            if (!empty($values[$field['alias']])) {
+                $type = $field['type'];
+                switch ($type) {
+                    case 'datetime':
+                    case 'date':
+                    case 'time':
+                        try {
+                            $value    = $values[$field['alias']];
+                            $dtHelper = new DateTimeHelper($value, null, 'local');
+                            if ($type == 'datetime') {
+                                $values[$field['alias']] = $dtHelper->toLocalString('Y-m-d H:i:s');
+                            } elseif ($type == 'date') {
+                                $values[$field['alias']] = $dtHelper->toLocalString('Y-m-d');
+                            } else {
+                                $values[$field['alias']] = $dtHelper->toLocalString('H:i:s');
+                            }
+                        } catch (\Exception $e) {
+                        }
+                        break;
+                }
+            }
+        }
     }
 
     /**
@@ -492,9 +543,9 @@ class CampaignSubscriber extends CommonSubscriber
     private function compareDateValue(Lead $lead, CampaignExecutionEvent $event, \DateTime $triggerDate)
     {
         $result = $this->leadFieldModel->getRepository()->compareDateValue(
-                $lead->getId(),
-                $event->getConfig()['field'],
-                $triggerDate->format('Y-m-d')
+            $lead->getId(),
+            $event->getConfig()['field'],
+            $triggerDate->format('Y-m-d')
         );
 
         return $result;
