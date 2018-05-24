@@ -16,8 +16,8 @@ use Mautic\CampaignBundle\Event\CampaignBuilderEvent;
 use Mautic\CampaignBundle\Event\CampaignExecutionEvent;
 use Mautic\CampaignBundle\Model\CampaignModel;
 use Mautic\CoreBundle\EventListener\CommonSubscriber;
+use Mautic\CoreBundle\Helper\DateTimeHelper;
 use Mautic\CoreBundle\Helper\IpLookupHelper;
-use Mautic\CoreBundle\Templating\Helper\DateHelper;
 use Mautic\LeadBundle\Entity\Lead;
 use Mautic\LeadBundle\Entity\PointsChangeLog;
 use Mautic\LeadBundle\Form\Type\ChangeOwnerType;
@@ -59,11 +59,6 @@ class CampaignSubscriber extends CommonSubscriber
     protected $campaignModel;
 
     /**
-     * @var DateHelper
-     */
-    private $dateHelper;
-
-    /**
      * CampaignSubscriber constructor.
      *
      * @param IpLookupHelper $ipLookupHelper
@@ -71,22 +66,19 @@ class CampaignSubscriber extends CommonSubscriber
      * @param FieldModel     $leadFieldModel
      * @param ListModel      $listModel
      * @param CampaignModel  $campaignModel
-     * @param DateHelper     $dateHelper
      */
     public function __construct(
         IpLookupHelper $ipLookupHelper,
         LeadModel $leadModel,
         FieldModel $leadFieldModel,
         ListModel $listModel,
-        CampaignModel $campaignModel,
-        DateHelper $dateHelper
+        CampaignModel $campaignModel
     ) {
         $this->ipLookupHelper = $ipLookupHelper;
         $this->leadModel      = $leadModel;
         $this->leadFieldModel = $leadFieldModel;
         $this->listModel      = $listModel;
         $this->campaignModel  = $campaignModel;
-        $this->dateHelper     = $dateHelper;
     }
 
     /**
