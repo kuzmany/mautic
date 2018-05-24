@@ -186,24 +186,6 @@ class DateHelper extends Helper
     }
 
     /**
-     * @param $string
-     *
-     * @return string
-     */
-    public function stringToDate($string)
-    {
-        // check does this match php date params pattern?
-        if (stristr($string[0], '-') || stristr($string[0], '+')) {
-            $date = new \DateTime('now');
-            $date->modify($string);
-
-            return $date->format('Y-m-d H:i:s');
-        }
-
-        return $string;
-    }
-
-    /**
      * Format DateInterval into humanly readable format.
      * Example: 55 minutes 49 seconds.
      * It doesn't return zero values like 0 years.
