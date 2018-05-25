@@ -376,7 +376,6 @@ return [
                     'mautic.lead.model.field',
                     'mautic.lead.model.list',
                     'mautic.campaign.model.campaign',
-                    'mautic.helper.template.date',
                 ],
             ],
             'mautic.lead.reportbundle.subscriber' => [

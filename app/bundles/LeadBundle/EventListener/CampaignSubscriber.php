@@ -16,7 +16,6 @@ use Mautic\CampaignBundle\Event\CampaignBuilderEvent;
 use Mautic\CampaignBundle\Event\CampaignExecutionEvent;
 use Mautic\CampaignBundle\Model\CampaignModel;
 use Mautic\CoreBundle\EventListener\CommonSubscriber;
-use Mautic\CoreBundle\Helper\DateTimeHelper;
 use Mautic\CoreBundle\Helper\IpLookupHelper;
 use Mautic\LeadBundle\Entity\Lead;
 use Mautic\LeadBundle\Entity\PointsChangeLog;
@@ -495,7 +494,11 @@ class CampaignSubscriber extends CommonSubscriber
         return $event->setResult($result);
     }
 
-    private function relativeDatesTranslator(Lead $lead, &$values)
+    /**
+     * @param Lead  $lead
+     * @param array $values
+     */
+    private function relativeDatesTranslator(Lead $lead, array &$values)
     {
         $fields = $lead->getFields(true);
         foreach ($fields as $field) {
