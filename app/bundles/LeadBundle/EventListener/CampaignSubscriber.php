@@ -16,11 +16,11 @@ use Mautic\CampaignBundle\Event\CampaignBuilderEvent;
 use Mautic\CampaignBundle\Event\CampaignExecutionEvent;
 use Mautic\CampaignBundle\Model\CampaignModel;
 use Mautic\CoreBundle\EventListener\CommonSubscriber;
-use Mautic\CoreBundle\Helper\DateTimeHelper;
 use Mautic\CoreBundle\Helper\IpLookupHelper;
 use Mautic\LeadBundle\Entity\Lead;
 use Mautic\LeadBundle\Entity\PointsChangeLog;
 use Mautic\LeadBundle\Form\Type\ChangeOwnerType;
+use Mautic\LeadBundle\Helper\CustomFieldHelper;
 use Mautic\LeadBundle\LeadEvents;
 use Mautic\LeadBundle\Model\FieldModel;
 use Mautic\LeadBundle\Model\LeadModel;
@@ -509,18 +509,7 @@ class CampaignSubscriber extends CommonSubscriber
                     case 'datetime':
                     case 'date':
                     case 'time':
-                        try {
-                            $value    = $values[$field['alias']];
-                            $dtHelper = new DateTimeHelper($value, null, 'local');
-                            if ($type == 'datetime') {
-                                $values[$field['alias']] = $dtHelper->toLocalString('Y-m-d H:i:s');
-                            } elseif ($type == 'date') {
-                                $values[$field['alias']] = $dtHelper->toLocalString('Y-m-d');
-                            } else {
-                                $values[$field['alias']] = $dtHelper->toLocalString('H:i:s');
-                            }
-                        } catch (\Exception $e) {
-                        }
+                        $values[$field['alias']] = CustomFieldHelper::formatDateType($type, $values[$field['alias']]);
                         break;
                 }
             }

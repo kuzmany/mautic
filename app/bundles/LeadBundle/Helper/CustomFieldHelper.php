@@ -11,13 +11,17 @@
 
 namespace Mautic\LeadBundle\Helper;
 
+use Mautic\CoreBundle\Helper\DateTimeHelper;
+
 /**
  * Helper class custom field operations.
  */
 class CustomFieldHelper
 {
     const TYPE_BOOLEAN = 'boolean';
+
     const TYPE_NUMBER  = 'number';
+
     const TYPE_SELECT  = 'select';
 
     /**
@@ -42,6 +46,30 @@ class CustomFieldHelper
                     $value = (string) $value;
                     break;
             }
+        }
+
+        return $value;
+    }
+
+    /**
+     * Format date type (today, yesterday..).
+     *
+     * @param $type
+     * @param $value
+     *
+     * @return mixed
+     */
+    public static function formatDateType($type, $value)
+    {
+        $dtHelper = new DateTimeHelper($value, null, 'local');
+
+        switch ($type) {
+            case 'datetime':
+                return $dtHelper->toLocalString('Y-m-d H:i:s');
+            case 'date':
+                return $dtHelper->toLocalString('Y-m-d');
+            case 'time':
+                return $dtHelper->toLocalString('H:i:s');
         }
 
         return $value;
