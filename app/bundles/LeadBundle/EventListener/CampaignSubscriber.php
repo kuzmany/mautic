@@ -87,8 +87,8 @@ class CampaignSubscriber extends CommonSubscriber
     public static function getSubscribedEvents()
     {
         return [
-            CampaignEvents::CAMPAIGN_ON_BUILD         => ['onCampaignBuild', 0],
-            LeadEvents::ON_CAMPAIGN_TRIGGER_ACTION    => [
+            CampaignEvents::CAMPAIGN_ON_BUILD      => ['onCampaignBuild', 0],
+            LeadEvents::ON_CAMPAIGN_TRIGGER_ACTION => [
                 ['onCampaignTriggerActionChangePoints', 0],
                 ['onCampaignTriggerActionChangeLists', 1],
                 ['onCampaignTriggerActionUpdateLead', 2],
