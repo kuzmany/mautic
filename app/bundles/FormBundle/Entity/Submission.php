@@ -68,6 +68,8 @@ class Submission
      */
     private $results = [];
 
+    private $name;
+
     /**
      * @param ORM\ClassMetadata $metadata
      */
@@ -364,5 +366,21 @@ class Submission
         }
 
         return null;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getName()
+    {
+        return $this->name;
+    }
+
+    /**
+     * @param mixed $name
+     */
+    public function setName($name)
+    {
+        $this->name = $name;
     }
 }

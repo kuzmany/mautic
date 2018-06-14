@@ -171,6 +171,31 @@ class SubmissionModel extends CommonFormModel
     }
 
     /**
+     * {@inheritdoc}
+     *
+     * @param       $entity
+     * @param       $formFactory
+     * @param null  $action
+     * @param array $options
+     *
+     * @return mixed
+     *
+     * @throws \InvalidArgumentException
+     */
+    public function createForm($entity, $formFactory, $action = null, $options = [])
+    {
+        if (!$entity instanceof Submission) {
+            throw new \InvalidArgumentException('Entity must be of class Recombee');
+        }
+
+        if (!empty($action)) {
+            $options['action'] = $action;
+        }
+
+        return $formFactory->create('submission', $entity, $options);
+    }
+
+    /**
      * @param              $post
      * @param              $server
      * @param Form         $form
