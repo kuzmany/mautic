@@ -312,13 +312,7 @@ class CampaignSubscriber extends CommonSubscriber
         $values = $event->getConfig();
         $fields = $lead->getFields(true);
 
-        foreach ($values as $alias => &$value) {
-            if (!empty($fields[$alias])) {
-                CustomFieldHelper::fieldValueTransfomer($fields[$alias], $value);
-            }
-        }
-
-        $this->leadModel->setFieldValues($lead, $values, false);
+        $this->leadModel->setFieldValues($lead, CustomFieldHelper::fieldsValuesTransformer($fields, $values), false);
         $this->leadModel->saveEntity($lead);
 
         return $event->setResult(true);
@@ -492,12 +486,11 @@ class CampaignSubscriber extends CommonSubscriber
                 $field     = $event->getConfig()['field'];
                 $value     = $event->getConfig()['value'];
                 $fields    = $lead->getFields(true);
-                CustomFieldHelper::fieldValueTransfomer($fields[$field], $value);
 
                 $result = $this->leadFieldModel->getRepository()->compareValue(
                     $lead->getId(),
                     $field,
-                    $value,
+                    CustomFieldHelper::fieldValueTransfomer($fields[$field], $value),
                     $operators[$event->getConfig()['operator']]['expr']
                 );
             }
