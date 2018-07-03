@@ -310,7 +310,14 @@ class CampaignSubscriber extends CommonSubscriber
 
         $lead   = $event->getLead();
         $values = $event->getConfig();
-        $this->relativeDatesTranslator($lead, $values);
+        $fields = $lead->getFields(true);
+
+        foreach ($values as $alias => &$value) {
+            if (!empty($fields[$alias])) {
+                CustomFieldHelper::fieldValueTransfomer($fields[$alias], $value);
+            }
+        }
+
         $this->leadModel->setFieldValues($lead, $values, false);
         $this->leadModel->saveEntity($lead);
 
@@ -482,38 +489,21 @@ class CampaignSubscriber extends CommonSubscriber
                 }
             } else {
                 $operators = $this->leadModel->getFilterExpressionFunctions();
+                $field     = $event->getConfig()['field'];
+                $value     = $event->getConfig()['value'];
+                $fields    = $lead->getFields(true);
+                CustomFieldHelper::fieldValueTransfomer($fields[$field], $value);
 
                 $result = $this->leadFieldModel->getRepository()->compareValue(
                     $lead->getId(),
-                    $event->getConfig()['field'],
-                    $event->getConfig()['value'],
+                    $field,
+                    $value,
                     $operators[$event->getConfig()['operator']]['expr']
                 );
             }
         }
 
         return $event->setResult($result);
-    }
-
-    /**
-     * @param Lead  $lead
-     * @param array $values
-     */
-    private function relativeDatesTranslator(Lead $lead, array &$values)
-    {
-        $fields = $lead->getFields(true);
-        foreach ($fields as $field) {
-            if (!empty($values[$field['alias']])) {
-                $type = $field['type'];
-                switch ($type) {
-                    case 'datetime':
-                    case 'date':
-                    case 'time':
-                        $values[$field['alias']] = CustomFieldHelper::formatDateType($type, $values[$field['alias']]);
-                        break;
-                }
-            }
-        }
     }
 
     /**

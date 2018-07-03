@@ -19,9 +19,7 @@ use Mautic\CoreBundle\Helper\DateTimeHelper;
 class CustomFieldHelper
 {
     const TYPE_BOOLEAN = 'boolean';
-
     const TYPE_NUMBER  = 'number';
-
     const TYPE_SELECT  = 'select';
 
     /**
@@ -52,26 +50,31 @@ class CustomFieldHelper
     }
 
     /**
-     * Format date type (today, yesterday..).
+     * Transform  value based on type.
      *
-     * @param $type
+     * @param $field
      * @param $value
-     *
-     * @return mixed
      */
-    public static function formatDateType($type, $value)
+    public static function fieldValueTransfomer($field, &$value)
     {
-        $dtHelper = new DateTimeHelper($value, null, 'local');
-
+        $type = $field['type'];
         switch ($type) {
             case 'datetime':
-                return $dtHelper->toLocalString('Y-m-d H:i:s');
             case 'date':
-                return $dtHelper->toLocalString('Y-m-d');
             case 'time':
-                return $dtHelper->toLocalString('H:i:s');
+                $dtHelper = new DateTimeHelper($value, null, 'local');
+                switch ($type) {
+                    case 'datetime':
+                        $value = $dtHelper->toLocalString('Y-m-d H:i:s');
+                        break;
+                    case 'date':
+                        $value = $dtHelper->toLocalString('Y-m-d');
+                        break;
+                    case 'time':
+                        $value = $dtHelper->toLocalString('H:i:s');
+                        break;
+                }
+                break;
         }
-
-        return $value;
     }
 }
