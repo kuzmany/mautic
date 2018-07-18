@@ -70,6 +70,13 @@ return [
                 ],
                 'alias' => 'category',
             ],
+            'mautic.form.type.category.list' => [
+                'class'     => 'Mautic\CategoryBundle\Form\Type\CategoryBundleListType',
+                'arguments' => [
+                    'mautic.category.model.category',
+                ],
+                'alias' => 'category_list',
+            ],
             'mautic.form.type.category_form' => [
                 'class'     => 'Mautic\CategoryBundle\Form\Type\CategoryType',
                 'alias'     => 'category_form',

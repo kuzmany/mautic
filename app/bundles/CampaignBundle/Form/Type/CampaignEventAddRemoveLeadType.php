@@ -37,6 +37,17 @@ class CampaignEventAddRemoveLeadType extends AbstractType
             'this_translation' => 'mautic.campaign.form.thiscampaign_restart',
         ]);
 
+        $builder->add('addToFromCategories', 'category_list', [
+            'label'      => 'mautic.campaign.form.addtocampaigns',
+            'label_attr' => ['class' => 'control-label'],
+            'attr'       => [
+                'class'       => 'form-control',
+                'preaddon'    => 'fa fa-calendar',
+            ],
+            'bundle'           => 'campaign',
+            'required'         => false,
+        ]);
+
         $builder->add('removeFrom', 'campaign_list', [
             'label'      => 'mautic.campaign.form.removefromcampaigns',
             'label_attr' => ['class' => 'control-label'],
