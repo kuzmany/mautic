@@ -978,7 +978,7 @@ class SubmissionModel extends CommonFormModel
                 if ($lead->isNewlyCreated()) {
                     $this->leadModel->removeEntityDefaultValues($lead);
                 }
-                $lead = $this->leadModel->mergeLeads($lead, $foundLead, false);
+                $lead = $this->leadModel->mergeLeads($lead, $foundLead);
             }
 
             // Update unique fields data for comparison with submitted data
