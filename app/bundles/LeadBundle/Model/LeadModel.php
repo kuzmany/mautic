@@ -978,7 +978,7 @@ class LeadModel extends FormModel
             if (!empty($existingLeads)) {
                 $this->logger->addDebug("LEAD: Existing contact ID# {$existingLeads[0]->getId()} found through query identifiers.");
                 // Merge with existing lead or use the one found
-                $lead = ($lead->getId()) ? $this->mergexPLeads($lead, $existingLeads[0]) : $existingLeads[0];
+                $lead = ($lead->getId()) ? $this->mergeLeads($lead, $existingLeads[0]) : $existingLeads[0];
             }
         }
 
@@ -1467,7 +1467,7 @@ class LeadModel extends FormModel
 
                 // The email must be set for successful unsubscribtion
                 $lead->addUpdatedField('email', $data[$fields['email']]);
-                $this->addDncForLead($lead, 'email', $reason, DoNotContact::MANUAL);
+                $this->addDncForLead($lead, 'email', $reason, DNC::MANUAL);
             }
         }
         unset($fieldData['doNotEmail']);
@@ -1540,7 +1540,7 @@ class LeadModel extends FormModel
 
                 // Skip if the value is in the CSV row
                 continue;
-            } elseif ($leadField['defaultValue']) {
+            } elseif ($lead->isNew() && $leadField['defaultValue']) {
                 // Fill in the default value if any
                 $fieldData[$leadField['alias']] = ('multiselect' === $leadField['type']) ? [$leadField['defaultValue']] : $leadField['defaultValue'];
             }
@@ -1769,9 +1769,16 @@ class LeadModel extends FormModel
             $tags = explode(',', $tags);
         }
 
+        if (empty($tags) && empty($removeTags)) {
+            return false;
+        }
+
         $this->logger->debug('CONTACT: Adding '.implode(', ', $tags).' to contact ID# '.$lead->getId());
 
-        array_walk($tags, create_function('&$val', '$val = trim($val); \Mautic\CoreBundle\Helper\InputHelper::clean($val);'));
+        array_walk($tags, function (&$val) {
+            $val = trim($val);
+            InputHelper::clean($val);
+        });
 
         // See which tags already exist
         $foundTags = $this->getTagRepository()->getTagsByName($tags);
@@ -1806,7 +1813,10 @@ class LeadModel extends FormModel
         if (!empty($removeTags)) {
             $this->logger->debug('CONTACT: Removing '.implode(', ', $removeTags).' for contact ID# '.$lead->getId());
 
-            array_walk($removeTags, create_function('&$val', '$val = trim($val); \Mautic\CoreBundle\Helper\InputHelper::clean($val);'));
+            array_walk($removeTags, function (&$val) {
+                $val = trim($val);
+                InputHelper::clean($val);
+            });
 
             // See which tags really exist
             $foundRemoveTags = $this->getTagRepository()->getTagsByName($removeTags);
@@ -2241,7 +2251,7 @@ class LeadModel extends FormModel
 
         $channels = [];
         foreach ($allChannels as $channel) {
-            if ($this->isContactable($lead, $channel) === DoNotContact::IS_CONTACTABLE) {
+            if ($this->isContactable($lead, $channel) === DNC::IS_CONTACTABLE) {
                 $channels[$channel] = $channel;
             }
         }
@@ -2262,7 +2272,7 @@ class LeadModel extends FormModel
 
         $channels = [];
         foreach ($allChannels as $channel) {
-            if ($this->isContactable($lead, $channel) !== DoNotContact::IS_CONTACTABLE) {
+            if ($this->isContactable($lead, $channel) !== DNC::IS_CONTACTABLE) {
                 $channels[$channel] = $channel;
             }
         }
@@ -2444,7 +2454,6 @@ class LeadModel extends FormModel
 
         if ($persist && !defined('MAUTIC_NON_TRACKABLE_REQUEST')) {
             // Set to prevent loops
-            $this->setCurrentLead($lead);
             $this->contactTracker->setTrackedContact($lead);
 
             // Note ignoring a lead manipulator object here on purpose to not falsely record entries
@@ -2487,16 +2496,16 @@ class LeadModel extends FormModel
 
         // If the lead has no entries in the DNC table, we're good to go
         if (empty($dncEntries)) {
-            return DoNotContact::IS_CONTACTABLE;
+            return DNC::IS_CONTACTABLE;
         }
 
         foreach ($dncEntries as $dnc) {
-            if ($dnc->getReason() !== DoNotContact::IS_CONTACTABLE) {
+            if ($dnc->getReason() !== DNC::IS_CONTACTABLE) {
                 return $dnc->getReason();
             }
         }
 
-        return DoNotContact::IS_CONTACTABLE;
+        return DNC::IS_CONTACTABLE;
     }
 
     /**
@@ -2512,7 +2521,7 @@ class LeadModel extends FormModel
      */
     public function removeDncForLead(Lead $lead, $channel, $persist = true)
     {
-        /** @var DoNotContact $dnc */
+        /** @var DNC $dnc */
         foreach ($lead->getDoNotContact() as $dnc) {
             if ($dnc->getChannel() === $channel) {
                 $lead->removeDoNotContactEntry($dnc);
@@ -2541,17 +2550,17 @@ class LeadModel extends FormModel
      * @param bool         $checkCurrentStatus
      * @param bool         $override
      *
-     * @return bool|DoNotContact If a DNC entry is added or updated, returns the DoNotContact object. If a DNC is already present
-     *                           and has the specified reason, nothing is done and this returns false
+     * @return bool|DNC If a DNC entry is added or updated, returns the DNC object. If a DNC is already present
+     *                  and has the specified reason, nothing is done and this returns false
      */
-    public function addDncForLead(Lead $lead, $channel, $comments = '', $reason = DoNotContact::BOUNCED, $persist = true, $checkCurrentStatus = true, $override = false)
+    public function addDncForLead(Lead $lead, $channel, $comments = '', $reason = DNC::BOUNCED, $persist = true, $checkCurrentStatus = true, $override = false)
     {
         // if !$checkCurrentStatus, assume is contactable due to already being valided
-        $isContactable = ($checkCurrentStatus) ? $this->isContactable($lead, $channel) : DoNotContact::IS_CONTACTABLE;
+        $isContactable = ($checkCurrentStatus) ? $this->isContactable($lead, $channel) : DNC::IS_CONTACTABLE;
 
         // If they don't have a DNC entry yet
-        if ($isContactable === DoNotContact::IS_CONTACTABLE) {
-            $dnc = new DoNotContact();
+        if ($isContactable === DNC::IS_CONTACTABLE) {
+            $dnc = new DNC();
 
             if (is_array($channel)) {
                 $channelId = reset($channel);
@@ -2577,10 +2586,10 @@ class LeadModel extends FormModel
         }
         // Or if the given reason is different than the stated reason
         elseif ($isContactable !== $reason) {
-            /** @var DoNotContact $dnc */
+            /** @var DNC $dnc */
             foreach ($lead->getDoNotContact() as $dnc) {
                 // Only update if the contact did not unsubscribe themselves
-                if (!$override && $dnc->getReason() !== DoNotContact::UNSUBSCRIBED) {
+                if (!$override && $dnc->getReason() !== DNC::UNSUBSCRIBED) {
                     $override = true;
                 }
                 if ($dnc->getChannel() === $channel && $override) {
@@ -2676,5 +2685,21 @@ class LeadModel extends FormModel
         @trigger_error('setSystemCurrentLead is deprecated and will be removed in 3.0; Use the ContactTracker::setSystemContac instead', E_USER_DEPRECATED);
 
         $this->contactTracker->setSystemContact($lead);
+    }
+
+    /**
+     * Merge two leads; if a conflict of data occurs, the newest lead will get precedence.
+     *
+     * @deprecated 2.13.0; to be removed in 3.0. Use \Mautic\LeadBundle\Deduplicate\ContactMerger instead
+     *
+     * @param Lead $lead
+     * @param Lead $lead2
+     * @param bool $autoMode If true, the newest lead will be merged into the oldes then deleted; otherwise, $lead will be merged into $lead2 then deleted
+     *
+     * @return Lead
+     */
+    public function mergeLeads(Lead $lead, Lead $lead2, $autoMode = true)
+    {
+        return $this->legacyLeadModel->mergeLeads($lead, $lead2, $autoMode);
     }
 }
