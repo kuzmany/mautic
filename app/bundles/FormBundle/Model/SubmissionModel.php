@@ -964,13 +964,6 @@ class SubmissionModel extends CommonFormModel
         ) : [];
         $uniqueFieldsCurrent = $getData($currentFields, true);
 
-        // If tracked contact and not foundLead
-        // nothing
-        // else if founded and tracked contact
-        // merge
-        // else if founded and not tracked
-        // set founded
-
         if (count($leads)) {
             $this->logger->debug(count($leads).' found based on unique identifiers');
 
