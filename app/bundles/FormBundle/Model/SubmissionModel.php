@@ -979,7 +979,7 @@ class SubmissionModel extends CommonFormModel
             $uniqueFieldsFound             = $getData($foundLeadFields, true);
             list($hasConflict, $conflicts) = $checkForIdentifierConflict($uniqueFieldsFound, $uniqueFieldsCurrent);
 
-            if ($inKioskMode || $hasConflict || !$leadId) {
+            if ($inKioskMode || $hasConflict || !$trackedContact) {
                 // Use the found lead without merging because there is some sort of conflict with unique identifiers or in kiosk mode and thus should not merge
                 if (!$inKioskMode) {
                     $this->contactTracker->setTrackedContact($foundLead);
