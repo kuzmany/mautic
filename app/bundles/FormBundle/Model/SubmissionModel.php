@@ -44,6 +44,8 @@ use Mautic\LeadBundle\Helper\IdentifyCompanyHelper;
 use Mautic\LeadBundle\Model\CompanyModel;
 use Mautic\LeadBundle\Model\FieldModel as LeadFieldModel;
 use Mautic\LeadBundle\Model\LeadModel;
+use Mautic\LeadBundle\Tracker\ContactTracker;
+use Mautic\LeadBundle\Tracker\Service\ContactTrackingService\ContactTrackingServiceInterface;
 use Mautic\LeadBundle\Tracker\Service\DeviceTrackingService\DeviceTrackingServiceInterface;
 use Mautic\PageBundle\Model\PageModel;
 use Symfony\Component\HttpFoundation\Request;
@@ -126,19 +128,31 @@ class SubmissionModel extends CommonFormModel
     private $fieldValueTransformer;
 
     /**
-     * @param IpLookupHelper                 $ipLookupHelper
-     * @param TemplatingHelper               $templatingHelper
-     * @param FormModel                      $formModel
-     * @param PageModel                      $pageModel
-     * @param LeadModel                      $leadModel
-     * @param CampaignModel                  $campaignModel
-     * @param LeadFieldModel                 $leadFieldModel
-     * @param CompanyModel                   $companyModel
-     * @param FormFieldHelper                $fieldHelper
-     * @param UploadFieldValidator           $uploadFieldValidator
-     * @param FormUploader                   $formUploader
-     * @param DeviceTrackingServiceInterface $deviceTrackingService
-     * @param FieldValueTransformer          $fieldValueTransformer
+     * @var ContactTrackingServiceInterface
+     */
+    private $contactTracking;
+
+    /**
+     * @var ContactTracker
+     */
+    private $contactTracker;
+
+    /**
+     * @param IpLookupHelper                  $ipLookupHelper
+     * @param TemplatingHelper                $templatingHelper
+     * @param FormModel                       $formModel
+     * @param PageModel                       $pageModel
+     * @param LeadModel                       $leadModel
+     * @param CampaignModel                   $campaignModel
+     * @param LeadFieldModel                  $leadFieldModel
+     * @param CompanyModel                    $companyModel
+     * @param FormFieldHelper                 $fieldHelper
+     * @param UploadFieldValidator            $uploadFieldValidator
+     * @param FormUploader                    $formUploader
+     * @param DeviceTrackingServiceInterface  $deviceTrackingService
+     * @param FieldValueTransformer           $fieldValueTransformer
+     * @param ContactTrackingServiceInterface $contactTracking
+     * @param ContactTracker                  $contactTracker
      */
     public function __construct(
         IpLookupHelper $ipLookupHelper,
@@ -153,7 +167,9 @@ class SubmissionModel extends CommonFormModel
         UploadFieldValidator $uploadFieldValidator,
         FormUploader $formUploader,
         DeviceTrackingServiceInterface $deviceTrackingService,
-        FieldValueTransformer $fieldValueTransformer
+        FieldValueTransformer $fieldValueTransformer,
+        ContactTrackingServiceInterface $contactTracking,
+        ContactTracker $contactTracker
     ) {
         $this->ipLookupHelper         = $ipLookupHelper;
         $this->templatingHelper       = $templatingHelper;
@@ -168,6 +184,8 @@ class SubmissionModel extends CommonFormModel
         $this->formUploader           = $formUploader;
         $this->deviceTrackingService  = $deviceTrackingService;
         $this->fieldValueTransformer  = $fieldValueTransformer;
+        $this->contactTracking        = $contactTracking;
+        $this->contactTracker         = $contactTracker;
     }
 
     /**
@@ -863,12 +881,11 @@ class SubmissionModel extends CommonFormModel
 
         if (!$inKioskMode) {
             // Default to currently tracked lead
-            if ($currentLead = $this->leadModel->getCurrentLead()) {
-                $lead          = $currentLead;
+            if ($trackedContact = $this->contactTracking->getTrackedLead()) {
+                $lead          = $trackedContact;
                 $leadId        = $lead->getId();
                 $currentFields = $lead->getProfileFields();
             }
-
             $this->logger->debug('FORM: Not in kiosk mode so using current contact ID #'.$leadId);
         } else {
             // Default to a new lead in kiosk mode
@@ -945,8 +962,15 @@ class SubmissionModel extends CommonFormModel
             $uniqueFieldsWithData,
             $leadId
         ) : [];
-
         $uniqueFieldsCurrent = $getData($currentFields, true);
+
+        // If tracked contact and not foundLead
+        // nothing
+        // else if founded and tracked contact
+        // merge
+        // else if founded and not tracked
+        // set founded
+
         if (count($leads)) {
             $this->logger->debug(count($leads).' found based on unique identifiers');
 
@@ -962,10 +986,14 @@ class SubmissionModel extends CommonFormModel
             $uniqueFieldsFound             = $getData($foundLeadFields, true);
             list($hasConflict, $conflicts) = $checkForIdentifierConflict($uniqueFieldsFound, $uniqueFieldsCurrent);
 
-            if ($inKioskMode || $hasConflict || !$lead->getId()) {
+            if ($inKioskMode || $hasConflict || !$leadId) {
                 // Use the found lead without merging because there is some sort of conflict with unique identifiers or in kiosk mode and thus should not merge
-                $lead = $foundLead;
-
+                if (!$inKioskMode) {
+                    $this->contactTracker->setTrackedContact($foundLead);
+                    $lead = $foundLead;
+                } else {
+                    $lead = $this->contactTracker->getContact();
+                }
                 if ($hasConflict) {
                     $this->logger->debug('FORM: Conflicts found in '.implode(', ', $conflicts).' so not merging');
                 } else {
@@ -974,16 +1002,14 @@ class SubmissionModel extends CommonFormModel
             } else {
                 $this->logger->debug('FORM: Merging contacts '.$lead->getId().' and '.$foundLead->getId());
 
-                // If contact is new, remove all default values before merge
-                if ($lead->isNewlyCreated()) {
-                    $this->leadModel->removeEntityDefaultValues($lead);
-                }
                 $lead = $this->leadModel->mergeLeads($lead, $foundLead);
             }
 
             // Update unique fields data for comparison with submitted data
             $currentFields       = $lead->getProfileFields();
             $uniqueFieldsCurrent = $getData($currentFields, true);
+        } else {
+            $lead = $this->contactTracker->getContact();
         }
 
         if (!$inKioskMode) {
@@ -1013,7 +1039,7 @@ class SubmissionModel extends CommonFormModel
         $ipAddress = $this->ipLookupHelper->getIpAddress();
 
         //no lead was found by a mapped email field so create a new one
-        if ($lead->isNewlyCreated()) {
+        if (!$leadId) {
             if (!$inKioskMode) {
                 $lead->addIpAddress($ipAddress);
                 $this->logger->debug('FORM: Associating '.$ipAddress->getIpAddress().' to contact');

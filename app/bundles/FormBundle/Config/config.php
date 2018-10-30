@@ -379,6 +379,8 @@ return [
                     'mautic.form.helper.form_uploader',
                     'mautic.lead.service.device_tracking_service',
                     'mautic.form.service.field.value.transformer',
+                    'mautic.lead.service.contact_tracking_service',
+                    'mautic.tracker.contact',
                 ],
             ],
             'mautic.form.model.submission_result_loader' => [

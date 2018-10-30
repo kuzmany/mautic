@@ -34,24 +34,4 @@ trait DefaultValueTrait
             }
         }
     }
-
-    /**
-     * @param CustomFieldEntityInterface $entity
-     * @param string                     $object
-     */
-    public function removeEntityDefaultValues(CustomFieldEntityInterface $entity, $object = 'lead')
-    {
-        if ($entity->getId()) {
-            /** @var FieldModel $fieldModel */
-            $fields = $this->leadFieldModel->getFieldListWithProperties($object);
-            foreach ($fields as $alias => $field) {
-                // Prevent defaults from overwriting values already set
-                $value = $entity->getFieldValue($alias);
-
-                if ((null !== $value || '' !== $value) && '' !== $field['defaultValue'] && null !== $field['defaultValue']) {
-                    $entity->addUpdatedField($alias, '');
-                }
-            }
-        }
-    }
 }
