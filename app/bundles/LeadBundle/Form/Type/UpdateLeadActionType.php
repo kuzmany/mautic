@@ -1,7 +1,7 @@
 <?php
 
 /*
- * @copyright   2014 Mautic Contributors. All rights reserved
+ * @copyright   2018 Mautic Contributors. All rights reserved
  * @author      Mautic
  *
  * @link        http://mautic.org
@@ -15,9 +15,6 @@ use Mautic\CoreBundle\Factory\MauticFactory;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\FormBuilderInterface;
 
-/**
- * Class UpdateLeadActionType.
- */
 class UpdateLeadActionType extends AbstractType
 {
     const FIELD_TYPE_TO_REMOVE_VALUES = ['multiselect'];

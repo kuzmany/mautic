@@ -333,8 +333,10 @@ Mautic.switchFormFieldVisibilty = function (formName) {
     form.find('[data-show-on]').each(function(index, el) {
         var field = mQuery(el);
         var showOn = jQuery.parseJSON(field.attr('data-show-on'));
+
         mQuery.each(showOn, function(fieldId, condition) {
             var fieldParts = getFieldParts(fieldId);
+
             // Treat multiple fields as OR statements
             if (typeof fields[field.attr('id')] === 'undefined' || !fields[field.attr('id')]) {
                 fields[field.attr('id')] = checkFieldCondition(fieldParts.name, fieldParts.attribute, condition);
