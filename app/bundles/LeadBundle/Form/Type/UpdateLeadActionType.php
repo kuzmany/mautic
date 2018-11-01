@@ -20,6 +20,7 @@ use Symfony\Component\Form\FormBuilderInterface;
  */
 class UpdateLeadActionType extends AbstractType
 {
+    const FIELD_TYPE_TO_REMOVE_VALUES = ['multiselect'];
     use EntityFieldsBuildFormTrait;
 
     private $factory;
@@ -53,10 +54,41 @@ class UpdateLeadActionType extends AbstractType
             ]
         );
 
-        $options['fields']                      = $leadFields;
-        $options['ignore_required_constraints'] = true;
+        $builder->add(
+            'fields_to_update',
+            'leadfields_choices',
+            [
+                'label'       => '',
+                'label_attr'  => ['class' => 'control-label'],
+                'multiple'    => true,
+                'object'      => 'lead',
+                'empty_value' => 'mautic.core.select',
+                'attr'        => [
+                    'class'    => 'form-control',
+                    'onchange' => 'Mautic.updateContactActionModifiers()',
+                ],
+            ]
+        );
 
-        $this->getFormFields($builder, $options);
+        $builder->add(
+            'fields',
+            UpdateFieldType::class,
+            [
+                'fields'  => $leadFields,
+                'object'  => 'lead',
+                'actions' => $options['data']['actions'],
+                'data'    => $options['data']['fields'],
+            ]
+        );
+
+        $builder->add(
+            'actions',
+            UpdateActionType::class,
+            [
+                'fields' => $leadFields,
+                'data'   => $options['data']['actions'],
+            ]
+        );
     }
 
     /**
