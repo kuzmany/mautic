@@ -9,9 +9,6 @@
  * @license     GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
  */
 ?>
-<h4 class="mb-sm"><?php echo $view['translator']->trans('mautic.lead.lead.update.action.help'); ?></h4>
-<br>
-
 <?php if (isset($form->children['fields_to_update'])): ?>
     <?php echo $view['form']->row($form->children['fields_to_update']); ?>
     <?php unset($form->children['fields_to_update']); ?>
@@ -22,10 +19,10 @@
         <div class="row">
             <div  id="<?php echo $alias; ?>_label" data-show-on='{"campaignevent_properties_fields_to_update":"<?php echo $alias; ?>"}'></div>
             <label class="mt-5 col-xs-3"><?php echo $child->vars['label']; ?></label>
-            <div class="col-xs-3 contact-update-action">
+            <div class="col-xs-4 contact-update-action">
                 <?php echo $view['form']->widget($form->children['actions'][$alias]); ?>
             </div>
-        <div class="col-xs-6 contact-update-input">
+        <div class="col-xs-5 contact-update-input">
             <?php echo $view['form']->widget($child); ?>
         </div>
         </div>

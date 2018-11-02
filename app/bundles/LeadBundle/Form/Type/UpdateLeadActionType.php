@@ -66,7 +66,6 @@ class UpdateLeadActionType extends AbstractType
                 ],
             ]
         );
-
         $builder->add(
             'fields',
             UpdateFieldType::class,

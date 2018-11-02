@@ -25,8 +25,9 @@ class UpdateActionType extends AbstractType
      */
     public function buildForm(FormBuilderInterface $builder, array $options)
     {
+        $object = isset($options['object']) ? $options['object'] : 'lead';
         foreach ($options['fields'] as $field) {
-            if ($field['isPublished'] === false || $field['object'] !== 'lead') {
+            if ($field['isPublished'] === false || $field['object'] !== $object) {
                 continue;
             }
 
@@ -62,6 +63,6 @@ class UpdateActionType extends AbstractType
      */
     public function configureOptions(OptionsResolver $resolver)
     {
-        $resolver->setDefined(['fields']);
+        $resolver->setDefined(['fields', 'object']);
     }
 }
