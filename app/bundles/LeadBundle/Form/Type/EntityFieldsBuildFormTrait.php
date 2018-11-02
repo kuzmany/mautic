@@ -251,7 +251,6 @@ trait EntityFieldsBuildFormTrait
                     break;
                 default:
                     $attr['data-encoding'] = 'raw';
-
                     switch ($type) {
                         case 'lookup':
                             $type                = 'text';
