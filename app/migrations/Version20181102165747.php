@@ -65,7 +65,7 @@ class Version20181102165747 extends AbstractMauticMigration
                 $newProperties['fields']           = $properties;
                 $newProperties['actions']          =  array_fill_keys($fields, 'update');
                 $propertiesColumn['properties']    = $newProperties;
-                $propertiesColumn                  = array_merge($propertiesColumn, $newProperties);
+                $propertiesColumn                  = $propertiesColumn + $newProperties;
                 $this->fixRow($qb, $event['id'], $propertiesColumn);
             }
         }
@@ -85,5 +85,6 @@ class Version20181102165747 extends AbstractMauticMigration
                 $qb->expr()->eq('id', $id)
             )
             ->execute();
+        echo $qb->getSQL();
     }
 }
