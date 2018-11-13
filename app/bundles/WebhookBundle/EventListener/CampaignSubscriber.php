@@ -116,7 +116,7 @@ class CampaignSubscriber extends CommonSubscriber
             }
 
             if ($this->dispatcher->hasListeners(WebhookEvents::ON_SEND_WEBHOOK)) {
-                $sendWebhookEvent = new SendWebhookEvent($response);
+                $sendWebhookEvent = new SendWebhookEvent($response, $lead);
                 $this->dispatcher->dispatch(WebhookEvents::ON_SEND_WEBHOOK, $sendWebhookEvent);
                 unset($sendWebhookEvent);
             }

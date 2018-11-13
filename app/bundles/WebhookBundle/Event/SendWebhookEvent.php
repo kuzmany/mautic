@@ -12,15 +12,22 @@
 namespace MauticPlugin\WebhookBundle\Event;
 
 use Joomla\Http\Response;
+use Mautic\LeadBundle\Entity\Lead;
 use Symfony\Component\EventDispatcher\Event;
 
 class SendWebhookEvent extends Event
 {
     /**
+     * @var Lead
+     */
+    private $contact;
+
+    /**
      * @param Response $response
      */
-    public function __construct(Response $response)
+    public function __construct(Response $response, Lead $contact)
     {
         $this->response  = $response;
+        $this->contact   = $contact;
     }
 }
