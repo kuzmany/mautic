@@ -111,15 +111,17 @@ class CampaignSubscriber extends CommonSubscriber
                     return;
             }
 
+            if (in_array($response->code, [200, 201])) {
+                $event->setResult(true);
+            }
+
             if ($this->dispatcher->hasListeners(WebhookEvents::ON_SEND_WEBHOOK)) {
                 $sendWebhookEvent = new SendWebhookEvent($response);
                 $this->dispatcher->dispatch(WebhookEvents::ON_SEND_WEBHOOK, $sendWebhookEvent);
                 unset($sendWebhookEvent);
             }
 
-            if (in_array($response->code, [200, 201])) {
-                return $event->setResult(true);
-            }
+            return;
         } catch (\Exception $e) {
             return $event->setFailed($e->getMessage());
         }
