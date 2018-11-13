@@ -90,6 +90,12 @@ return [
                     'mautic.http.connector',
                 ],
             ],
+            'mautic.webhook.campaign.subscriber.response' => [
+                'class'     => \Mautic\WebhookBundle\EventListener\SendWebhookSubscriber::class,
+                'arguments' => [
+                    'mautic.campaign.executioner.realtime',
+                ],
+            ],
         ],
         'models' => [
             'mautic.webhook.model.webhook' => [

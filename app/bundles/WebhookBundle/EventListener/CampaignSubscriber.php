@@ -18,8 +18,8 @@ use Mautic\CampaignBundle\Event\CampaignExecutionEvent;
 use Mautic\CoreBundle\EventListener\CommonSubscriber;
 use Mautic\CoreBundle\Helper\AbstractFormFieldHelper;
 use Mautic\LeadBundle\Helper\TokenHelper;
+use Mautic\WebhookBundle\Event\SendWebhookEvent;
 use Mautic\WebhookBundle\WebhookEvents;
-use MauticPlugin\WebhookBundle\Event\SendWebhookEvent;
 
 /**
  * Class CampaignSubscriber.
