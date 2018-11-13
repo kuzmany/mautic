@@ -1,0 +1,26 @@
+<?php
+
+/*
+ * @copyright   2018 Mautic Contributors. All rights reserved
+ * @author      Mautic
+ *
+ * @link        http://mautic.org
+ *
+ * @license     GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
+ */
+
+namespace MauticPlugin\WebhookBundle\Event;
+
+use Joomla\Http\Response;
+use Symfony\Component\EventDispatcher\Event;
+
+class SendWebhookEvent extends Event
+{
+    /**
+     * @param Response $response
+     */
+    public function __construct(Response $response)
+    {
+        $this->response  = $response;
+    }
+}

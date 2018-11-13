@@ -19,6 +19,7 @@ use Mautic\CoreBundle\EventListener\CommonSubscriber;
 use Mautic\CoreBundle\Helper\AbstractFormFieldHelper;
 use Mautic\LeadBundle\Helper\TokenHelper;
 use Mautic\WebhookBundle\WebhookEvents;
+use MauticPlugin\WebhookBundle\Event\SendWebhookEvent;
 
 /**
  * Class CampaignSubscriber.
@@ -108,6 +109,12 @@ class CampaignSubscriber extends CommonSubscriber
                     break;
                 default:
                     return;
+            }
+
+            if ($this->dispatcher->hasListeners(WebhookEvents::ON_SEND_WEBHOOK)) {
+                $sendWebhookEvent = new SendWebhookEvent($response);
+                $this->dispatcher->dispatch(WebhookEvents::ON_SEND_WEBHOOK, $sendWebhookEvent);
+                unset($sendWebhookEvent);
             }
 
             if (in_array($response->code, [200, 201])) {
