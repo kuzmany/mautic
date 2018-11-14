@@ -9,7 +9,7 @@
  * @license     GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
  */
 
-namespace MauticPlugin\WebhookBundle\Event;
+namespace Mautic\WebhookBundle\Event;
 
 use Joomla\Http\Response;
 use Mautic\LeadBundle\Entity\Lead;
