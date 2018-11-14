@@ -21,6 +21,7 @@ use Mautic\CoreBundle\Helper\InputHelper;
 use Mautic\CoreBundle\Helper\IpLookupHelper;
 use Mautic\CoreBundle\Helper\TemplatingHelper;
 use Mautic\CoreBundle\Model\FormModel as CommonFormModel;
+use Mautic\CoreBundle\Templating\Helper\DateHelper;
 use Mautic\FormBundle\Crate\UploadFileCrate;
 use Mautic\FormBundle\Entity\Action;
 use Mautic\FormBundle\Entity\Field;
@@ -128,6 +129,11 @@ class SubmissionModel extends CommonFormModel
     private $fieldValueTransformer;
 
     /**
+     * @var DateHelper
+     */
+    private $dateHelper;
+
+    /**
      * @var ContactTrackingServiceInterface
      */
     private $contactTracking;
@@ -151,8 +157,9 @@ class SubmissionModel extends CommonFormModel
      * @param FormUploader                    $formUploader
      * @param DeviceTrackingServiceInterface  $deviceTrackingService
      * @param FieldValueTransformer           $fieldValueTransformer
+     * @param DateHelper                      $dateHelper
      * @param ContactTrackingServiceInterface $contactTracking
-     * @param ContactTracker                  $contactTracker
+     * @param ContactTracker
      */
     public function __construct(
         IpLookupHelper $ipLookupHelper,
@@ -168,6 +175,7 @@ class SubmissionModel extends CommonFormModel
         FormUploader $formUploader,
         DeviceTrackingServiceInterface $deviceTrackingService,
         FieldValueTransformer $fieldValueTransformer,
+        DateHelper $dateHelper,
         ContactTrackingServiceInterface $contactTracking,
         ContactTracker $contactTracker
     ) {
@@ -184,6 +192,7 @@ class SubmissionModel extends CommonFormModel
         $this->formUploader           = $formUploader;
         $this->deviceTrackingService  = $deviceTrackingService;
         $this->fieldValueTransformer  = $fieldValueTransformer;
+        $this->dateHelper             = $dateHelper;
         $this->contactTracking        = $contactTracking;
         $this->contactTracker         = $contactTracker;
     }
@@ -886,6 +895,7 @@ class SubmissionModel extends CommonFormModel
                 $leadId        = $lead->getId();
                 $currentFields = $lead->getProfileFields();
             }
+
             $this->logger->debug('FORM: Not in kiosk mode so using current contact ID #'.$leadId);
         } else {
             // Default to a new lead in kiosk mode
@@ -963,7 +973,6 @@ class SubmissionModel extends CommonFormModel
             $leadId
         ) : [];
         $uniqueFieldsCurrent = $getData($currentFields, true);
-
         if (count($leads)) {
             $this->logger->debug(count($leads).' found based on unique identifiers');
 
