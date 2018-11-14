@@ -18,6 +18,11 @@ use Symfony\Component\EventDispatcher\Event;
 class SendWebhookEvent extends Event
 {
     /**
+     * @var Response
+     */
+    protected $response;
+
+    /**
      * @var Lead
      */
     private $contact;
