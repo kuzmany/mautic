@@ -563,7 +563,7 @@ class SubmissionModel extends CommonFormModel
                         foreach ($results as $k => $s) {
                             $row = [
                                 $s['id'],
-                                $s['dateSubmitted'],
+                                $this->dateHelper->toFull($s['dateSubmitted'], 'UTC'),
                                 $s['ipAddress'],
                                 $s['referer'],
                             ];
@@ -640,7 +640,7 @@ class SubmissionModel extends CommonFormModel
                             foreach ($results as $k => $s) {
                                 $row = [
                                     $s['id'],
-                                    $s['dateSubmitted'],
+                                    $this->dateHelper->toFull($s['dateSubmitted'], 'UTC'),
                                     $s['ipAddress'],
                                     $s['referer'],
                                 ];
@@ -1004,6 +1004,7 @@ class SubmissionModel extends CommonFormModel
             } else {
                 $this->logger->debug('FORM: Merging contacts '.$lead->getId().' and '.$foundLead->getId());
 
+                // Merge the found lead with currently tracked lead
                 $lead = $this->leadModel->mergeLeads($lead, $foundLead);
             }
 
