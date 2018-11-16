@@ -29,10 +29,10 @@ class Version20181102165747 extends AbstractMauticMigration
     public function preUp(Schema $schema)
     {
         $qb              = $this->connection->createQueryBuilder();
-        $notUpdateEvents = $qb->select('ce.properties')
+        $notUpdateEvents = $qb->select('ce.id')
             ->from($this->prefix.'campaign_events', 'ce')
             ->where($qb->expr()->eq('type', $qb->expr()->literal('lead.updatelead')))
-            ->andWhere($qb->expr()->notLike('properties', '%"fields_to_update";%'))
+            ->andWhere($qb->expr()->notLike('properties', $qb->expr()->literal('%"fields_to_update";%')))
             ->execute()->fetchColumn();
         if (empty($notUpdateEvents)) {
             throw new SkipMigrationException('Schema includes this migration');
