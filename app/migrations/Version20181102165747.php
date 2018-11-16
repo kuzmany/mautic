@@ -28,16 +28,15 @@ class Version20181102165747 extends AbstractMauticMigration
      */
     public function preUp(Schema $schema)
     {
-        if ($schema->getTable(MAUTIC_TABLE_PREFIX.'form_fields')->hasColumn('validation')) {
+        $qb              = $this->connection->createQueryBuilder();
+        $notUpdateEvents = $qb->select('ce.properties')
+            ->from($this->prefix.'campaign_events', 'ce')
+            ->where($qb->expr()->eq('type', $qb->expr()->literal('lead.updatelead')))
+            ->andWhere($qb->expr()->notLike('properties', '%"fields_to_update";%'))
+            ->execute()->fetchColumn();
+        if (empty($notUpdateEvents)) {
             throw new SkipMigrationException('Schema includes this migration');
         }
-    }
-
-    /**
-     * @param Schema $schema
-     */
-    public function up(Schema $schema)
-    {
     }
 
     /**
@@ -56,7 +55,7 @@ class Version20181102165747 extends AbstractMauticMigration
                 $propertiesColumn = unserialize($event['properties']);
                 $properties       = array_filter($propertiesColumn['properties']);
                 // skip If fields_to_update exist
-                if (isset($newProperties['fields_to_update'])) {
+                if (isset($properties['fields_to_update'])) {
                     continue;
                 }
                 $newProperties                     = [];
@@ -85,6 +84,5 @@ class Version20181102165747 extends AbstractMauticMigration
                 $qb->expr()->eq('id', $id)
             )
             ->execute();
-        echo $qb->getSQL();
     }
 }
