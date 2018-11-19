@@ -60,12 +60,12 @@ class LeadFieldsType extends AbstractType
 
                 return $fieldList;
             },
-            'global_only'           => false,
-            'required'              => false,
-            'with_company_fields'   => false,
-            'with_tags'             => false,
-            'with_utm'              => false,
-            'object'                => 'lead',
+            'global_only'         => false,
+            'required'            => false,
+            'with_company_fields' => false,
+            'with_tags'           => false,
+            'with_utm'            => false,
+            'object'              => 'lead',
         ]);
     }
 
