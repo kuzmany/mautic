@@ -17,7 +17,7 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 
 class UpdateActionType extends AbstractType
 {
-    const FIELD_TYPE_TO_REMOVE_VALUES = ['multiselect'];
+    const FIELD_TYPE_TO_UPDATE_VALUES = ['multiselect'];
 
     /**
      * @param FormBuilderInterface $builder
@@ -35,7 +35,8 @@ class UpdateActionType extends AbstractType
             $choices                                     = ['mautic.campaign.lead.field.update' => 'update'];
             $choices['mautic.campaign.lead.field.empty'] = 'empty';
 
-            if (in_array($field['type'], self::FIELD_TYPE_TO_REMOVE_VALUES)) {
+            if (in_array($field['type'], self::FIELD_TYPE_TO_UPDATE_VALUES)) {
+                $choices['mautic.campaign.lead.field.add.values']    = 'add';
                 $choices['mautic.campaign.lead.field.remove.values'] = 'remove';
             }
 

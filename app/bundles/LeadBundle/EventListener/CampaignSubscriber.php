@@ -317,6 +317,7 @@ class CampaignSubscriber extends CommonSubscriber
 
         $fieldsToUpdate       = array_intersect_key($fieldsToProcess, array_flip(array_keys($actionsToProcess, 'update')));
         $fieldsToEmpty        = array_intersect_key($fieldsToProcess, array_flip(array_keys($actionsToProcess, 'empty')));
+        $fieldsToAddValues    = array_intersect_key($fieldsToProcess, array_flip(array_keys($actionsToProcess, 'add')));
         $fieldsToRemoveValues = array_intersect_key($fieldsToProcess, array_flip(array_keys($actionsToProcess, 'remove')));
 
         switch (true) {
@@ -324,6 +325,13 @@ class CampaignSubscriber extends CommonSubscriber
                 $this->leadModel->setFieldValues($lead, $fieldsToUpdate);
             case !empty($fieldsToEmpty):
                 $this->leadModel->setFieldValues($lead, $fieldsToEmpty, true);
+            case !empty($fieldsToAddValues):
+                // update values with diff after remove
+                foreach ($fieldsToAddValues as $field => &$fieldToAddValue) {
+                    $oldValue           = explode('|', $lead->getFieldValue($field));
+                    $fieldToAddValue    = array_unique(array_merge($oldValue, $fieldToAddValue));
+                }
+                $this->leadModel->setFieldValues($lead, $fieldsToAddValues);
             case !empty($fieldsToRemoveValues):
                 // update values with diff after remove
                 foreach ($fieldsToRemoveValues as $field => &$fieldToRemoveValue) {
@@ -332,8 +340,9 @@ class CampaignSubscriber extends CommonSubscriber
                 }
                 $this->leadModel->setFieldValues($lead, $fieldsToRemoveValues);
         }
-
-        $this->leadModel->saveEntity($lead);
+        if (!empty($lead->getChanges())) {
+            $this->leadModel->saveEntity($lead);
+        }
 
         return $event->setResult(true);
     }
