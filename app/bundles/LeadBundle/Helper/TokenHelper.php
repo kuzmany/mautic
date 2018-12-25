@@ -102,7 +102,6 @@ class TokenHelper
         } elseif (isset($lead['companies'][0][$alias])) {
             $value = $lead['companies'][0][$alias];
         }
-
         if ($value) {
             switch ($defaultValue) {
                 case 'true':
@@ -111,10 +110,10 @@ class TokenHelper
                 case 'datetime':
                 case 'date':
                 case 'time':
-                    $dt   = new DateTimeHelper($value);
-                    $date = $dt->getDateTime()->format(
-                        self::getParameter('date_format_dateonly')
-                    );
+                    $dt   = new DateTimeHelper($value, 'Y-m-d H:i:s');
+
+                    $date = strftime('%A %d %B F', $dt->getLocalTimestamp());
+
                     $time = $dt->getDateTime()->format(
                         self::getParameter('date_format_timeonly')
                     );
@@ -168,6 +167,20 @@ class TokenHelper
     }
 
     /**
+     * @param array $contact
+     */
+    private static function getTimezone($contact)
+    {
+        if (!empty($contact['timezone'])) {
+            return $contact['timezone'];
+        } elseif (!empty(self::getParameter('default_timezone'))) {
+            return self::getParameter('default_timezone');
+        } else {
+            return 'UTC';
+        }
+    }
+
+    /**
      * @param string $parameter
      *
      * @return mixed
@@ -178,6 +191,8 @@ class TokenHelper
             self::$parameters = (new ParamsLoaderHelper())->getParameters();
         }
 
-        return self::$parameters[$parameter];
+        if (isset(self::$parameters[$parameter])) {
+            return self::$parameters[$parameter];
+        }
     }
 }
