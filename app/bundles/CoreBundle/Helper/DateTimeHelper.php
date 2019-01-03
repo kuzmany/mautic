@@ -391,6 +391,20 @@ class DateTimeHelper
         return $timezone;
     }
 
+    public function formatter($locale = 'en_US', $format = 'Y-m-d H:i:s')
+    {
+        $formatter = new \IntlDateFormatter(
+            $locale,
+            \IntlDateFormatter::FULL,
+            \IntlDateFormatter::FULL,
+            null,
+            null,
+            $format
+        );
+
+        return  $formatter->formatObject($this->getDateTime(), 'Y-m-d H:i:s');
+    }
+
     /**
      * @param string $unit
      *

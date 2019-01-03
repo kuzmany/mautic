@@ -110,13 +110,18 @@ class TokenHelper
                 case 'datetime':
                 case 'date':
                 case 'time':
-                    $dt   = new DateTimeHelper($value, 'Y-m-d H:i:s');
-
-                    $date = strftime('%A %d %B F', $dt->getLocalTimestamp());
-
-                    $time = $dt->getDateTime()->format(
-                        self::getParameter('date_format_timeonly')
-                    );
+                $dt     = new DateTimeHelper($value);
+                $locale = !empty($lead['preferred_locale']) ? $lead['preferred_locale'] : self::getParameter('locale');
+                $locale = 'cs_CZ';
+                $date   = $dt->formatter(
+                    $locale,
+                    'Y-m-d H:i:s'
+                );
+                die($date);
+                $time   = $dt->formatter(
+                    $locale,
+                    self::getParameter('date_format_timeonly')
+                );
                     switch ($defaultValue) {
                         case 'datetime':
                             $value = $date.' '.$time;

@@ -17,11 +17,12 @@ use ReflectionProperty;
 class TokenHelperTest extends \PHPUnit_Framework_TestCase
 {
     private $lead = [
-        'firstname' => 'Bob',
-        'lastname'  => 'Smith',
-        'country'   => '',
-        'date'      => '2000-05-05 12:45:50',
-        'companies' => [
+        'firstname'        => 'Bob',
+        'lastname'         => 'Smith',
+        'country'          => '',
+        'date'             => '2000-05-05 12:45:50',
+        'preferred_locale' => 'en_US',
+        'companies'        => [
             [
                 'companyzip' => '77008',
             ],
@@ -189,10 +190,10 @@ class TokenHelperTest extends \PHPUnit_Framework_TestCase
 
     public function testDateFormatValue()
     {
-        setlocale(LC_ALL, 'cs_CZ');
         // Output the date with microseconds.
         $token     = '{contactfield=date|date}';
         $tokenList = TokenHelper::findLeadTokens($token, $this->lead);
+
         die(print_r($tokenList));
         $this->assertNotSame($this->lead['date'], $tokenList[$token]);
     }
