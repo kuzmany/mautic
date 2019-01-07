@@ -189,20 +189,15 @@ class TokenHelperTest extends \PHPUnit_Framework_TestCase
 
     public function testDateFormatValue()
     {
-        setlocale(LC_ALL, 'cs_CZ');
-        // Output the date with microseconds.
         $token     = '{contactfield=date|date}';
         $tokenList = TokenHelper::findLeadTokens($token, $this->lead);
-        die(print_r($tokenList));
         $this->assertNotSame($this->lead['date'], $tokenList[$token]);
     }
 
     public function testTimeFormatValue()
     {
-        $token               = '{contactfield=date|time}';
-        $contact             = $this->lead;
-        $contact['timezone'] = 'Europe/Berlin';
-        $tokenList           = TokenHelper::findLeadTokens($token, $contact);
+        $token     = '{contactfield=date|time}';
+        $tokenList = TokenHelper::findLeadTokens($token, $this->lead);
         $this->assertNotSame($this->lead['date'], $tokenList[$token]);
     }
 
@@ -210,8 +205,9 @@ class TokenHelperTest extends \PHPUnit_Framework_TestCase
     {
         $lead         = $this->lead;
         $lead['date'] = '';
-        $token        = '{contactfield=date|time}';
-        $tokenList    = TokenHelper::findLeadTokens($token, $lead);
+
+        $token     = '{contactfield=date|time}';
+        $tokenList = TokenHelper::findLeadTokens($token, $lead);
         $this->assertEmpty($tokenList[$token]);
     }
 }
