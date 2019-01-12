@@ -24,6 +24,11 @@ class OperatorOptions
             'expr'        => 'neq',
             'negate_expr' => 'eq',
         ],
+        '!gt' => [
+            'label'       => 'mautic.lead.list.form.operator.notgreaterthan',
+            'expr'        => 'notGt',
+            'negate_expr' => 'gt',
+        ],
         'gt' => [
             'label'       => 'mautic.lead.list.form.operator.greaterthan',
             'expr'        => 'gt',
@@ -38,6 +43,11 @@ class OperatorOptions
             'label'       => 'mautic.lead.list.form.operator.lessthan',
             'expr'        => 'lt',
             'negate_expr' => 'gt',
+        ],
+        '!lt' => [
+            'label'       => 'mautic.lead.list.form.operator.notlessthan',
+            'expr'        => 'notLt',
+            'negate_expr' => 'lt',
         ],
         'lte' => [
             'label'       => 'mautic.lead.list.form.operator.lessthanequals',
