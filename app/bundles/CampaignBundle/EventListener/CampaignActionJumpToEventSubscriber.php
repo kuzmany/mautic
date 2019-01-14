@@ -105,8 +105,7 @@ class CampaignActionJumpToEventSubscriber implements EventSubscriberInterface
             $campaignEvent->passWithError($jumpTarget, $this->translator->trans('mautic.campaign.campaign.jump_to_event.target_not_exist'));
         }
 
-        $jumpTarget->setJumped(true);
-        $this->eventExecutioner->executeForContacts($jumpTarget, $campaignEvent->getContactsKeyedById());
+        $this->eventExecutioner->executeForContacts($jumpTarget, $campaignEvent->getContactsKeyedById(), null, false, true);
 
         $campaignEvent->passRemaining();
     }

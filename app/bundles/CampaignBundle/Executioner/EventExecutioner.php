@@ -88,6 +88,8 @@ class EventExecutioner
      */
     private $leadRepository;
 
+    private $jumpEvents;
+
     /**
      * EventExecutioner constructor.
      *
@@ -181,7 +183,7 @@ class EventExecutioner
      * @throws Exception\CannotProcessEventException
      * @throws Scheduler\Exception\NotSchedulableException
      */
-    public function executeForContacts(Event $event, ArrayCollection $contacts, Counter $counter = null, $isInactiveEvent = false)
+    public function executeForContacts(Event $event, ArrayCollection $contacts, Counter $counter = null, $isInactiveEvent = false, $isJumped = false)
     {
         if (!$contacts->count()) {
             $this->logger->debug('CAMPAIGN: No contacts to process for event ID '.$event->getId());
@@ -190,7 +192,8 @@ class EventExecutioner
         }
 
         $config = $this->collector->getEventConfig($event);
-        if ($event->isJumped()) {
+        $this->jumpEvents += (bool) $isJumped;
+        if ($this->jumpEvents === 1) {
             // Increment the campaign rotation for the given contacts and current campaign
             $this->leadRepository->incrementCampaignRotationForContacts(
                 $contacts->getKeys(),

@@ -161,9 +161,6 @@ class Event implements ChannelInterface
      */
     private $changes;
 
-    /** @var bool */
-    private $jumped;
-
     public function __construct()
     {
         $this->log      = new ArrayCollection();
@@ -1090,21 +1087,5 @@ class Event implements ChannelInterface
         $this->isChanged('triggerRestrictedDaysOfWeek', $triggerRestrictedDaysOfWeek);
 
         return $this;
-    }
-
-    /**
-     * @return boolean
-     */
-    public function isJumped()
-    {
-        return $this->jumped;
-    }
-
-    /**
-     * @param bool $jumped
-     */
-    public function setJumped($jumped)
-    {
-        $this->jumped = $jumped;
     }
 }
