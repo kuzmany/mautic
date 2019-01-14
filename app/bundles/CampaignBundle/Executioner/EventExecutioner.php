@@ -88,8 +88,6 @@ class EventExecutioner
      */
     private $leadRepository;
 
-    private $jumpEvents;
-
     /**
      * EventExecutioner constructor.
      *
@@ -192,14 +190,16 @@ class EventExecutioner
         }
 
         $config = $this->collector->getEventConfig($event);
-        $this->jumpEvents += (bool) $isJumped;
-        if ($this->jumpEvents === 1) {
+
+        static $jump;
+        if ($isJumped && $jump == null) {
             // Increment the campaign rotation for the given contacts and current campaign
-            $this->leadRepository->incrementCampaignRotationForContacts(
+            $jump = $this->leadRepository->incrementCampaignRotationForContacts(
                 $contacts->getKeys(),
                 $event->getCampaign()->getId()
             );
         }
+
         $logs   = $this->eventLogger->fetchRotationAndGenerateLogsFromContacts($event, $config, $contacts, $isInactiveEvent);
 
         $this->executeLogs($event, $logs, $counter);
