@@ -268,6 +268,7 @@ class EventExecutioner
         if (!$contacts->count()) {
             return;
         }
+
         // Schedule then return those that need to be immediately executed
         $executeThese = $this->scheduleEvents($events, $contacts, $childrenCounter, $isInactive);
 
@@ -281,10 +282,12 @@ class EventExecutioner
                 $this->executeForContacts($event, $contacts, $childrenCounter, $isInactive);
             }
         }
+
         // Now execute jump to events
         $jumpEvents = $executeThese->filter(function (Event $event) {
             return CampaignActionJumpToEventSubscriber::EVENT_NAME === $event->getType();
         });
+
         if ($jumpEvents->count()) {
             $jumpLogs = [];
             // Create logs for the jump to events before the rotation is incremented
