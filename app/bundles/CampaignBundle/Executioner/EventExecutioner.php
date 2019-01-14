@@ -246,6 +246,19 @@ class EventExecutioner
     }
 
     /**
+     * @param array $contacts
+     * @param int   $campaignId
+     */
+    public function incrementCampaignRotationForContacts(array $contacts, int $campaignId)
+    {
+        // Increment the campaign rotation for the given contacts and current campaign
+        $this->leadRepository->incrementCampaignRotationForContacts(
+            $contacts,
+            $campaignId
+        );
+    }
+
+    /**
      * @param ArrayCollection $events
      * @param ArrayCollection $contacts
      * @param Counter|null    $childrenCounter
@@ -261,7 +274,6 @@ class EventExecutioner
         if (!$contacts->count()) {
             return;
         }
-
         // Schedule then return those that need to be immediately executed
         $executeThese = $this->scheduleEvents($events, $contacts, $childrenCounter, $isInactive);
 
@@ -275,20 +287,17 @@ class EventExecutioner
                 $this->executeForContacts($event, $contacts, $childrenCounter, $isInactive);
             }
         }
-
         // Now execute jump to events
         $jumpEvents = $executeThese->filter(function (Event $event) {
             return CampaignActionJumpToEventSubscriber::EVENT_NAME === $event->getType();
         });
         if ($jumpEvents->count()) {
             $jumpLogs = [];
-
             // Create logs for the jump to events before the rotation is incremented
             foreach ($jumpEvents as $key => $event) {
                 $config         = $this->collector->getEventConfig($event);
                 $jumpLogs[$key] = $this->eventLogger->fetchRotationAndGenerateLogsFromContacts($event, $config, $contacts, $isInactive);
             }
-
             // Increment the campaign rotation for the given contacts and current campaign
             $this->leadRepository->incrementCampaignRotationForContacts(
                 $contacts->getKeys(),
