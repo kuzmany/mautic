@@ -175,6 +175,7 @@ class EventExecutioner
      * @param ArrayCollection $contacts
      * @param Counter|null    $counter
      * @param bool            $isInactiveEvent
+     * @param bool            $isJumped
      *
      * @throws Dispatcher\Exception\LogNotProcessedException
      * @throws Dispatcher\Exception\LogPassedAndFailedException
