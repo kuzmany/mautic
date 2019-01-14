@@ -34,7 +34,7 @@ class DateDecorator extends CustomMappedDecorator
      */
     public function getDefaultDate()
     {
-        return new DateTimeHelper('midnight today', null, 'local');
+        return new DateTimeHelper('midnight today', null, 'UTC');
     }
 
     /**
@@ -42,6 +42,6 @@ class DateDecorator extends CustomMappedDecorator
      */
     public function getDefaultDateTime()
     {
-        return new DateTimeHelper('now', null, 'local');
+        return new DateTimeHelper('now', null, 'UTC');
     }
 }

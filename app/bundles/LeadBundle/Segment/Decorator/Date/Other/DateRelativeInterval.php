@@ -11,7 +11,6 @@
 
 namespace Mautic\LeadBundle\Segment\Decorator\Date\Other;
 
-use Mautic\CampaignBundle\Executioner\Scheduler\Mode\DateTime;
 use Mautic\LeadBundle\Segment\ContactSegmentFilterCrate;
 use Mautic\LeadBundle\Segment\Decorator\DateDecorator;
 use Mautic\LeadBundle\Segment\Decorator\FilterDecoratorInterface;
@@ -101,7 +100,7 @@ class DateRelativeInterval implements FilterDecoratorInterface
         // set now datetime for relative dates like -8 hours, -24 minutes with gt/lt types of operator
         if ($contactSegmentFilterCrate->hasTimeParts() && in_array($contactSegmentFilterCrate->getOperator(), ['notGt', 'gt', 'gte', 'notLt', 'lt', 'lte'])) {
             $date     = $this->dateDecorator->getDefaultDateTime();
-            $format   = $contactSegmentFilterCrate->hasTimeParts() ? 'Y-m-d H:i:s' : 'Y-m-d';
+            $format   = 'Y-m-d H:i:s';
         }
 
         $date->modify($this->originalValue);
