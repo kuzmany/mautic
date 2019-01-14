@@ -190,6 +190,13 @@ class EventExecutioner
         }
 
         $config = $this->collector->getEventConfig($event);
+        if ($event->isJumped()) {
+            // Increment the campaign rotation for the given contacts and current campaign
+            $this->leadRepository->incrementCampaignRotationForContacts(
+                $contacts->getKeys(),
+                $event->getCampaign()->getId()
+            );
+        }
         $logs   = $this->eventLogger->fetchRotationAndGenerateLogsFromContacts($event, $config, $contacts, $isInactiveEvent);
 
         $this->executeLogs($event, $logs, $counter);
