@@ -246,19 +246,6 @@ class EventExecutioner
     }
 
     /**
-     * @param array $contacts
-     * @param int   $campaignId
-     */
-    public function incrementCampaignRotationForContacts(array $contacts, int $campaignId)
-    {
-        // Increment the campaign rotation for the given contacts and current campaign
-        $this->leadRepository->incrementCampaignRotationForContacts(
-            $contacts,
-            $campaignId
-        );
-    }
-
-    /**
      * @param ArrayCollection $events
      * @param ArrayCollection $contacts
      * @param Counter|null    $childrenCounter
