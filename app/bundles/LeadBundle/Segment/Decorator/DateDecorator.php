@@ -34,6 +34,6 @@ class DateDecorator extends CustomMappedDecorator
      */
     public function getDefaultDate()
     {
-        return new DateTimeHelper('now', null, 'local');
+        return new DateTimeHelper('midnight today', null, 'local');
     }
 }
