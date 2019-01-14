@@ -287,14 +287,15 @@ class EventExecutioner
         $jumpEvents = $executeThese->filter(function (Event $event) {
             return CampaignActionJumpToEventSubscriber::EVENT_NAME === $event->getType();
         });
-
         if ($jumpEvents->count()) {
             $jumpLogs = [];
+
             // Create logs for the jump to events before the rotation is incremented
             foreach ($jumpEvents as $key => $event) {
                 $config         = $this->collector->getEventConfig($event);
                 $jumpLogs[$key] = $this->eventLogger->fetchRotationAndGenerateLogsFromContacts($event, $config, $contacts, $isInactive);
             }
+
             // Increment the campaign rotation for the given contacts and current campaign
             $this->leadRepository->incrementCampaignRotationForContacts(
                 $contacts->getKeys(),
