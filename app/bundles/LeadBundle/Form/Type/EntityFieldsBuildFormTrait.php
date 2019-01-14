@@ -103,38 +103,41 @@ trait EntityFieldsBuildFormTrait
                         'required'    => $required,
                         'label'       => $field['label'],
                         'label_attr'  => ['class' => 'control-label'],
-                        'widget'      => 'single_text',
                         'attr'        => $attr,
                         'mapped'      => $mapped,
-                        'input'       => 'string',
-                        'html5'       => false,
                         'constraints' => $constraints,
                     ];
 
-                if ($value) {
-                    try {
-                        $dtHelper = new DateTimeHelper($value, null, 'local');
-                    } catch (\Exception $e) {
-                        // Rather return empty value than break the page
-                        $value = null;
-                    }
-                }
-
-                if ($type == 'datetime') {
-                    $opts['model_timezone'] = 'UTC';
-                    $opts['view_timezone']  = date_default_timezone_get();
-                    $opts['format']         = 'yyyy-MM-dd HH:mm:ss';
-                    $opts['with_seconds']   = true;
-
-                    $opts['data'] = (!empty($value)) ? $dtHelper->toLocalString('Y-m-d H:i:s') : null;
-                } elseif ($type == 'date') {
-                    $opts['data'] = (!empty($value)) ? $dtHelper->toLocalString('Y-m-d') : null;
+                if (!empty($options['ignore_date_type'])) {
+                    $type = 'text';
                 } else {
-                    $opts['model_timezone'] = 'UTC';
-                    $opts['with_seconds']   = true;
-                    $opts['view_timezone']  = date_default_timezone_get();
-                    $opts['data']           = (!empty($value)) ? $dtHelper->toLocalString('H:i:s') : null;
-                }
+                    $opts['html5']  = false;
+                    $opts['input']  = 'string';
+                    $opts['widget'] = 'single_text';
+                    if ($value) {
+                        try {
+                            $dtHelper = new DateTimeHelper($value, null, 'local');
+                        } catch (\Exception $e) {
+                            // Rather return empty value than break the page
+                            $value = null;
+                        }
+                    }
+
+                    if ($type == 'datetime') {
+                        $opts['model_timezone'] = 'UTC';
+                        $opts['view_timezone']  = date_default_timezone_get();
+                        $opts['format']         = 'yyyy-MM-dd HH:mm:ss';
+                        $opts['with_seconds']   = true;
+
+                        $opts['data'] = (!empty($value)) ? $dtHelper->toLocalString('Y-m-d H:i:s') : null;
+                    } elseif ($type == 'date') {
+                        $opts['data'] = (!empty($value)) ? $dtHelper->toLocalString('Y-m-d') : null;
+                    } else {
+                        $opts['model_timezone'] = 'UTC';
+                        $opts['with_seconds']   = true;
+                        $opts['view_timezone']  = date_default_timezone_get();
+                        $opts['data']           = (!empty($value)) ? $dtHelper->toLocalString('H:i:s') : null;
+                    }
 
                     $builder->addEventListener(
                         FormEvents::PRE_SUBMIT,
@@ -163,7 +166,7 @@ trait EntityFieldsBuildFormTrait
                             $event->setData($data);
                         }
                     );
-
+                }
                     $builder->add($alias, $type, $opts);
                     break;
                 case 'select':

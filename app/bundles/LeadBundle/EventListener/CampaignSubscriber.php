@@ -21,6 +21,7 @@ use Mautic\LeadBundle\Entity\Company;
 use Mautic\LeadBundle\Entity\Lead;
 use Mautic\LeadBundle\Entity\PointsChangeLog;
 use Mautic\LeadBundle\Form\Type\ChangeOwnerType;
+use Mautic\LeadBundle\Helper\CustomFieldHelper;
 use Mautic\LeadBundle\Helper\IdentifyCompanyHelper;
 use Mautic\LeadBundle\LeadEvents;
 use Mautic\LeadBundle\Model\CompanyModel;
@@ -306,9 +307,11 @@ class CampaignSubscriber extends CommonSubscriber
             return;
         }
 
-        $lead = $event->getLead();
+        $lead   = $event->getLead();
+        $values = $event->getConfig();
+        $fields = $lead->getFields(true);
 
-        $this->leadModel->setFieldValues($lead, $event->getConfig(), false);
+        $this->leadModel->setFieldValues($lead, CustomFieldHelper::fieldsValuesTransformer($fields, $values), false);
         $this->leadModel->saveEntity($lead);
 
         return $event->setResult(true);
@@ -503,12 +506,15 @@ class CampaignSubscriber extends CommonSubscriber
                 }
             } else {
                 $operators = $this->leadModel->getFilterExpressionFunctions();
+                $field     = $event->getConfig()['field'];
+                $value     = $event->getConfig()['value'];
+                $fields    = $lead->getFields(true);
 
                 $result = $this->leadFieldModel->getRepository()->compareValue(
-                        $lead->getId(),
-                        $event->getConfig()['field'],
-                        $event->getConfig()['value'],
-                        $operators[$event->getConfig()['operator']]['expr']
+                    $lead->getId(),
+                    $field,
+                    CustomFieldHelper::fieldValueTransfomer($fields[$field], $value),
+                    $operators[$event->getConfig()['operator']]['expr']
                 );
             }
         }
