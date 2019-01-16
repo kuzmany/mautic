@@ -175,13 +175,14 @@ class EventExecutioner
      * @param ArrayCollection $contacts
      * @param Counter|null    $counter
      * @param bool            $isInactiveEvent
+     * @param bool            $isJumped
      *
      * @throws Dispatcher\Exception\LogNotProcessedException
      * @throws Dispatcher\Exception\LogPassedAndFailedException
      * @throws Exception\CannotProcessEventException
      * @throws Scheduler\Exception\NotSchedulableException
      */
-    public function executeForContacts(Event $event, ArrayCollection $contacts, Counter $counter = null, $isInactiveEvent = false)
+    public function executeForContacts(Event $event, ArrayCollection $contacts, Counter $counter = null, $isInactiveEvent = false, $isJumped = false)
     {
         if (!$contacts->count()) {
             $this->logger->debug('CAMPAIGN: No contacts to process for event ID '.$event->getId());
@@ -190,6 +191,16 @@ class EventExecutioner
         }
 
         $config = $this->collector->getEventConfig($event);
+
+        static $jump;
+        if ($isJumped && $jump == null) {
+            // Increment the campaign rotation for the given contacts and current campaign
+            $jump = $this->leadRepository->incrementCampaignRotationForContacts(
+                $contacts->getKeys(),
+                $event->getCampaign()->getId()
+            );
+        }
+
         $logs   = $this->eventLogger->fetchRotationAndGenerateLogsFromContacts($event, $config, $contacts, $isInactiveEvent);
 
         $this->executeLogs($event, $logs, $counter);
