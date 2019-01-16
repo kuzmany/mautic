@@ -170,6 +170,23 @@ class CampaignBuilderEvent extends Event
     }
 
     /**
+     * Add restriction to already added event.
+     *
+     * @param $type (decisions, actions or conditions)
+     * @param $key (email.open)
+     * @param $restrictionType (decision, action or condition)
+     * @param $restrictonKey (my.custom.sedn.email.action)
+     */
+    public function addConnectionRestriction($type, $key, $restrictionType, $restrictonKey)
+    {
+        if (isset($this->$type) && in_array($key, array_keys($this->$type))) {
+            $param                                                               = $this->$type; // fix for PHP 5.6
+            $param[$key]['connectionRestrictions']['source'][$restrictionType][] = $restrictonKey;
+            $this->$type                                                         =$param;
+        }
+    }
+
+    /**
      * Get lead conditions.
      *
      * @return array
