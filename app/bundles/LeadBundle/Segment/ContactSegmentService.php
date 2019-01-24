@@ -14,6 +14,7 @@ namespace Mautic\LeadBundle\Segment;
 use Mautic\LeadBundle\Entity\LeadList;
 use Mautic\LeadBundle\Segment\Query\ContactSegmentQueryBuilder;
 use Mautic\LeadBundle\Segment\Query\QueryBuilder;
+use MauticPlugin\MauticRecommenderBundle\Helper\SqlQuery;
 use Symfony\Bridge\Monolog\Logger;
 
 class ContactSegmentService
@@ -86,6 +87,7 @@ class ContactSegmentService
         $this->logger->debug('Segment QB: Create SQL: '.$qb->getDebugOutput(), ['segmentId' => $segment->getId()]);
 
         $result = $this->timedFetch($qb, $segment->getId());
+        //die(print_r(SqlQuery::getQuery($qb)));
 
         return [$segment->getId() => $result];
     }
