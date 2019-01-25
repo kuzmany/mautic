@@ -181,6 +181,15 @@ class SearchSubscriber extends CommonSubscriber
             case $this->translator->trans('mautic.lead.lead.searchcommand.page_source_id', [], null, 'en_US'):
             $this->buildPageHitSourceIdQuery($event);
                 break;
+            case $this->translator->trans('mautic.lead.lead.searchcommand.import_id'):
+            case $this->translator->trans('mautic.lead.lead.searchcommand.import_id', [], null, 'en_US'):
+            $this->buildImportIdQuery($event);
+                break;
+
+            case $this->translator->trans('mautic.lead.lead.searchcommand.import_action'):
+            case $this->translator->trans('mautic.lead.lead.searchcommand.import_action', [], null, 'en_US'):
+            $this->buildImportActionQuery($event);
+                break;
             case $this->translator->trans('mautic.lead.lead.searchcommand.page_id'):
             case $this->translator->trans('mautic.lead.lead.searchcommand.page_id', [], null, 'en_US'):
                 $this->buildPageHitIdQuery($event);
@@ -306,6 +315,48 @@ class SearchSubscriber extends CommonSubscriber
         $config = [
             'column' => 'ph.redirect_id',
         ];
+        $this->buildJoinQuery($event, $tables, $config);
+    }
+
+    /**
+     * @param LeadBuildSearchEvent $event
+     */
+    private function buildImportIdQuery(LeadBuildSearchEvent $event)
+    {
+        $tables = [
+            [
+                'from_alias' => 'l',
+                'table'      => 'lead_event_log',
+                'alias'      => 'lel',
+                'condition'  => 'l.id = lel.lead_id',
+            ],
+        ];
+
+        $config = [
+            'column' => 'lel.object_id',
+        ];
+
+        $this->buildJoinQuery($event, $tables, $config);
+    }
+
+    /**
+     * @param LeadBuildSearchEvent $event
+     */
+    private function buildImportActionQuery(LeadBuildSearchEvent $event)
+    {
+        $tables = [
+            [
+                'from_alias' => 'l',
+                'table'      => 'lead_event_log',
+                'alias'      => 'lel',
+                'condition'  => 'l.id = lel.lead_id',
+            ],
+        ];
+
+        $config = [
+            'column' => 'lel.action',
+        ];
+
         $this->buildJoinQuery($event, $tables, $config);
     }
 
