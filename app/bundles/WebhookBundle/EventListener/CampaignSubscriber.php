@@ -11,34 +11,27 @@
 
 namespace Mautic\WebhookBundle\EventListener;
 
-use Joomla\Http\Http;
 use Mautic\CampaignBundle\CampaignEvents;
 use Mautic\CampaignBundle\Event as Events;
 use Mautic\CampaignBundle\Event\CampaignExecutionEvent;
 use Mautic\CoreBundle\EventListener\CommonSubscriber;
-use Mautic\CoreBundle\Helper\AbstractFormFieldHelper;
-use Mautic\LeadBundle\Helper\TokenHelper;
 use Mautic\WebhookBundle\Event\SendWebhookEvent;
+use Mautic\WebhookBundle\Helper\CampaignHelper;
 use Mautic\WebhookBundle\WebhookEvents;
 
-/**
- * Class CampaignSubscriber.
- */
 class CampaignSubscriber extends CommonSubscriber
 {
     /**
-     * @var Http
+     * @var CampaignHelper
      */
-    protected $connector;
+    protected $campaignHelper;
 
     /**
-     * CampaignSubscriber constructor.
-     *
-     * @param Http $connector
+     * @param CampaignHelper $campaignHelper
      */
-    public function __construct(Http $connector)
+    public function __construct(CampaignHelper $campaignHelper)
     {
-        $this->connector = $connector;
+        $this->campaignHelper = $campaignHelper;
     }
 
     /**
@@ -59,74 +52,20 @@ class CampaignSubscriber extends CommonSubscriber
      */
     public function onCampaignTriggerAction(CampaignExecutionEvent $event)
     {
-        if (!$event->checkContext('campaign.sendwebhook')) {
-            return;
-        }
-        $lead   = $event->getLead();
-        $config = $event->getConfig();
-        try {
-            $url    = $config['url'];
-            $method = $config['method'];
-            $data   = !empty($config['additional_data']['list']) ? $config['additional_data']['list'] : '';
-            $data   = array_flip(AbstractFormFieldHelper::parseList($data));
-            // replace contacts tokens
-            foreach ($data as $key => $value) {
-                $data[$key] = urldecode(TokenHelper::findLeadTokens($value, $lead->getProfileFields(), true));
-            }
-            $headers = !empty($config['headers']['list']) ? $config['headers']['list'] : '';
-            $headers = array_flip(AbstractFormFieldHelper::parseList($headers));
-            foreach ($headers as $key => $value) {
-                $headers[$key] = urldecode(TokenHelper::findLeadTokens($value, $lead->getProfileFields(), true));
-            }
-            $timeout = $config['timeout'];
-
-            switch ($method) {
-                case 'get':
-                    $response = $this->connector->get(
-                        $url.(parse_url($url, PHP_URL_QUERY) ? '&' : '?').http_build_query($data),
-                        $headers,
-                        $timeout
-                    );
-                    break;
-                case 'post':
-                case 'put':
-                case 'patch':
-                    $response = $this->connector->$method(
-                        $url,
-                        $data,
-                        $headers,
-                        $timeout
-                    );
-                    break;
-
-                case 'delete':
-                    $response = $this->connector->delete(
-                        $url,
-                        $headers,
-                        $timeout,
-                        $data
-                    );
-                    break;
-                default:
-                    return;
-            }
-
-            if (in_array($response->code, [200, 201])) {
+        if ($event->checkContext('campaign.sendwebhook')) {
+            try {
+                $this->campaignHelper->fireWebhook($event->getConfig(), $event->getLead());
                 $event->setResult(true);
-            }
 
-            if ($this->dispatcher->hasListeners(WebhookEvents::ON_SEND_WEBHOOK)) {
-                $sendWebhookEvent = new SendWebhookEvent($response, $lead);
-                $this->dispatcher->dispatch(WebhookEvents::ON_SEND_WEBHOOK, $sendWebhookEvent);
-                unset($sendWebhookEvent);
+                if ($this->dispatcher->hasListeners(WebhookEvents::ON_WEBHOOK_RESPONSE)) {
+                    $sendWebhookEvent = new SendWebhookEvent($this->campaignHelper->getResponse(), $event->getLead());
+                    $this->dispatcher->dispatch(WebhookEvents::ON_WEBHOOK_RESPONSE, $sendWebhookEvent);
+                    unset($sendWebhookEvent);
+                }
+            } catch (\Exception $e) {
+                $event->setFailed($e->getMessage());
             }
-
-            return;
-        } catch (\Exception $e) {
-            return $event->setFailed($e->getMessage());
         }
-
-        return $event->setFailed($this->translator->trans('Error code').': '.$response->code);
     }
 
     /**
@@ -136,7 +75,6 @@ class CampaignSubscriber extends CommonSubscriber
      */
     public function onCampaignBuild(Events\CampaignBuilderEvent $event)
     {
-        //Add action to remote url call
         $sendWebhookAction = [
             'label'       => 'mautic.webhook.event.sendwebhook',
             'description' => 'mautic.webhook.event.sendwebhook_desc',
