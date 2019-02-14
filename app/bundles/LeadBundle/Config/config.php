@@ -533,6 +533,7 @@ return [
                     'mautic.stage.model.stage',
                     'mautic.category.model.category',
                     'mautic.helper.user',
+                    'mautic.campaign.model.campaign',
                 ],
                 'alias' => 'leadlist',
             ],
@@ -972,6 +973,7 @@ return [
                     'mautic.tracker.contact',
                     'mautic.tracker.device',
                     'mautic.lead.model.legacy_lead',
+                    'mautic.lead.model.ipaddress',
                 ],
             ],
 
@@ -1081,6 +1083,7 @@ return [
                 'arguments' => [
                     'mautic.lead.model.lead_segment_filter_operator',
                     'mautic.lead.repository.lead_segment_filter_descriptor',
+                    'mautic.helper.core_parameters',
                 ],
             ],
             'mautic.lead.model.lead_segment.decorator.date.optionFactory' => [
@@ -1202,6 +1205,13 @@ return [
                     'mautic.lead.service.device_creator_service',
                     'mautic.lead.factory.device_detector_factory',
                     'mautic.lead.service.device_tracking_service',
+                    'monolog.logger.mautic',
+                ],
+            ],
+            'mautic.lead.model.ipaddress' => [
+                'class'     => Mautic\LeadBundle\Model\IpAddressModel::class,
+                'arguments' => [
+                    'doctrine.orm.entity_manager',
                     'monolog.logger.mautic',
                 ],
             ],
