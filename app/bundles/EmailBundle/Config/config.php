@@ -242,6 +242,12 @@ return [
                     'mautic.email.model.email',
                 ],
             ],
+            'mautic.email.dashboard.best.hours.subscriber' => [
+                'class'     => 'Mautic\EmailBundle\EventListener\DashboardBestHoursSubscriber',
+                'arguments' => [
+                    'mautic.email.model.email',
+                ],
+            ],
             'mautic.email.broadcast.subscriber' => [
                 'class'     => 'Mautic\EmailBundle\EventListener\BroadcastSubscriber',
                 'arguments' => [
