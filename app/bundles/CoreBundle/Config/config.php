@@ -286,6 +286,10 @@ return [
                 'arguments' => 'mautic.factory',
                 'alias'     => 'daterange',
             ],
+            'mautic.form.type.timeformat' => [
+                'class'     => \Mautic\CoreBundle\Form\Type\TimeFormatType::class,
+                'arguments' => ['translator'],
+            ],
             'mautic.form.type.builder.section' => [
                 'class'     => 'Mautic\CoreBundle\Form\Type\BuilderSectionType',
                 'arguments' => 'mautic.factory',
