@@ -903,7 +903,6 @@ class SubmissionModel extends CommonFormModel
 
             $this->logger->debug('FORM: In kiosk mode so assuming a new contact');
         }
-
         $uniqueLeadFields = $this->leadFieldModel->getUniqueIdentifierFields();
 
         // Closure to get data and unique fields
@@ -989,11 +988,11 @@ class SubmissionModel extends CommonFormModel
             list($hasConflict, $conflicts) = $checkForIdentifierConflict($uniqueFieldsFound, $uniqueFieldsCurrent);
 
             if ($inKioskMode || $hasConflict || !$trackedContact) {
-                // Use the found lead without merging because there is some sort of conflict with unique identifiers or in kiosk mode and thus should not merge
                 if (!$inKioskMode) {
-                    $this->contactTracker->setTrackedContact($foundLead);
+                    // Use the found lead without merging because there is some sort of conflict with unique identifiers or in kiosk mode and thus should not merge
                     $lead = $foundLead;
                 }
+
                 if ($hasConflict) {
                     $this->logger->debug('FORM: Conflicts found in '.implode(', ', $conflicts).' so not merging');
                 } else {
@@ -1009,8 +1008,6 @@ class SubmissionModel extends CommonFormModel
             // Update unique fields data for comparison with submitted data
             $currentFields       = $lead->getProfileFields();
             $uniqueFieldsCurrent = $getData($currentFields, true);
-        } else {
-            $lead = $this->contactTracker->getContact();
         }
 
         if (!$inKioskMode) {
@@ -1024,7 +1021,7 @@ class SubmissionModel extends CommonFormModel
             $this->logger->debug(
                 'FORM: Submitted unique contact fields '.implode(', ', array_keys($uniqueFieldsWithData)).' = '.implode(', ', $uniqueFieldsWithData)
             );
-            if ($hasConflict) {
+            if ($hasConflict || !$lead) {
                 // There's a conflict so create a new lead
                 $lead = new Lead();
                 $lead->setNewlyCreated(true);
@@ -1033,6 +1030,9 @@ class SubmissionModel extends CommonFormModel
                     'FORM: Conflicts found in '.implode(', ', $conflicts)
                     .' between current tracked contact and submitted data so assuming a new contact'
                 );
+            } else {
+                $this->contactTracker->setTrackedContact($lead);
+                $lead = $this->contactTracker->getContact();
             }
         }
 
