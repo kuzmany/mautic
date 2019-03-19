@@ -993,8 +993,6 @@ class SubmissionModel extends CommonFormModel
                 if (!$inKioskMode) {
                     $this->contactTracker->setTrackedContact($foundLead);
                     $lead = $foundLead;
-                } else {
-                    $lead = $this->contactTracker->getContact();
                 }
                 if ($hasConflict) {
                     $this->logger->debug('FORM: Conflicts found in '.implode(', ', $conflicts).' so not merging');
