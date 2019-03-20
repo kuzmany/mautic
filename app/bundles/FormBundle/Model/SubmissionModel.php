@@ -894,15 +894,19 @@ class SubmissionModel extends CommonFormModel
                 $lead          = $trackedContact;
                 $leadId        = $lead->getId();
                 $currentFields = $lead->getProfileFields();
-            }
 
-            $this->logger->debug('FORM: Not in kiosk mode so using current contact ID #'.$leadId);
+                $this->logger->debug('FORM: Not in kiosk mode so using current contact ID #'.$leadId);
+            } else {
+                $lead->setNewlyCreated(true);
+                $this->logger->debug('FORM: Not in kiosk mode create a new contact');
+            }
         } else {
             // Default to a new lead in kiosk mode
             $lead->setNewlyCreated(true);
 
             $this->logger->debug('FORM: In kiosk mode so assuming a new contact');
         }
+
         $uniqueLeadFields = $this->leadFieldModel->getUniqueIdentifierFields();
 
         // Closure to get data and unique fields
@@ -971,6 +975,7 @@ class SubmissionModel extends CommonFormModel
             $uniqueFieldsWithData,
             $leadId
         ) : [];
+
         $uniqueFieldsCurrent = $getData($currentFields, true);
         if (count($leads)) {
             $this->logger->debug(count($leads).' found based on unique identifiers');
@@ -987,7 +992,7 @@ class SubmissionModel extends CommonFormModel
             $uniqueFieldsFound             = $getData($foundLeadFields, true);
             list($hasConflict, $conflicts) = $checkForIdentifierConflict($uniqueFieldsFound, $uniqueFieldsCurrent);
 
-            if ($inKioskMode || $hasConflict || !$trackedContact) {
+            if ($inKioskMode || $hasConflict || !$lead->getId()) {
                 if (!$inKioskMode) {
                     // Use the found lead without merging because there is some sort of conflict with unique identifiers or in kiosk mode and thus should not merge
                     $lead = $foundLead;
@@ -1021,7 +1026,7 @@ class SubmissionModel extends CommonFormModel
             $this->logger->debug(
                 'FORM: Submitted unique contact fields '.implode(', ', array_keys($uniqueFieldsWithData)).' = '.implode(', ', $uniqueFieldsWithData)
             );
-            if ($hasConflict || !$lead) {
+            if ($hasConflict) {
                 // There's a conflict so create a new lead
                 $lead = new Lead();
                 $lead->setNewlyCreated(true);
@@ -1030,9 +1035,6 @@ class SubmissionModel extends CommonFormModel
                     'FORM: Conflicts found in '.implode(', ', $conflicts)
                     .' between current tracked contact and submitted data so assuming a new contact'
                 );
-            } else {
-                $this->contactTracker->setTrackedContact($lead);
-                $lead = $this->contactTracker->getContact();
             }
         }
 
@@ -1040,7 +1042,7 @@ class SubmissionModel extends CommonFormModel
         $ipAddress = $this->ipLookupHelper->getIpAddress();
 
         //no lead was found by a mapped email field so create a new one
-        if (!$leadId) {
+        if ($lead->isNewlyCreated()) {
             if (!$inKioskMode) {
                 $lead->addIpAddress($ipAddress);
                 $this->logger->debug('FORM: Associating '.$ipAddress->getIpAddress().' to contact');
