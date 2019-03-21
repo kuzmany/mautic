@@ -159,7 +159,7 @@ class SubmissionModel extends CommonFormModel
      * @param FieldValueTransformer           $fieldValueTransformer
      * @param DateHelper                      $dateHelper
      * @param ContactTrackingServiceInterface $contactTracking
-     * @param ContactTracker
+     * @param ContactTracker                  $contactTracker
      */
     public function __construct(
         IpLookupHelper $ipLookupHelper,
