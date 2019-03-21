@@ -690,6 +690,7 @@ class SugarcrmApi extends CrmApi
                 }
                 //$filter_args = ['filter' => [['$and' => $filter]]];
                 //$fields_arg  = implode(',', $fields);
+                $fields[]   = 'reports_to_id'; // webmecanik custom
                 $parameters = [
 //                     'order_by'                 => '',
                      'filter' => [['$and' => $filter]],

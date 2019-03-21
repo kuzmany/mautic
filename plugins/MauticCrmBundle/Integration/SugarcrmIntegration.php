@@ -774,6 +774,10 @@ class SugarcrmIntegration extends CrmAbstractIntegration
             $onwerEmailByAssignedUserId = [];
             if ($object == 'Leads' || $object == 'Contacts' || $object == 'Accounts') {
                 foreach ($data[$RECORDS_LIST_NAME] as $key => $record) {
+                    // skip if enable_custom_filter_on_sugar_sync and reports_to_id empty
+                    if (($object == 'Leads' || $object == 'Contacts') && !empty($this->factory->getParameter('enable_custom_filter_on_sugar_sync')) && !empty($record['reports_to_id'])) {
+                        continue;
+                    }
                     if ($SUGAR_VERSION == '6') {
                         foreach ($record['name_value_list'] as $item) {
                             if ($item['name'] == 'assigned_user_id' && $item['value'] && $item['value'] != '') {
