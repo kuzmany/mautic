@@ -993,10 +993,8 @@ class SubmissionModel extends CommonFormModel
             list($hasConflict, $conflicts) = $checkForIdentifierConflict($uniqueFieldsFound, $uniqueFieldsCurrent);
 
             if ($inKioskMode || $hasConflict || !$lead->getId()) {
-                if (!$inKioskMode) {
-                    // Use the found lead without merging because there is some sort of conflict with unique identifiers or in kiosk mode and thus should not merge
-                    $lead = $foundLead;
-                }
+                // Use the found lead without merging because there is some sort of conflict with unique identifiers or in kiosk mode and thus should not merge
+                $lead = $foundLead;
 
                 if ($hasConflict) {
                     $this->logger->debug('FORM: Conflicts found in '.implode(', ', $conflicts).' so not merging');
