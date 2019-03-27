@@ -872,14 +872,13 @@ class SugarcrmIntegration extends CrmAbstractIntegration
                     continue; //Lead email is already in Sugar Contacts. Do not carry on
                 }
                 // skip if enable_custom_filter_on_sugar_sync and reports_to_id empty
-                if (($object == 'Leads' || $object == 'Contacts') && !empty($this->factory->getParameter('enable_custom_filter_on_sugar_sync')) && !empty($dataObject['reports_to_id'])) {
+                if (!empty($this->factory->getParameter('enable_custom_filter_on_sugar_sync')) && (!empty($dataObject['reports_to_id__Leads']) || !empty($dataObject['reports_to_id__Contacts']))) {
                     continue;
                 }
                 //$itemLastDate = $itemDateModified;
                 //if ($itemDateEntered > $itemLastDate) {
                 //    $itemLastDate = $itemDateEntered;
                 //}
-
                 if (isset($dataObject) && $dataObject && !empty($dataObject)) {
                     if ($object == 'Leads' or $object == 'Contacts') {
                         $email_present = false;
@@ -1252,6 +1251,7 @@ class SugarcrmIntegration extends CrmAbstractIntegration
      */
     public function pushLeads($params = [])
     {
+        return;
         list($fromDate, $toDate) = $this->getSyncTimeframeDates($params);
         $limit                   = $params['limit'];
         $config                  = $this->mergeConfigToFeatureSettings();
