@@ -774,10 +774,6 @@ class SugarcrmIntegration extends CrmAbstractIntegration
             $onwerEmailByAssignedUserId = [];
             if ($object == 'Leads' || $object == 'Contacts' || $object == 'Accounts') {
                 foreach ($data[$RECORDS_LIST_NAME] as $key => $record) {
-                    // skip if enable_custom_filter_on_sugar_sync and reports_to_id empty
-                    if (($object == 'Leads' || $object == 'Contacts') && !empty($this->factory->getParameter('enable_custom_filter_on_sugar_sync')) && !empty($record['reports_to_id'])) {
-                        continue;
-                    }
                     if ($SUGAR_VERSION == '6') {
                         foreach ($record['name_value_list'] as $item) {
                             if ($item['name'] == 'assigned_user_id' && $item['value'] && $item['value'] != '') {
@@ -875,6 +871,10 @@ class SugarcrmIntegration extends CrmAbstractIntegration
                     && $dataObject['email1__Leads'] != '' && in_array($dataObject['email1__Leads'], $sugarRejectedLeads)) {
                     continue; //Lead email is already in Sugar Contacts. Do not carry on
                 }
+                // skip if enable_custom_filter_on_sugar_sync and reports_to_id empty
+                if (($object == 'Leads' || $object == 'Contacts') && !empty($this->factory->getParameter('enable_custom_filter_on_sugar_sync')) && !empty($dataObject['reports_to_id'])) {
+                    continue;
+                }
                 //$itemLastDate = $itemDateModified;
                 //if ($itemDateEntered > $itemLastDate) {
                 //    $itemLastDate = $itemDateEntered;
@@ -928,7 +928,6 @@ class SugarcrmIntegration extends CrmAbstractIntegration
 
                         continue;
                     }
-
                     if ($entity) {
                         $integrationId = $integrationEntityRepo->getIntegrationsEntityId(
                             'Sugarcrm',
