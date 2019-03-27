@@ -879,6 +879,7 @@ class SugarcrmIntegration extends CrmAbstractIntegration
                 //if ($itemDateEntered > $itemLastDate) {
                 //    $itemLastDate = $itemDateEntered;
                 //}
+
                 if (isset($dataObject) && $dataObject && !empty($dataObject)) {
                     if ($object == 'Leads' or $object == 'Contacts') {
                         $email_present = false;
@@ -927,6 +928,7 @@ class SugarcrmIntegration extends CrmAbstractIntegration
 
                         continue;
                     }
+
                     if ($entity) {
                         $integrationId = $integrationEntityRepo->getIntegrationsEntityId(
                             'Sugarcrm',
