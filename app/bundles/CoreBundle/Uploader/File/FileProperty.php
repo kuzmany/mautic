@@ -1,5 +1,5 @@
 <?php
-/**
+/*
  *  * @copyright   2019 Mautic Contributors. All rights reserved
  *  * @author      Mautic
  *  *
@@ -10,23 +10,12 @@
  *  * @license     GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
  */
 
-/*
- *
- *  * @copyright   2019 Mautic Contributors. All rights reserved
- *  * @author      Mautic
- *  *
- *  * @link        http://mautic.org
- *  *
- *  * @license     GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
- *
- */
-
-namespace Mautic\CoreBundle\Uploader\Decorator;
+namespace Mautic\CoreBundle\Uploader\File;
 
 use Mautic\CoreBundle\Exception\FileNotFoundException;
 use Symfony\Component\HttpFoundation\File\File;
 
-class FileDecorator
+class FileProperty
 {
     /**
      * @var string

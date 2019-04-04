@@ -67,8 +67,7 @@ switch ($type) {
                 <?php echo $text; ?>
                 <div class="mt-15 text-muted"><i class="fa fa-clock-o fa-fw"></i><span class="small"><?php echo $view['date']->toFullConcat($date); ?></span> <i class="fa fa-user fa-fw"></i><span class="small"><?php echo $author; ?></span>
                      <?php if ($attachment): ?>
-                     <?php $leadNoteUploadDecorator->setEntity($note); ?>
-                        <i class="fa fa-download fa-fw"></i><span class="small"><a href="<?php echo $view['router']->path('mautic_lead_note_attachment_download', ['objectId'=> $id]); ?>"><?php echo $attachment; ?></a> (<?php echo $leadNoteUploadDecorator->getFileSize('attachment') ?>)</span>
+                        <i class="fa fa-download fa-fw"></i><span class="small"><a href="<?php echo $view['router']->path('mautic_lead_note_attachment_download', ['objectId'=> $id]); ?>"><?php echo $attachment; ?></a></span>
                      <?php endif; ?>
                 </div>
             </div>

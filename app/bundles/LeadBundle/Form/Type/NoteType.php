@@ -84,7 +84,6 @@ class NoteType extends AbstractType
                 'required'   => false,
                 'attr'       => [
                     'class'        => 'form-control',
-                    'data-show-on' => '{"leadnote_attachment_remove":""}',
                 ],
                 'mapped'      => false,
             ]

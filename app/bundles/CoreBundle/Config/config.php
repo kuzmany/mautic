@@ -590,16 +590,11 @@ return [
         ],
         'other' => [
             // uploader
-            'mautic.core.uploader' => [
-                'class'     => Mautic\CoreBundle\Uploader\Uploader::class,
+            'mautic.core.uploader.factory' => [
+                'class'     => \Mautic\CoreBundle\Uploader\AbstractUploader::class,
                 'arguments' => [
                     'mautic.helper.file_uploader',
                     'request_stack',
-                ],
-            ],
-            'mautic.core.uploader.decorator' => [
-                'class'     => \Mautic\CoreBundle\Uploader\Decorator\BaseUploaderDecorator::class,
-                'arguments' => [
                     'mautic.helper.core_parameters',
                     'mautic.helper.paths',
                 ],

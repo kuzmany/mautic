@@ -835,9 +835,11 @@ return [
                     'mautic.lead.repository.company_lead',
                 ],
             ],
-            'mautic.lead.note.uploader.decorator' => [
-                'class'     => \Mautic\LeadBundle\Uploader\Decorator\LeadNoteUploaderDecorator::class,
+            'mautic.lead.note.uploader' => [
+                'class'     => \Mautic\LeadBundle\Uploader\LeadNoteUploader::class,
                 'arguments' => [
+                    'mautic.helper.file_uploader',
+                    'request_stack',
                     'mautic.helper.core_parameters',
                     'mautic.helper.paths',
                 ],
@@ -1116,7 +1118,10 @@ return [
                 'class'     => \Mautic\LeadBundle\Segment\OperatorOptions::class,
             ],
             'mautic.lead.model.note' => [
-                'class' => 'Mautic\LeadBundle\Model\NoteModel',
+                'class'     => 'Mautic\LeadBundle\Model\NoteModel',
+                'arguments' => [
+                    'mautic.lead.note.uploader',
+                ],
             ],
             'mautic.lead.model.device' => [
                 'class'     => Mautic\LeadBundle\Model\DeviceModel::class,

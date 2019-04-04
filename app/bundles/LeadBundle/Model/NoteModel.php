@@ -16,6 +16,7 @@ use Mautic\LeadBundle\Entity\Lead;
 use Mautic\LeadBundle\Entity\LeadNote;
 use Mautic\LeadBundle\Event\LeadNoteEvent;
 use Mautic\LeadBundle\LeadEvents;
+use Mautic\LeadBundle\Uploader\LeadNoteUploader;
 use Symfony\Component\EventDispatcher\Event;
 use Symfony\Component\HttpFoundation\Session\Session;
 use Symfony\Component\HttpKernel\Exception\MethodNotAllowedHttpException;
@@ -26,6 +27,16 @@ use Symfony\Component\HttpKernel\Exception\MethodNotAllowedHttpException;
  */
 class NoteModel extends FormModel
 {
+    /**
+     * @var LeadNoteUploader
+     */
+    private $leadNoteUploaderFactory;
+
+    public function __construct(LeadNoteUploader $leadNoteUploaderFactory)
+    {
+        $this->leadNoteUploaderFactory = $leadNoteUploaderFactory;
+    }
+
     /**
      * @var Session
      */
@@ -98,6 +109,25 @@ class NoteModel extends FormModel
         }
 
         return $formFactory->create('leadnote', $entity, $options);
+    }
+
+    /**
+     * @param LeadNote $entity
+     * @param bool     $unlock
+     */
+    public function saveEntity($entity, $unlock = true)
+    {
+        parent::saveEntity($entity, $unlock);
+        // attachment upload
+        if ($this->leadNoteUploaderFactory->uploadFiles($entity)) {
+            $this->getRepository()->saveEntity($entity);
+        }
+    }
+
+    public function deleteEntity($entity)
+    {
+        $this->leadNoteUploaderFactory->removeFiles($entity);
+        parent::deleteEntity($entity);
     }
 
     /**

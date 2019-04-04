@@ -16,7 +16,7 @@ use Mautic\CoreBundle\Controller\AbstractFormController;
 use Mautic\CoreBundle\Exception\FileNotFoundException;
 use Mautic\LeadBundle\Entity\LeadNote;
 use Mautic\LeadBundle\Model\NoteModel;
-use Mautic\LeadBundle\Uploader\Decorator\LeadNoteUploaderDecorator;
+use Mautic\LeadBundle\Uploader\LeadNoteUploader;
 
 class PublicController extends AbstractFormController
 {
@@ -36,11 +36,10 @@ class PublicController extends AbstractFormController
             if ((!$security->hasEntityAccess('lead:note:viewown', 'lead:note:viewother', $entity->getCreatedBy()))) {
                 return $this->accessDenied();
             }
-            /** @var LeadNoteUploaderDecorator $leadNoteUploaderDecorator */
-            $leadNoteUploaderDecorator = $this->get('mautic.lead.note.uploader.decorator');
-            $leadNoteUploaderDecorator->setEntity($entity);
+            /** @var LeadNoteUploader $leadNoteUploaderDecorator */
+            $leadNoteUploaderDecorator = $this->get('mautic.lead.note.uploader');
             try {
-                return $leadNoteUploaderDecorator->downloadFile('attachment');
+                return $leadNoteUploaderDecorator->downloadFile($entity, 'attachment');
             } catch (FileNotFoundException $exception) {
                 return $this->notFound();
             }
