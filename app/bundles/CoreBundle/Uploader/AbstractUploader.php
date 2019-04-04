@@ -171,22 +171,6 @@ abstract class AbstractUploader
     }
 
     /**
-     * @return array
-     */
-    public function getFields()
-    {
-        return [];
-    }
-
-    /**
-     * @return string
-     */
-    public function getForm()
-    {
-        return '';
-    }
-
-    /**
      * Directory path.
      *
      * @return array
@@ -226,13 +210,5 @@ abstract class AbstractUploader
     public function getFileNameFromEntity($field)
     {
         return $this->propertyAccessor->getValue($this->entity, $field);
-    }
-
-    /**
-     * @param CommonEntity $entity
-     */
-    public function setEntity($entity)
-    {
-        $this->entity = $entity;
     }
 }
