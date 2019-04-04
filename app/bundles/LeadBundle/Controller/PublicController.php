@@ -38,7 +38,7 @@ class PublicController extends AbstractFormController
 
         if (!empty($entity)) {
             //make sure the asset is published or deny access if not
-            if ((!$security->hasEntityAccess('lead:note:viewown', 'lead:note:viewother', $entity->getCreatedBy()))) {
+            if (!$security->hasEntityAccess('lead:note:viewown', 'lead:note:viewother', $entity->getCreatedBy())) {
                 return $this->accessDenied();
             }
             /** @var LeadNoteUploader $leadNoteUploaderDecorator */
