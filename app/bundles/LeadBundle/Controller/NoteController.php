@@ -68,6 +68,7 @@ class NoteController extends FormController
                 'value'  => $lead,
             ],
         ];
+
         $tmpl     = $this->request->isXmlHttpRequest() ? $this->request->get('tmpl', 'index') : 'index';
         $noteType = InputHelper::clean($this->request->request->get('noteTypes', [], true));
         if (empty($noteType) && $tmpl == 'index') {
@@ -100,6 +101,7 @@ class NoteController extends FormController
                 'limit'          => $limit,
                 'orderBy'        => $orderBy,
                 'orderByDir'     => $orderByDir,
+                'hydration_mode' => 'HYDRATE_ARRAY',
             ]
         );
 
@@ -108,15 +110,15 @@ class NoteController extends FormController
         return $this->delegateView(
             [
                 'viewParameters' => [
-                    'notes'                   => $items,
-                    'lead'                    => $lead,
-                    'page'                    => $page,
-                    'limit'                   => $limit,
-                    'search'                  => $search,
-                    'noteType'                => $noteType,
-                    'noteTypes'               => $noteTypes,
-                    'tmpl'                    => $tmpl,
-                    'permissions'             => [
+                    'notes'       => $items,
+                    'lead'        => $lead,
+                    'page'        => $page,
+                    'limit'       => $limit,
+                    'search'      => $search,
+                    'noteType'    => $noteType,
+                    'noteTypes'   => $noteTypes,
+                    'tmpl'        => $tmpl,
+                    'permissions' => [
                         'edit'   => $security->hasEntityAccess('lead:leads:editown', 'lead:leads:editother', $lead->getPermissionUser()),
                         'delete' => $security->hasEntityAccess('lead:leads:deleteown', 'lead:leads:deleteown', $lead->getPermissionUser()),
                     ],
@@ -161,7 +163,6 @@ class NoteController extends FormController
         $form       = $model->createForm($note, $this->get('form.factory'), $action);
         $closeModal = false;
         $valid      = false;
-
         ///Check for a submitted form and process it
         if ($this->request->getMethod() == 'POST') {
             if (!$cancelled = $this->isFormCancelled($form)) {
@@ -194,9 +195,9 @@ class NoteController extends FormController
                 $passthroughVars['noteHtml']    = $this->renderView(
                     'MauticLeadBundle:Note:note.html.php',
                     [
-                        'note'                    => $note,
-                        'lead'                    => $lead,
-                        'permissions'             => $permissions,
+                        'note'        => $note,
+                        'lead'        => $lead,
+                        'permissions' => $permissions,
                     ]
                 );
                 $passthroughVars['noteId'] = $note->getId();
@@ -280,9 +281,9 @@ class NoteController extends FormController
                 $passthroughVars['noteHtml'] = $this->renderView(
                     'MauticLeadBundle:Note:note.html.php',
                     [
-                        'note'                   => $note,
-                        'lead'                   => $lead,
-                        'permissions'            => $permissions,
+                        'note'        => $note,
+                        'lead'        => $lead,
+                        'permissions' => $permissions,
                     ]
                 );
                 $passthroughVars['noteId'] = $note->getId();
@@ -297,10 +298,9 @@ class NoteController extends FormController
             return $this->delegateView(
                 [
                     'viewParameters' => [
-                        'form'                   => $form->createView(),
-                        'note'                   => $note,
-                        'lead'                   => $lead,
-                        'permissions'            => $permissions,
+                        'form'        => $form->createView(),
+                        'lead'        => $lead,
+                        'permissions' => $permissions,
                     ],
                     'contentTemplate' => 'MauticLeadBundle:Note:form.html.php',
                 ]

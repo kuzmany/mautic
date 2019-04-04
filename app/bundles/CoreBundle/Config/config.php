@@ -589,17 +589,6 @@ return [
             ],
         ],
         'other' => [
-            // uploader
-            'mautic.core.uploader.factory' => [
-                'class'     => \Mautic\CoreBundle\Uploader\AbstractUploader::class,
-                'arguments' => [
-                    'mautic.helper.file_uploader',
-                    'request_stack',
-                    'mautic.helper.core_parameters',
-                    'mautic.helper.paths',
-                ],
-            ],
-
             'symfony.filesystem' => [
                 'class' => \Symfony\Component\Filesystem\Filesystem::class,
             ],

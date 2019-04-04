@@ -30,7 +30,6 @@ class FileLocator
      * FileLocator constructor.
      *
      * @param AbstractUploader $uploaderFactory
-     * @param string           $fileName
      */
     public function __construct(AbstractUploader $uploaderFactory)
     {
