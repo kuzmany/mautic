@@ -16,11 +16,13 @@ if ($tmpl == 'index') {
 <ul class="notes" id="LeadNotes">
     <?php foreach ($notes as $note): ?>
         <?php
+        $leadNoteUploadDecorator->setEntity($note);
         //Use a separate layout for AJAX generated content
         echo $view->render('MauticLeadBundle:Note:note.html.php', [
-            'note'        => $note,
-            'lead'        => $lead,
-            'permissions' => $permissions,
+            'note'                    => $note,
+            'leadNoteUploadDecorator' => $leadNoteUploadDecorator,
+            'lead'                    => $lead,
+            'permissions'             => $permissions,
         ]); ?>
     <?php endforeach; ?>
 </ul>

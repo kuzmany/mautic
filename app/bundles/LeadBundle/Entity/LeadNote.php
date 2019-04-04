@@ -213,4 +213,24 @@ class LeadNote extends FormEntity
     {
         $this->dateTime = $dateTime;
     }
+
+    /**
+     * @return string
+     */
+    public function getAttachment()
+    {
+        return $this->attachment;
+    }
+
+    /**
+     * @param string $attachment
+     *
+     * @return LeadNote
+     */
+    public function setAttachment($attachment)
+    {
+        $this->attachment = $attachment;
+
+        return $this;
+    }
 }

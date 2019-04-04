@@ -11,6 +11,12 @@
 
 return [
     'routes' => [
+        'public' => [
+            'mautic_lead_note_attachment_download' => [
+                'path'       => '/note/download/{objectId}',
+                'controller' => 'MauticLeadBundle:Public:download',
+            ],
+        ],
         'main' => [
             'mautic_plugin_timeline_index' => [
                 'path'         => '/plugin/{integration}/timeline/{page}',
@@ -827,6 +833,13 @@ return [
                 'class'     => \Mautic\LeadBundle\Helper\PrimaryCompanyHelper::class,
                 'arguments' => [
                     'mautic.lead.repository.company_lead',
+                ],
+            ],
+            'mautic.lead.note.uploader.decorator' => [
+                'class'     => \Mautic\LeadBundle\Uploader\Decorator\LeadNoteUploaderDecorator::class,
+                'arguments' => [
+                    'mautic.helper.core_parameters',
+                    'mautic.helper.paths',
                 ],
             ],
         ],

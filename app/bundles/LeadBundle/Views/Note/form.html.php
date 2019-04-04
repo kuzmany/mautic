@@ -27,6 +27,30 @@ if (!empty($userId)) {
         <?php echo $view['form']->widget($form['dateTime']); ?>
     </div>
 </div>
+<div class="row mt-10">
+    <div class="col-xs-6">
+        <?php echo $view['form']->row($form['attachment']); ?>
+    </div>
+    <div class="col-xs-6">
+
+        <?php if ($note->getAttachment() && isset($leadNoteUploadDecorator)): ?>
+            <label class="control-label">&nbsp;</label>
+            <?php
+            /** @var \Mautic\CoreBundle\Uploader\Decorator\FileDecorator $fileDecorator */
+            $fileDecorator = new \Mautic\CoreBundle\Uploader\Decorator\FileDecorator($leadNoteUploadDecorator->getFilePath('attachment')); ?> <br>
+        <a href="<?php echo $view['router']->path('mautic_lead_note_attachment_download', ['objectId'=> $note->getId()]); ?>">
+            <?php echo $note->getAttachment(); ?>
+        </a>
+            (<?php echo $fileDecorator->getFileSize(); ?>) <br>
+        <?php endif; ?>
+        <span class="<?php if (!isset($note) || !$note->getAttachment()) {
+                echo 'hidden';
+            } ?>"><?php echo $view['translator']->trans(
+                'mautic.core.remove'
+            ); ?> &nbsp;<span class="mt-2"><?php echo $view['form']->widget($form['attachment_remove']); ?></span>
+        </span>
+    </div>
+</div>
 
 <?php echo $view['form']->row($form['buttons']); ?>
 <?php echo $view['form']->end($form); ?>

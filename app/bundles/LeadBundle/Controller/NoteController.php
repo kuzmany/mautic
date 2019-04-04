@@ -13,6 +13,8 @@ namespace Mautic\LeadBundle\Controller;
 
 use Mautic\CoreBundle\Controller\FormController;
 use Mautic\CoreBundle\Helper\InputHelper;
+use Mautic\CoreBundle\Uploader\Decorator\AbstractUploaderDecorator;
+use Mautic\CoreBundle\Uploader\Uploader;
 use Mautic\LeadBundle\Entity\LeadNote;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
@@ -68,7 +70,6 @@ class NoteController extends FormController
                 'value'  => $lead,
             ],
         ];
-
         $tmpl     = $this->request->isXmlHttpRequest() ? $this->request->get('tmpl', 'index') : 'index';
         $noteType = InputHelper::clean($this->request->request->get('noteTypes', [], true));
         if (empty($noteType) && $tmpl == 'index') {
@@ -101,7 +102,6 @@ class NoteController extends FormController
                 'limit'          => $limit,
                 'orderBy'        => $orderBy,
                 'orderByDir'     => $orderByDir,
-                'hydration_mode' => 'HYDRATE_ARRAY',
             ]
         );
 
@@ -110,15 +110,16 @@ class NoteController extends FormController
         return $this->delegateView(
             [
                 'viewParameters' => [
-                    'notes'       => $items,
-                    'lead'        => $lead,
-                    'page'        => $page,
-                    'limit'       => $limit,
-                    'search'      => $search,
-                    'noteType'    => $noteType,
-                    'noteTypes'   => $noteTypes,
-                    'tmpl'        => $tmpl,
-                    'permissions' => [
+                    'notes'                   => $items,
+                    'leadNoteUploadDecorator' => $this->get('mautic.lead.note.uploader.decorator'),
+                    'lead'                    => $lead,
+                    'page'                    => $page,
+                    'limit'                   => $limit,
+                    'search'                  => $search,
+                    'noteType'                => $noteType,
+                    'noteTypes'               => $noteTypes,
+                    'tmpl'                    => $tmpl,
+                    'permissions'             => [
                         'edit'   => $security->hasEntityAccess('lead:leads:editown', 'lead:leads:editother', $lead->getPermissionUser()),
                         'delete' => $security->hasEntityAccess('lead:leads:deleteown', 'lead:leads:deleteown', $lead->getPermissionUser()),
                     ],
@@ -163,6 +164,11 @@ class NoteController extends FormController
         $form       = $model->createForm($note, $this->get('form.factory'), $action);
         $closeModal = false;
         $valid      = false;
+
+        /** @var AbstractUploaderDecorator $decorator */
+        $decorator = $this->get('mautic.lead.note.uploader.decorator');
+        $decorator->setEntity($note);
+
         ///Check for a submitted form and process it
         if ($this->request->getMethod() == 'POST') {
             if (!$cancelled = $this->isFormCancelled($form)) {
@@ -171,6 +177,11 @@ class NoteController extends FormController
 
                     //form is valid so process the data
                     $model->saveEntity($note);
+
+                    // save again
+                    if ($this->get('mautic.core.uploader')->uploadFiles($decorator)) {
+                        $model->saveEntity($note);
+                    }
                 }
             } else {
                 $closeModal = true;
@@ -195,9 +206,10 @@ class NoteController extends FormController
                 $passthroughVars['noteHtml']    = $this->renderView(
                     'MauticLeadBundle:Note:note.html.php',
                     [
-                        'note'        => $note,
-                        'lead'        => $lead,
-                        'permissions' => $permissions,
+                        'note'                    => $note,
+                        'leadNoteUploadDecorator' => $decorator,
+                        'lead'                    => $lead,
+                        'permissions'             => $permissions,
                     ]
                 );
                 $passthroughVars['noteId'] = $note->getId();
@@ -254,10 +266,16 @@ class NoteController extends FormController
         );
         $form = $model->createForm($note, $this->get('form.factory'), $action);
 
+        /** @var AbstractUploaderDecorator $leadNoteUploadDecorator */
+        $leadNoteUploadDecorator = $this->get('mautic.lead.note.uploader.decorator');
+        $leadNoteUploadDecorator->setEntity($note);
+
         ///Check for a submitted form and process it
         if ($this->request->getMethod() == 'POST') {
             if (!$cancelled = $this->isFormCancelled($form)) {
                 if ($valid = $this->isFormValid($form)) {
+                    $this->get('mautic.core.uploader')->uploadFiles($leadNoteUploadDecorator);
+
                     //form is valid so process the data
                     $model->saveEntity($note);
                     $closeModal = true;
@@ -281,9 +299,10 @@ class NoteController extends FormController
                 $passthroughVars['noteHtml'] = $this->renderView(
                     'MauticLeadBundle:Note:note.html.php',
                     [
-                        'note'        => $note,
-                        'lead'        => $lead,
-                        'permissions' => $permissions,
+                        'note'                   => $note,
+                        'leadNoteUploadDecorator'=> $leadNoteUploadDecorator,
+                        'lead'                   => $lead,
+                        'permissions'            => $permissions,
                     ]
                 );
                 $passthroughVars['noteId'] = $note->getId();
@@ -298,9 +317,11 @@ class NoteController extends FormController
             return $this->delegateView(
                 [
                     'viewParameters' => [
-                        'form'        => $form->createView(),
-                        'lead'        => $lead,
-                        'permissions' => $permissions,
+                        'form'                   => $form->createView(),
+                        'leadNoteUploadDecorator'=> $leadNoteUploadDecorator,
+                        'note'                   => $note,
+                        'lead'                   => $lead,
+                        'permissions'            => $permissions,
                     ],
                     'contentTemplate' => 'MauticLeadBundle:Note:form.html.php',
                 ]

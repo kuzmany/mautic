@@ -15,6 +15,7 @@ use Mautic\CoreBundle\Form\EventListener\CleanFormSubscriber;
 use Mautic\CoreBundle\Form\EventListener\FormExitSubscriber;
 use Mautic\CoreBundle\Helper\DateTimeHelper;
 use Symfony\Component\Form\AbstractType;
+use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolverInterface;
 use Symfony\Component\Validator\Constraints\File;
@@ -78,12 +79,24 @@ class NoteType extends AbstractType
             'attachment',
             'file',
             [
-                'label'      => 'mautic.core.attachment',
+                'label'      => 'mautic.lead.note.type.attachment',
                 'label_attr' => ['class' => 'control-label'],
                 'required'   => false,
                 'attr'       => [
-                    'class'   => 'form-control',
+                    'class'        => 'form-control',
+                    'data-show-on' => '{"leadnote_attachment_remove":""}',
                 ],
+                'mapped'      => false,
+            ]
+        );
+
+        $builder->add(
+            'attachment_remove',
+            CheckboxType::class,
+            [
+                'label'       => 'mautic.lead.note.type.attachment.remove',
+                'label_attr'  => ['class' => 'control-label'],
+                'required'    => false,
                 'mapped'      => false,
             ]
         );
