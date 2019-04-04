@@ -32,7 +32,6 @@ if (!empty($userId)) {
         <?php echo $view['form']->row($form['attachment']); ?>
     </div>
     <div class="col-xs-12">
-
         <span class="<?php if (!isset($note) || !$note->getAttachment()): echo 'hidden'; endif; ?>">
         <strong><?php echo $view['translator']->trans('mautic.lead.note.type.attached.file'); ?>:</strong>
             <?php if (isset($note) && $note->getAttachment()): ?>
@@ -44,8 +43,6 @@ if (!empty($userId)) {
             <?php echo $view['form']->widget($form['attachment_remove']); ?>
             <span class="text-lowercase"><?php echo $view['translator']->trans('mautic.core.remove'); ?>  </span>
         </span>
-
-
     </div>
 </div>
 

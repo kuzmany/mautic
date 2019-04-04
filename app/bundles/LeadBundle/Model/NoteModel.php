@@ -30,11 +30,11 @@ class NoteModel extends FormModel
     /**
      * @var LeadNoteUploader
      */
-    private $leadNoteUploaderFactory;
+    private $leadNoteUploader;
 
-    public function __construct(LeadNoteUploader $leadNoteUploaderFactory)
+    public function __construct(LeadNoteUploader $leadNoteUploader)
     {
-        $this->leadNoteUploaderFactory = $leadNoteUploaderFactory;
+        $this->leadNoteUploader = $leadNoteUploader;
     }
 
     /**
@@ -119,14 +119,14 @@ class NoteModel extends FormModel
     {
         parent::saveEntity($entity, $unlock);
         // attachment upload
-        if ($this->leadNoteUploaderFactory->uploadFiles($entity)) {
+        if ($this->leadNoteUploader->uploadFiles($entity)) {
             $this->getRepository()->saveEntity($entity);
         }
     }
 
     public function deleteEntity($entity)
     {
-        $this->leadNoteUploaderFactory->removeFiles($entity);
+        $this->leadNoteUploader->removeFiles($entity);
         parent::deleteEntity($entity);
     }
 

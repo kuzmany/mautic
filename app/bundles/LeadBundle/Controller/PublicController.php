@@ -20,6 +20,11 @@ use Mautic\LeadBundle\Uploader\LeadNoteUploader;
 
 class PublicController extends AbstractFormController
 {
+    /**
+     * @param $objectId
+     *
+     * @return array|bool|\Symfony\Component\HttpFoundation\JsonResponse|\Symfony\Component\HttpFoundation\RedirectResponse|\Symfony\Component\HttpFoundation\Response
+     */
     public function downloadAction($objectId)
     {
         //find the asset

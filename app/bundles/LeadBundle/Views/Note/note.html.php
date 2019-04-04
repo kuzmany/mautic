@@ -9,19 +9,19 @@
  * @license     GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
  */
 if ($note instanceof \Mautic\LeadBundle\Entity\LeadNote) {
-    $id           = $note->getId();
-    $text         = $note->getText();
-    $date         = $note->getDateTime();
-    $author       = $note->getCreatedByUser();
-    $type         = $note->getType();
-    $attachment   = $note->getAttachment();
+    $id         = $note->getId();
+    $text       = $note->getText();
+    $date       = $note->getDateTime();
+    $author     = $note->getCreatedByUser();
+    $type       = $note->getType();
+    $attachment = $note->getAttachment();
 } else {
-    $id           = $note['id'];
-    $text         = $note['text'];
-    $date         = $note['dateTime'];
-    $author       = $note['createdByUser'];
-    $type         =   $note['type'];
-    $attachment   = $note['attachment'];
+    $id         = $note['id'];
+    $text       = $note['text'];
+    $date       = $note['dateTime'];
+    $author     = $note['createdByUser'];
+    $type       = $note['type'];
+    $attachment = $note['attachment'];
 }
 
 switch ($type) {

@@ -63,7 +63,7 @@ class NoteType extends AbstractType
         $data = ($dt == null) ? $this->dateHelper->getDateTime() : $dt;
 
         $builder->add('dateTime', 'datetime', [
-            'label'      => 'mautic.core.attachment',
+            'label'      => 'mautic.core.date.added',
             'label_attr' => ['class' => 'control-label'],
             'widget'     => 'single_text',
             'attr'       => [
