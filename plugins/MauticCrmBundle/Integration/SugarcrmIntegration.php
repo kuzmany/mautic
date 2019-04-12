@@ -407,6 +407,21 @@ class SugarcrmIntegration extends CrmAbstractIntegration
     }
 
     /**
+     * @return array
+     */
+    private function getAvailableLeadFieldsChoices()
+    {
+        $availableLeadFields =  $this->getAvailableLeadFields();
+        $availableLeadFields = reset($availableLeadFields);
+
+        if (!empty($availableLeadFields)) {
+            return array_combine(array_keys($availableLeadFields), array_column($availableLeadFields, 'optionLabel'));
+        }
+
+        return [];
+    }
+
+    /**
      * @param $params
      *
      * @return mixed
@@ -889,6 +904,9 @@ class SugarcrmIntegration extends CrmAbstractIntegration
                         }
                         $mauticObjectReference = 'lead';
                         $entity                = $this->getMauticLead($dataObject, true, null, null, $object);
+                        if ($object == 'Leads') {
+                            $this->setTags($dataObject, $entity);
+                        }
                         $detachClass           = Lead::class;
                         $company               = null;
                         $this->fetchDncToMautic($entity, $data);
@@ -966,6 +984,27 @@ class SugarcrmIntegration extends CrmAbstractIntegration
         }
 
         return $count;
+    }
+
+    /**
+     * @param $dataObject
+     * @param Lead $entity
+     */
+    private function setTags($dataObject, &$entity)
+    {
+        $config = $this->mergeConfigToFeatureSettings();
+        if (!empty($config['toTags'])) {
+            $toTags = $config['toTags'];
+            $tags   = [];
+            foreach ($toTags as $toTag) {
+                if (!empty($dataObject[$toTag])) {
+                    $tags[] =  $dataObject[$toTag];
+                }
+            }
+            if (!empty($tags) && method_exists($entity, 'setTags')) {
+                $this->leadModel->setTags($entity, $tags);
+            }
+        }
     }
 
     /**
@@ -1076,6 +1115,20 @@ class SugarcrmIntegration extends CrmAbstractIntegration
                     ],
                     'multiple'   => true,
                     'empty_data' => ['point.gained', 'form.submitted', 'email.read'], // BC with pre 2.11.0
+                    'required'   => false,
+                ]
+            );
+
+            $builder->add(
+                'toTags',
+                ChoiceType::class,
+                [
+                    'choices'    => $this->getAvailableLeadFieldsChoices(),
+                    'label'      => 'mautic.sugarcrm.form.toTags',
+                    'label_attr' => [
+                        'class'       => 'control-label',
+                    ],
+                    'multiple'   => true,
                     'required'   => false,
                 ]
             );
