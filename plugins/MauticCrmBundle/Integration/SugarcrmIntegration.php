@@ -193,7 +193,7 @@ class SugarcrmIntegration extends CrmAbstractIntegration
         return [
             'sugarcrm_url'  => 'mautic.sugarcrm.form.url',
             'client_id'     => 'mautic.sugarcrm.form.clientkey',
-            //'client_secret' => 'mautic.sugarcrm.form.clientsecret',
+            'client_secret' => 'mautic.sugarcrm.form.clientsecret',
             'username'      => 'mautic.sugarcrm.form.username',
             'password'      => 'mautic.sugarcrm.form.password',
         ];
@@ -988,6 +988,26 @@ class SugarcrmIntegration extends CrmAbstractIntegration
         }
 
         return $count;
+    }
+
+    /**
+     * @param array $dataObject
+     */
+    private function setTagsToContactIfCustomFilterIsEnabled(array $dataObject)
+    {
+        $config = $this->mergeConfigToFeatureSettings([]);
+        // Match that data with mapped lead fields
+        $matchedFields = $this->populateMauticLeadData($dataObject, $config);
+        if (empty($matchedFields)) {
+            return;
+        }
+        $lead = $this->leadModel->checkForDuplicateContact($matchedFields);
+        if (!$lead->isNewlyCreated()) {
+            $this->setTagsToContact($dataObject, $lead);
+            if ($lead->getChanges()) {
+                $this->leadModel->saveEntity($lead);
+            }
+        }
     }
 
     /**
