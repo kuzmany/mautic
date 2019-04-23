@@ -193,7 +193,7 @@ class SugarcrmIntegration extends CrmAbstractIntegration
         return [
             'sugarcrm_url'  => 'mautic.sugarcrm.form.url',
             'client_id'     => 'mautic.sugarcrm.form.clientkey',
-            'client_secret' => 'mautic.sugarcrm.form.clientsecret',
+        //    'client_secret' => 'mautic.sugarcrm.form.clientsecret',
             'username'      => 'mautic.sugarcrm.form.username',
             'password'      => 'mautic.sugarcrm.form.password',
         ];
@@ -888,13 +888,15 @@ class SugarcrmIntegration extends CrmAbstractIntegration
                 }
                 // skip if enable_custom_filter_on_sugar_sync and reports_to_id empty
                 if (!empty($this->factory->getParameter('enable_custom_filter_on_sugar_sync')) && (!empty($dataObject['reports_to_id__Leads']) || !empty($dataObject['reports_to_id__Contacts']))) {
-                    continue;
+                    // Stop here If no tags to import or tags exists and is not new lead
+                    if ($this->setTagsToContactIfCustomFilterIsEnabled($dataObject, $object)) {
+                        continue;
+                    }
                 }
                 //$itemLastDate = $itemDateModified;
                 //if ($itemDateEntered > $itemLastDate) {
                 //    $itemLastDate = $itemDateEntered;
                 //}
-
                 if (isset($dataObject) && $dataObject && !empty($dataObject)) {
                     if ($object == 'Leads' or $object == 'Contacts') {
                         $email_present = false;
@@ -908,7 +910,7 @@ class SugarcrmIntegration extends CrmAbstractIntegration
                         }
                         $mauticObjectReference = 'lead';
                         $entity                = $this->getMauticLead($dataObject, true, null, null, $object);
-                        if ($object == 'Leads') {
+                        if ($object == 'Leads' || $object == 'Contacts') {
                             $this->setTagsToContact($dataObject, $entity);
                         }
                         $detachClass           = Lead::class;
@@ -993,21 +995,51 @@ class SugarcrmIntegration extends CrmAbstractIntegration
     /**
      * @param array $dataObject
      */
-    private function setTagsToContactIfCustomFilterIsEnabled(array $dataObject)
+    private function setTagsToContactIfCustomFilterIsEnabled(array $dataObject, $object)
     {
         $config = $this->mergeConfigToFeatureSettings([]);
+        if (empty($config['toTags'])) {
+            return true;
+        }
         // Match that data with mapped lead fields
         $matchedFields = $this->populateMauticLeadData($dataObject, $config);
         if (empty($matchedFields)) {
-            return;
+            return true;
         }
         $lead = $this->leadModel->checkForDuplicateContact($matchedFields);
-        if (!$lead->isNewlyCreated()) {
-            $this->setTagsToContact($dataObject, $lead);
-            if ($lead->getChanges()) {
+        if (!$lead->isNew()) {
+            $tags = $this->setTagsToContact($dataObject, $lead);
+            if (!empty($tags)) {
                 $this->leadModel->saveEntity($lead);
+                $integrationEntityRepo = $this->em->getRepository('MauticPluginBundle:IntegrationEntity');
+                $mauticObjectReference = 'Contacts';
+                $integrationId         = $integrationEntityRepo->getIntegrationsEntityId(
+                    'Sugarcrm',
+                    $object,
+                    $mauticObjectReference,
+                    $lead->getId()
+                );
+
+                if ($integrationId == null) {
+                    $integrationEntity = new IntegrationEntity();
+                    $integrationEntity->setDateAdded(new \DateTime());
+                    $integrationEntity->setLastSyncDate(new \DateTime());
+                    $integrationEntity->setIntegration('Sugarcrm');
+                    $integrationEntity->setIntegrationEntity($object);
+                    $integrationEntity->setIntegrationEntityId($dataObject['id__'.$object]);
+                    $integrationEntity->setInternalEntity($mauticObjectReference);
+                    $integrationEntity->setInternalEntityId($lead->getId());
+                } else {
+                    $integrationEntity = $integrationEntityRepo->getEntity($integrationId[0]['id']);
+                    $integrationEntity->setLastSyncDate(new \DateTime());
+                }
+                $this->integrationEntityModel->saveEntity($integrationEntity);
             }
+
+            return true;
         }
+
+        return false;
     }
 
     /**
@@ -1021,12 +1053,17 @@ class SugarcrmIntegration extends CrmAbstractIntegration
             $toTags = $config['toTags'];
             $tags   = [];
             foreach ($toTags as $toTag) {
+                $toTagForContat = str_replace('__Leads', '__Contacts', $toTag);
                 if (!empty($dataObject[$toTag])) {
                     $tags[] =  $dataObject[$toTag];
+                } elseif (!empty($dataObject[$toTagForContat])) {
+                    $tags[] =  $dataObject[$toTagForContat];
                 }
             }
             if (!empty($tags) && method_exists($entity, 'setTags')) {
                 $this->leadModel->setTags($entity, $tags);
+
+                return $tags;
             }
         }
     }
@@ -1142,7 +1179,6 @@ class SugarcrmIntegration extends CrmAbstractIntegration
                     'required'   => false,
                 ]
             );
-
             $builder->add(
                 'toTags',
                 ChoiceType::class,
