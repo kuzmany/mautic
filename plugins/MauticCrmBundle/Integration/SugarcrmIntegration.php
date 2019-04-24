@@ -193,7 +193,7 @@ class SugarcrmIntegration extends CrmAbstractIntegration
         return [
             'sugarcrm_url'  => 'mautic.sugarcrm.form.url',
             'client_id'     => 'mautic.sugarcrm.form.clientkey',
-        //    'client_secret' => 'mautic.sugarcrm.form.clientsecret',
+            'client_secret' => 'mautic.sugarcrm.form.clientsecret',
             'username'      => 'mautic.sugarcrm.form.username',
             'password'      => 'mautic.sugarcrm.form.password',
         ];
