@@ -1012,7 +1012,7 @@ class SugarcrmIntegration extends CrmAbstractIntegration
             if (!empty($tags)) {
                 $this->leadModel->saveEntity($lead);
                 $integrationEntityRepo = $this->em->getRepository('MauticPluginBundle:IntegrationEntity');
-                $mauticObjectReference = 'Contacts';
+                $mauticObjectReference = 'lead';
                 $integrationId         = $integrationEntityRepo->getIntegrationsEntityId(
                     'Sugarcrm',
                     $object,
