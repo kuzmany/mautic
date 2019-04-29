@@ -882,7 +882,7 @@ class SugarcrmIntegration extends CrmAbstractIntegration
                         }
                     }
                 }
-                if ($object == 'Leads' && isset($dataObject['email1__Leads']) && $dataObject['email1__Leads'] != null
+                if (empty($this->factory->getParameter('enable_custom_filter_on_sugar_sync')) && $object == 'Leads' && isset($dataObject['email1__Leads']) && $dataObject['email1__Leads'] != null
                     && $dataObject['email1__Leads'] != '' && in_array($dataObject['email1__Leads'], $sugarRejectedLeads)) {
                     continue; //Lead email is already in Sugar Contacts. Do not carry on
                 }
