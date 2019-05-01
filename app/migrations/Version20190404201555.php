@@ -37,6 +37,6 @@ class Version20190404201555 extends AbstractMauticMigration
      */
     public function up(Schema $schema)
     {
-        $this->addSql('ALTER TABLE '.$this->prefix.'lead_notes ADD attchment VARCHAR(255) DEFAULT NULL');
+        $this->addSql('ALTER TABLE '.$this->prefix.'lead_notes ADD attachment VARCHAR(255) DEFAULT NULL');
     }
 }
