@@ -568,7 +568,6 @@ class SugarcrmApi extends CrmApi
         $tokenData       = $this->integration->getKeys();
         $data            = ['filter' => 'all'];
         $availableFields = $this->integration->getIntegrationSettings()->getFeatureSettings();
-
         switch ($object) {
             case 'company':
             case 'Account':
@@ -585,6 +584,17 @@ class SugarcrmApi extends CrmApi
                     }
                     if (strpos($sugarField, '-'.$object) !== false) {
                         $fields[] = str_replace('-'.$object, '', $sugarField);
+                    }
+                }
+                // add custom fields to select query
+                if (!empty($availableFields['toTags'])) {
+                    foreach ($availableFields['toTags'] as $sugarField) {
+                        if (strpos($sugarField, '__'.$object) !== false) {
+                            $field = str_replace('__'.$object, '', $sugarField);
+                            if (!in_array($field, $fields)) {
+                                $fields[] = $field;
+                            }
+                        }
                     }
                 }
         }
