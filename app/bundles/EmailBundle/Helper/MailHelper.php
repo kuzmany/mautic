@@ -1454,6 +1454,47 @@ class MailHelper
     }
 
     /**
+     * Set variables from params, for example POST request
+     * toEmail, toName, fromEmail, fromName, replyToEmail, replyToName, subject, content.
+     *
+     * @param array $params
+     */
+    public function setFromParams(array $params)
+    {
+        $toEmail      = (!empty($params['toEmail'])) ? $params['toEmail'] : null;
+        $toName       = (!empty($params['toName'])) ? $params['toName'] : null;
+        $fromEmail    = (!empty($params['fromEmail'])) ? $params['fromEmail'] : null;
+        $fromName     = (!empty($params['fromName'])) ? $params['fromName'] : null;
+        $replyToEmail = (!empty($params['replyToEmail'])) ? $params['replyToEmail'] : null;
+        $replyToName  = (!empty($params['replyToName'])) ? $params['replyToName'] : null;
+        $subject      = (!empty($params['subject'])) ? $params['subject'] : '';
+        $content      = (!empty($params['content'])) ? $params['content'] : '';
+
+        // To email
+        if ($toEmail) {
+            $this->addTo(
+            $toEmail,
+            $toName
+        );
+        }
+
+        $this->setFrom(
+            $fromEmail,
+            $fromName
+        );
+
+        $this->setReplyTo($replyToEmail, $replyToName);
+
+        // Set Content
+        $this->setBody($content);
+        $this->parsePlainText($content);
+
+        // Ensure safe emoji for notification
+        $subject = EmojiHelper::toHtml($subject);
+        $this->setSubject($subject);
+    }
+
+    /**
      * @param $name
      * @param $value
      */

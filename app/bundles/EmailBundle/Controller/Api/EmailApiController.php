@@ -14,6 +14,9 @@ namespace Mautic\EmailBundle\Controller\Api;
 use FOS\RestBundle\Util\Codes;
 use Mautic\ApiBundle\Controller\CommonApiController;
 use Mautic\CoreBundle\Helper\InputHelper;
+use Mautic\EmailBundle\Entity\Email;
+use Mautic\EmailBundle\Entity\Stat;
+use Mautic\EmailBundle\Helper\MailHelper;
 use Mautic\LeadBundle\Controller\LeadAccessTrait;
 use Mautic\LeadBundle\Entity\Lead;
 use Symfony\Component\HttpFoundation\Response;
@@ -32,8 +35,15 @@ class EmailApiController extends CommonApiController
         $this->entityClass      = 'Mautic\EmailBundle\Entity\Email';
         $this->entityNameOne    = 'email';
         $this->entityNameMulti  = 'emails';
-        $this->serializerGroups = ['emailDetails', 'categoryList', 'publishDetails', 'assetList', 'formList', 'leadListList'];
-        $this->dataInputMasks   = [
+        $this->serializerGroups = [
+            'emailDetails',
+            'categoryList',
+            'publishDetails',
+            'assetList',
+            'formList',
+            'leadListList',
+        ];
+        $this->dataInputMasks = [
             'customHtml'     => 'html',
             'dynamicContent' => [
                 'content' => 'html',
@@ -112,6 +122,7 @@ class EmailApiController extends CommonApiController
      */
     public function sendLeadAction($id, $leadId)
     {
+        /** @var Email $entity */
         $entity = $this->model->getEntity($id);
         if (null !== $entity) {
             if (!$this->checkEntityAccess($entity, 'view')) {
@@ -124,9 +135,10 @@ class EmailApiController extends CommonApiController
                 return $lead;
             }
 
-            $post     = $this->request->request->all();
-            $tokens   = (!empty($post['tokens'])) ? $post['tokens'] : [];
-            $response = ['success' => false];
+            $post      = $this->request->request->all();
+            $tokens    = (!empty($post['tokens'])) ? $post['tokens'] : [];
+            $ignoreDNC = isset($post['ignoreDNC']) ? $post['ignoreDNC'] : false;
+            $response  = ['success' => false];
 
             $cleanTokens = [];
 
@@ -147,6 +159,7 @@ class EmailApiController extends CommonApiController
                 [
                     'source'        => ['api', 0],
                     'tokens'        => $cleanTokens,
+                    'ignoreDNC'     => $ignoreDNC,
                     'return_errors' => true,
                 ]
             );
@@ -163,5 +176,70 @@ class EmailApiController extends CommonApiController
         }
 
         return $this->notFound();
+    }
+
+    /**
+     * Sends custom content to a specific lead.
+     *
+     * @param int $contactId
+     *
+     * @return \Symfony\Component\HttpFoundation\Response
+     *
+     * @throws \Symfony\Component\HttpKernel\Exception\NotFoundHttpException
+     */
+    public function sendCustomLeadAction($contactId)
+    {
+        /** @var Lead $lead */
+        $lead = $this->checkLeadAccess($contactId, 'edit');
+        if ($lead instanceof Response) {
+            return $lead;
+        }
+
+        $response = ['success' => false];
+        if ($lead && $lead->getEmail()) {
+            /** @var MailHelper $mailer */
+            $mailer = $this->get('mautic.helper.mailer')->getMailer();
+            $mailer->setFromParams($this->request->request->all());
+            $mailer->setLead($lead->getProfileFields());
+            $mailer->setIdHash();
+
+            if ($mailer->send(true, false, false)) {
+                /** @var Stat $stat */
+                $stat                     = $mailer->createEmailStat();
+                $response['trackingHash'] = ($stat && $stat->getTrackingHash()) ? $stat->getTrackingHash() : 0;
+                $response['success']      = true;
+            }
+
+            $view = $this->view($response, Codes::HTTP_OK);
+
+            return $this->handleView($view);
+        }
+
+        return $this->notFound();
+    }
+
+    /**
+     * Sends custom content to anybody.
+     *
+     * @return \Symfony\Component\HttpFoundation\Response
+     *
+     * @throws \Symfony\Component\HttpKernel\Exception\NotFoundHttpException
+     */
+    public function sendCustomAction()
+    {
+        $response = ['success' => false];
+
+        /** @var MailHelper $mailer */
+        $mailer = $this->get('mautic.helper.mailer')->getMailer();
+        $mailer->setFromParams($this->request->request->all());
+        $mailer->setIdHash();
+
+        if ($mailer->send(true, false, false)) {
+            $response['success'] = true;
+        }
+
+        $view = $this->view($response, Codes::HTTP_OK);
+
+        return $this->handleView($view);
     }
 }
