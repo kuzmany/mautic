@@ -12,6 +12,12 @@
 
 <div class="panel panel-primary">
     <div class="panel-heading">
+        <h3 class="panel-title"><?php echo $view['translator']->trans('mautic.lead.leads'); ?></h3>
+    </div>
+    <div class="panel-body">
+        <?php echo $view['form']->row($form['contact_columns']); ?>
+    </div>
+    <div class="panel-heading">
         <h3 class="panel-title"><?php echo $view['translator']->trans('mautic.config.tab.importconfig'); ?></h3>
     </div>
     <div class="panel-body">

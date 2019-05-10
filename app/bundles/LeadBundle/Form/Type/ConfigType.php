@@ -13,6 +13,7 @@ namespace Mautic\LeadBundle\Form\Type;
 
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\FormBuilderInterface;
+use Symfony\Component\Validator\Constraints\NotBlank;
 
 /**
  * Class ConfigType.
@@ -31,6 +32,22 @@ class ConfigType extends AbstractType
             'attr'       => [
                 'class'   => 'form-control',
                 'tooltip' => 'mautic.lead.background.import.if.more.rows.than.tooltip',
+            ],
+        ]);
+
+        $builder->add('contact_columns',
+            LeadColumnsType::class, [
+            'label'      => 'mautic.config.tab.columns',
+            'label_attr' => ['class' => 'control-label'],
+            'attr'       => [
+                'class'   => 'form-control',
+            ],
+            'multiple'    => true,
+            'required'    => true,
+            'constraints' => [
+                new NotBlank(
+                    ['message' => 'mautic.core.value.required']
+                ),
             ],
         ]);
     }

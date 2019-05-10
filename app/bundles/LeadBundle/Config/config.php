@@ -714,6 +714,13 @@ return [
                 ],
                 'alias'     => 'leadfields_choices',
             ],
+            'mautic.form.type.lead_columns' => [
+                'class'     => \Mautic\LeadBundle\Form\Type\LeadColumnsType::class,
+                'arguments' => [
+                    'mautic.lead.model.field',
+                    'translator',
+                ],
+            ],
             'mautic.form.type.lead_dashboard_leads_in_time_widget' => [
                 'class' => 'Mautic\LeadBundle\Form\Type\DashboardLeadsInTimeWidgetType',
                 'alias' => 'lead_dashboard_leads_in_time_widget',
@@ -1238,5 +1245,6 @@ return [
     'parameters' => [
         'parallel_import_limit'               => 1,
         'background_import_if_more_rows_than' => 0,
+        'contact_columns'                     => ['name', 'email', 'location', 'stage', 'points', 'last_active', 'id'],
     ],
 ];
