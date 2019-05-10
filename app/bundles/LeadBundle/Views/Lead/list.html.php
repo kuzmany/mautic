@@ -80,7 +80,6 @@ if ($permissions['lead:leads:editown'] || $permissions['lead:leads:editother']) 
         <thead>
             <tr>
                 <?php
-
                 echo $view->render('MauticCoreBundle:Helper:tableheader.html.php', [
                     'checkall'        => 'true',
                     'target'          => '#leadTable',
@@ -112,6 +111,7 @@ if ($permissions['lead:leads:editown'] || $permissions['lead:leads:editother']) 
         <tbody>
         <?php echo $view->render('MauticLeadBundle:Lead:list_rows.html.php', [
             'items'         => $items,
+            'columns'       => $columns,
             'security'      => $security,
             'currentList'   => $currentList,
             'permissions'   => $permissions,
