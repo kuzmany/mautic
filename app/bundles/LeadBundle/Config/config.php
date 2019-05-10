@@ -717,8 +717,7 @@ return [
             'mautic.form.type.lead_columns' => [
                 'class'     => \Mautic\LeadBundle\Form\Type\LeadColumnsType::class,
                 'arguments' => [
-                    'mautic.lead.model.field',
-                    'translator',
+                    'mautic.lead.columns.dictionary',
                 ],
             ],
             'mautic.form.type.lead_dashboard_leads_in_time_widget' => [
@@ -840,6 +839,14 @@ return [
             'mautic.lead.validator.length' => [
                 'class'     => Mautic\LeadBundle\Validator\Constraints\LengthValidator::class,
                 'tag'       => 'validator.constraint_validator',
+            ],
+            'mautic.lead.columns.dictionary' => [
+                'class'     => \Mautic\LeadBundle\Services\ContactColumnsDictionary::class,
+                'arguments' => [
+                    'mautic.lead.model.field',
+                    'translator',
+                    'mautic.helper.core_parameters',
+                ],
             ],
         ],
         'repositories' => [

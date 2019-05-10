@@ -11,32 +11,25 @@
 
 namespace Mautic\LeadBundle\Form\Type;
 
-use Mautic\LeadBundle\Model\FieldModel;
+use Mautic\LeadBundle\Services\ContactColumnsDictionary;
 use Symfony\Component\Form\AbstractType;
-use Symfony\Component\OptionsResolver\Options;
 use Symfony\Component\OptionsResolver\OptionsResolver;
-use Symfony\Component\Translation\TranslatorInterface;
 
 class LeadColumnsType extends AbstractType
 {
     /**
-     * @var FieldModel
+     * @var ContactColumnsDictionary
      */
-    protected $fieldModel;
+    private $columnsDictionary;
 
     /**
-     * @var TranslatorInterface
+     * LeadColumnsType constructor.
+     *
+     * @param ContactColumnsDictionary $columnsDictionary
      */
-    private $translator;
-
-    /**
-     * @param FieldModel          $fieldModel
-     * @param TranslatorInterface $translator
-     */
-    public function __construct(FieldModel $fieldModel, TranslatorInterface $translator)
+    public function __construct(ContactColumnsDictionary $columnsDictionary)
     {
-        $this->fieldModel = $fieldModel;
-        $this->translator = $translator;
+        $this->columnsDictionary = $columnsDictionary;
     }
 
     /**
@@ -44,23 +37,9 @@ class LeadColumnsType extends AbstractType
      */
     public function configureOptions(OptionsResolver $resolver)
     {
-        $model= $this->fieldModel;
-
         $resolver->setDefaults(
           [
-              'choices' => function (Options $options) use ($model) {
-                  $fieldList = [];
-                  $fieldList['name'] = $this->translator->trans('mautic.core.name');
-                  $fieldList['email'] = $this->translator->trans('mautic.core.type.email');
-                  $fieldList['location'] = $this->translator->trans('mautic.lead.lead.thead.location');
-                  $fieldList['stage'] = $this->translator->trans('mautic.lead.stage.label');
-                  $fieldList['points'] = $this->translator->trans('mautic.lead.points');
-                  $fieldList['last_active'] = $this->translator->trans('mautic.lead.field.last_active');
-                  $fieldList['id'] = $this->translator->trans('mautic.core.id');
-                  $fieldList = $fieldList + $model->getFieldList(false);
-
-                  return $fieldList;
-              },
+              'choices' => $this->columnsDictionary->getFields(),
           ]
         );
     }

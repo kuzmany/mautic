@@ -80,6 +80,7 @@ if ($permissions['lead:leads:editown'] || $permissions['lead:leads:editother']) 
         <thead>
             <tr>
                 <?php
+
                 echo $view->render('MauticCoreBundle:Helper:tableheader.html.php', [
                     'checkall'        => 'true',
                     'target'          => '#leadTable',
@@ -92,53 +93,19 @@ if ($permissions['lead:leads:editown'] || $permissions['lead:leads:editother']) 
                     'tooltip'       => $view['translator']->trans('mautic.lead.list.checkall.help'),
                 ]);
 
-                echo $view->render('MauticCoreBundle:Helper:tableheader.html.php', [
-                    'sessionVar' => 'lead',
-                    'orderBy'    => 'l.lastname, l.firstname, l.company, l.email',
-                    'text'       => 'mautic.core.name',
-                    'class'      => 'col-lead-name',
-                ]);
-
-                echo $view->render('MauticCoreBundle:Helper:tableheader.html.php', [
-                    'sessionVar' => 'lead',
-                    'orderBy'    => 'l.email',
-                    'text'       => 'mautic.core.type.email',
-                    'class'      => 'col-lead-email visible-md visible-lg',
-                ]);
-
-                echo $view->render('MauticCoreBundle:Helper:tableheader.html.php', [
-                    'sessionVar' => 'lead',
-                    'orderBy'    => 'l.city, l.state',
-                    'text'       => 'mautic.lead.lead.thead.location',
-                    'class'      => 'col-lead-location visible-md visible-lg',
-                ]);
-                echo $view->render('MauticCoreBundle:Helper:tableheader.html.php', [
-                    'sessionVar' => 'lead',
-                    'orderBy'    => 'l.stage_id',
-                    'text'       => 'mautic.lead.stage.label',
-                    'class'      => 'col-lead-stage',
-                ]);
-                echo $view->render('MauticCoreBundle:Helper:tableheader.html.php', [
-                    'sessionVar' => 'lead',
-                    'orderBy'    => 'l.points',
-                    'text'       => 'mautic.lead.points',
-                    'class'      => 'visible-md visible-lg col-lead-points',
-                ]);
-
-                echo $view->render('MauticCoreBundle:Helper:tableheader.html.php', [
-                    'sessionVar' => 'lead',
-                    'orderBy'    => 'l.last_active',
-                    'text'       => 'mautic.lead.lastactive',
-                    'class'      => 'col-lead-lastactive visible-md visible-lg',
-                    'default'    => true,
-                ]);
-
-                echo $view->render('MauticCoreBundle:Helper:tableheader.html.php', [
-                    'sessionVar' => 'lead',
-                    'orderBy'    => 'l.id',
-                    'text'       => 'mautic.core.id',
-                    'class'      => 'col-lead-id visible-md visible-lg',
-                ]);
+                foreach ($columns as $column=>$label) {
+                    $template = 'MauticLeadBundle:Lead\header:'.$column.'.html.php';
+                    if (!$view->exists($template)) {
+                        $template = 'MauticLeadBundle:Lead\header:default.html.php';
+                    }
+                    echo $view->render(
+                        $template,
+                        [
+                            'label'  => $label,
+                            'column' => $column,
+                        ]
+                    );
+                }
                 ?>
             </tr>
         </thead>
