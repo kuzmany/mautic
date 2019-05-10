@@ -65,6 +65,7 @@
                     ?>
                 </td>
                 <?php
+                $columsAliases = array_flip($columns);
                 foreach ($columns as $column=>$label) {
                     $template = 'MauticLeadBundle:Lead\row:'.$column.'.html.php';
                     if (!$view->exists($template)) {
@@ -78,6 +79,7 @@
                             'label'         => $label,
                             'column'        => $column,
                             'noContactList' => $noContactList,
+                            'class'         => array_search($column, $columsAliases) > 1 ? 'hidden-xs' : '',
                         ]
                     );
                 }

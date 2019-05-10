@@ -92,6 +92,7 @@ if ($permissions['lead:leads:editown'] || $permissions['lead:leads:editother']) 
                     'tooltip'       => $view['translator']->trans('mautic.lead.list.checkall.help'),
                 ]);
 
+                $columsAliases = array_flip($columns);
                 foreach ($columns as $column=>$label) {
                     $template = 'MauticLeadBundle:Lead\header:'.$column.'.html.php';
                     if (!$view->exists($template)) {
@@ -102,6 +103,7 @@ if ($permissions['lead:leads:editown'] || $permissions['lead:leads:editother']) 
                         [
                             'label'  => $label,
                             'column' => $column,
+                            'class'  => array_search($column, $columsAliases) > 1 ? 'hidden-xs' : '',
                         ]
                     );
                 }

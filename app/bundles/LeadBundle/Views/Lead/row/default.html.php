@@ -10,4 +10,4 @@
  */
 
 ?>
-<td class="visible-md visible-lg"><?php echo $fields['core'][$column]['value']; ?></td>
+<td class="<?php echo $class ?>"><?php echo $fields['core'][$column]['value']; ?></td>

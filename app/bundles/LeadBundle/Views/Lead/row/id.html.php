@@ -10,4 +10,4 @@
  */
 
 ?>
-<td class="visible-md visible-lg"><?php echo $item->getId(); ?></td>
+<td class="<?php echo $class ?>"><?php echo $item->getId(); ?></td>

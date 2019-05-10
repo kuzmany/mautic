@@ -10,7 +10,7 @@
  */
 
 ?>
-<td>
+<td class="<?php echo $class ?>">
     <a href="<?php echo $view['router']->path('mautic_contact_action', ['objectAction' => 'view', 'objectId' => $item->getId()]); ?>" data-toggle="ajax">
         <?php if (in_array($item->getId(), array_keys($noContactList)))  : ?>
             <div class="pull-right label label-danger"><i class="fa fa-ban"> </i></div>
