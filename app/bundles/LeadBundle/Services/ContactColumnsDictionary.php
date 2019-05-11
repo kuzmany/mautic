@@ -54,8 +54,7 @@ class ContactColumnsDictionary
      */
     public function getColumns()
     {
-        $columns = $this->coreParametersHelper->getParameter('contact_columns');
-        $columns = array_flip($columns);
+        $columns = array_flip($this->coreParametersHelper->getParameter('contact_columns'));
         $fields  = $this->getFields();
         foreach ($columns as $alias=>&$column) {
             if (isset($fields[$alias])) {
