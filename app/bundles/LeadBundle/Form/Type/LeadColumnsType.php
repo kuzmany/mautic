@@ -13,6 +13,7 @@ namespace Mautic\LeadBundle\Form\Type;
 
 use Mautic\LeadBundle\Services\ContactColumnsDictionary;
 use Symfony\Component\Form\AbstractType;
+use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
 class LeadColumnsType extends AbstractType
@@ -39,7 +40,15 @@ class LeadColumnsType extends AbstractType
     {
         $resolver->setDefaults(
           [
-              'choices' => $this->columnsDictionary->getFields(),
+              'choices'    => $this->columnsDictionary->getFields(),
+              'label'      => false,
+              'label_attr' => ['class' => 'control-label'],
+              'required'   => false,
+              'multiple'   => true,
+              'expanded'   => false,
+              'attr'       => [
+                  'class'         => 'form-control',
+              ],
           ]
         );
     }
@@ -49,6 +58,6 @@ class LeadColumnsType extends AbstractType
      */
     public function getParent()
     {
-        return 'choice';
+        return ChoiceType::class;
     }
 }
