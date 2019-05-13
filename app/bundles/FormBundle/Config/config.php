@@ -392,7 +392,6 @@ return [
                     'mautic.lead.service.device_tracking_service',
                     'mautic.form.service.field.value.transformer',
                     'mautic.helper.template.date',
-                    'mautic.lead.service.contact_tracking_service',
                     'mautic.tracker.contact',
                 ],
             ],
