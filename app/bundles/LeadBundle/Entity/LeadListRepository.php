@@ -1538,6 +1538,8 @@ class LeadListRepository extends CommonRepository
                     break;
                 case 'tags':
                 case 'globalcategory':
+                case 'campaign':
+                case 'lead_asset_download':
                 case 'lead_email_received':
                 case 'lead_email_sent':
                 case 'device_type':
@@ -1559,6 +1561,14 @@ class LeadListRepository extends CommonRepository
                             $table  = 'lead_categories';
                             $column = 'category_id';
                             break;
+                        case 'campaign':
+                            $table  = 'campaign_leads';
+                            $column = 'campaign_id';
+
+                            $notRemovedParameter                         = $this->generateRandomParameterName();
+                            $subQueryFilters[$alias.'.manually_removed'] = $notRemovedParameter;
+                            $parameters[$notRemovedParameter]            = 0;
+                            break;
                         case 'lead_email_received':
                             $table  = 'email_stats';
                             $column = 'email_id';
@@ -1579,6 +1589,10 @@ class LeadListRepository extends CommonRepository
                             $table  = 'lead_devices';
                             $column = 'device_brand';
                             break;
+                        case 'lead_asset_download':
+                            $table  = 'asset_downloads';
+                            $column = 'asset_id';
+                            break;
                         case 'device_os':
                             $table  = 'lead_devices';
                             $column = 'device_os_name';
@@ -1594,7 +1608,6 @@ class LeadListRepository extends CommonRepository
                         $leadId,
                         $subQueryFilters
                     );
-
                     $groupExpr->add(
                         sprintf('%s (%s)', $func, $subQb->getSQL())
                     );

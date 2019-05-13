@@ -16,6 +16,10 @@ return [
                 'path'       => '/emails/{page}',
                 'controller' => 'MauticEmailBundle:Email:index',
             ],
+            'mautic_email_graph_stats' => [
+                'path'       => '/emails-graph-stats/{objectId}/{isVariant}/{dateFrom}/{dateTo}',
+                'controller' => 'MauticEmailBundle:EmailGraphStats:view',
+            ],
             'mautic_email_action' => [
                 'path'       => '/emails/{objectAction}/{objectId}',
                 'controller' => 'MauticEmailBundle:Email:execute',
@@ -109,6 +113,21 @@ return [
                     'mautic.core.model.auditlog',
                     'mautic.email.model.email',
                     'mautic.helper.message',
+                ],
+            ],
+            'mautic.email.queue.subscriber' => [
+                'class'     => \Mautic\EmailBundle\EventListener\QueueSubscriber::class,
+                'arguments' => [
+                    'mautic.email.model.email',
+                ],
+            ],
+            'mautic.email.momentum.subscriber' => [
+                'class'     => \Mautic\EmailBundle\EventListener\MomentumSubscriber::class,
+                'arguments' => [
+                    'mautic.transport.momentum.callback',
+                    'mautic.queue.service',
+                    'mautic.email.helper.request.storage',
+                    'monolog.logger.mautic',
                 ],
             ],
             'mautic.email.monitored.bounce.subscriber' => [
@@ -645,6 +664,12 @@ return [
                     'mautic.email.repository.stat',
                 ],
             ],
+            'mautic.email.helper.request.storage' => [
+                'class'     => \Mautic\EmailBundle\Helper\RequestStorageHelper::class,
+                'arguments' => [
+                    'mautic.helper.cache_storage',
+                ],
+            ],
         ],
         'models' => [
             'mautic.email.model.email' => [
@@ -757,12 +782,13 @@ return [
         'resubscribe_message'          => null,
         'monitored_email'              => [
             'general' => [
-                'address'    => null,
-                'host'       => null,
-                'port'       => '993',
-                'encryption' => '/ssl',
-                'user'       => null,
-                'password'   => null,
+                'address'         => null,
+                'host'            => null,
+                'port'            => '993',
+                'encryption'      => '/ssl',
+                'user'            => null,
+                'password'        => null,
+                'use_attachments' => false,
             ],
             'EmailBundle_bounces' => [
                 'address'           => null,

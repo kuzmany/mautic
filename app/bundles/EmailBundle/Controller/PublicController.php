@@ -17,6 +17,7 @@ use Mautic\CoreBundle\Helper\TrackingPixelHelper;
 use Mautic\EmailBundle\EmailEvents;
 use Mautic\EmailBundle\Entity\Email;
 use Mautic\EmailBundle\Event\EmailSendEvent;
+use Mautic\EmailBundle\Event\TransportWebhookEvent;
 use Mautic\EmailBundle\Helper\MailHelper;
 use Mautic\EmailBundle\Model\EmailModel;
 use Mautic\EmailBundle\Swiftmailer\Transport\CallbackTransportInterface;
@@ -167,8 +168,9 @@ class PublicController extends CommonFormController
             $template = $theme->getTheme();
         }
         $contentTemplate = $this->factory->getHelper('theme')->checkForTwigTemplate(':'.$template.':message.html.php');
-
         if (!empty($stat)) {
+            $successSessionName = 'mautic.email.prefscenter.success';
+
             if ($lead = $stat->getLead()) {
                 // Set the lead as current lead
                 $leadModel->setCurrentLead($lead);
@@ -177,9 +179,11 @@ class PublicController extends CommonFormController
                 if ($lead->getPreferredLocale()) {
                     $translator->setLocale($lead->getPreferredLocale());
                 }
-            }
 
-            $successSessionName = 'mautic.email.prefscenter.success.'.$lead->getId();
+                // Add contact ID to the session name in case more contacts
+                // share the same session/device and the contact is known.
+                $successSessionName .= ".{$lead->getId()}";
+            }
 
             if (!$this->get('mautic.helper.core_parameters')->getParameter('show_contact_preferences')) {
                 $message = $this->getUnsubscribeMessage($idHash, $model, $stat, $translator);
@@ -216,16 +220,16 @@ class PublicController extends CommonFormController
                     // check if tokens are present
                     $savePrefsPresent = false !== strpos($html, 'data-slot="saveprefsbutton"') ||
                         false !== strpos($html, BuilderSubscriber::saveprefsRegex);
-                    $frequencyPresent = false !== strpos($html, 'data-slot="channelfrequency"') ||
-                        false !== strpos($html, BuilderSubscriber::channelfrequency);
-                    $tokensPresent    = $savePrefsPresent && $frequencyPresent;
-                    if ($tokensPresent) {
+                    if ($savePrefsPresent) {
                         // set custom tag to inject end form
                         // update show pref center slots by looking for their presence in the html
-                        $params = array_merge(
+                        /** @var \Mautic\CoreBundle\Templating\Helper\FormHelper $formHelper */
+                        $formHelper =$this->get('templating.helper.form');
+                        $params     = array_merge(
                             $viewParameters,
                             [
                                 'form'                         => $formView,
+                                'startform'                    => $formHelper->start($formView),
                                 'custom_tag'                   => '<a name="end-'.$formView->vars['id'].'"></a>',
                                 'showContactFrequency'         => false !== strpos($html, 'data-slot="channelfrequency"') || false !== strpos($html, BuilderSubscriber::channelfrequency),
                                 'showContactSegments'          => false !== strpos($html, 'data-slot="segmentlist"') || false !== strpos($html, BuilderSubscriber::segmentListRegex),
@@ -333,11 +337,11 @@ class PublicController extends CommonFormController
                 /** @var \Mautic\LeadBundle\Model\LeadModel $leadModel */
                 $leadModel = $this->getModel('lead');
                 $leadModel->setCurrentLead($lead);
-            }
 
-            // Set lead lang
-            if ($lead->getPreferredLocale()) {
-                $this->translator->setLocale($lead->getPreferredLocale());
+                // Set lead lang
+                if ($lead->getPreferredLocale()) {
+                    $this->translator->setLocale($lead->getPreferredLocale());
+                }
             }
 
             $model->removeDoNotContact($stat->getEmailAddress());
@@ -431,7 +435,8 @@ class PublicController extends CommonFormController
                     $model->processMailerCallback($response);
                 }
             } elseif ($currentTransport instanceof CallbackTransportInterface) {
-                $currentTransport->processCallbackRequest($this->request);
+                $event = new TransportWebhookEvent($currentTransport, $this->request);
+                $this->dispatcher->dispatch(EmailEvents::ON_TRANSPORT_WEBHOOK, $event);
             }
 
             return new Response('success');

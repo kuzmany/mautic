@@ -215,19 +215,26 @@ class LeadEventLogRepository extends CommonRepository
     /**
      * @param      $campaignId
      * @param bool $excludeScheduled
+     * @param bool $excludeNegative
+     * @param bool $all
      *
      * @return array
      */
-    public function getCampaignLogCounts($campaignId, $excludeScheduled = false, $excludeNegative = true)
+    public function getCampaignLogCounts($campaignId, $excludeScheduled = false, $excludeNegative = true, $all = false)
     {
         $q = $this->getSlaveConnection()->createQueryBuilder()
-                       ->from(MAUTIC_TABLE_PREFIX.'campaign_lead_event_log', 'o')
-                       ->innerJoin(
-                           'o',
-                           MAUTIC_TABLE_PREFIX.'campaign_leads',
-                           'l',
-                           'l.campaign_id = '.(int) $campaignId.' and l.manually_removed = 0 and o.lead_id = l.lead_id and l.rotation = o.rotation'
-                       );
+                      ->from(MAUTIC_TABLE_PREFIX.'campaign_lead_event_log', 'o');
+
+        $join = 'innerJoin';
+        if ($all === true) {
+            $join = 'leftJoin';
+        }
+        $q->$join(
+                    'o',
+                    MAUTIC_TABLE_PREFIX.'campaign_leads',
+                    'l',
+                    'l.campaign_id = '.(int) $campaignId.' and l.manually_removed = 0 and o.lead_id = l.lead_id and l.rotation = o.rotation'
+                );
 
         $expr = $q->expr()->andX(
             $q->expr()->eq('o.campaign_id', (int) $campaignId)
@@ -387,7 +394,12 @@ class LeadEventLogRepository extends CommonRepository
      */
     public function getScheduled($eventId, \DateTime $now, ContactLimiter $limiter)
     {
+        if ($limiter->hasCampaignLimit() && 0 === $limiter->getCampaignLimitRemaining()) {
+            return new ArrayCollection();
+        }
+
         $this->getSlaveConnection($limiter);
+
         $q = $this->createQueryBuilder('o');
 
         $q->select('o, e, c')
@@ -408,7 +420,17 @@ class LeadEventLogRepository extends CommonRepository
 
         $this->updateOrmQueryFromContactLimiter('o', $q, $limiter);
 
-        return new ArrayCollection($q->getQuery()->getResult());
+        if ($limiter->hasCampaignLimit() && $limiter->getCampaignLimitRemaining() < $limiter->getBatchLimit()) {
+            $q->setMaxResults($limiter->getCampaignLimitRemaining());
+        }
+
+        $result = new ArrayCollection($q->getQuery()->getResult());
+
+        if ($limiter->hasCampaignLimit()) {
+            $limiter->reduceCampaignLimitRemaining($result->count());
+        }
+
+        return $result;
     }
 
     /**
