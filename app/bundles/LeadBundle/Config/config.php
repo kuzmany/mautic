@@ -715,7 +715,7 @@ return [
                 'alias'     => 'leadfields_choices',
             ],
             'mautic.form.type.lead_columns' => [
-                'class'     => \Mautic\LeadBundle\Form\Type\LeadColumnsType::class,
+                'class'     => \Mautic\LeadBundle\Form\Type\ContactColumnsType::class,
                 'arguments' => [
                     'mautic.lead.columns.dictionary',
                 ],

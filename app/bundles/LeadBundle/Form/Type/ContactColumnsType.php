@@ -16,7 +16,7 @@ use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
-class LeadColumnsType extends AbstractType
+class ContactColumnsType extends AbstractType
 {
     /**
      * @var ContactColumnsDictionary
@@ -24,7 +24,7 @@ class LeadColumnsType extends AbstractType
     private $columnsDictionary;
 
     /**
-     * LeadColumnsType constructor.
+     * ContactColumnsType constructor.
      *
      * @param ContactColumnsDictionary $columnsDictionary
      */

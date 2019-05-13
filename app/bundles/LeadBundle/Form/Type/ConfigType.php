@@ -46,7 +46,7 @@ class ConfigType extends AbstractType
             }
             $form->add(
                 'contact_columns',
-                LeadColumnsType::class,
+                ContactColumnsType::class,
                 [
                     'label'       => 'mautic.config.tab.columns',
                     'label_attr'  => ['class' => 'control-label'],
@@ -63,6 +63,7 @@ class ConfigType extends AbstractType
                             ['message' => 'mautic.core.value.required']
                         ),
                     ],
+                    'data'=> $orderColumns,
                 ]
             );
         };
