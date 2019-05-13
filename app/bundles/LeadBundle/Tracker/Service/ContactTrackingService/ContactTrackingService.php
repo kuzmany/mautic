@@ -112,7 +112,7 @@ final class ContactTrackingService implements ContactTrackingServiceInterface
 
         $anotherDeviceAlreadyTracked = $this->leadDeviceRepository->isAnyLeadDeviceTracked($lead);
 
-        return !$anotherDeviceAlreadyTracked ? null : $lead;
+        return $anotherDeviceAlreadyTracked ? null : $lead;
     }
 
     /**
