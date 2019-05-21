@@ -50,6 +50,9 @@ class TokenHelper
             $foundMatches = preg_match_all($regex, $content, $matches);
             if ($foundMatches) {
                 foreach ($matches[2] as $key => $match) {
+                    if (false !== strpos($match, '%7C')) {
+                        $match = urldecode($match);
+                    }
                     $token = $matches[0][$key];
 
                     if (isset($tokenList[$token])) {
