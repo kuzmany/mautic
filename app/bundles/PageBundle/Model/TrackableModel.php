@@ -15,7 +15,6 @@ use Mautic\CoreBundle\Helper\UrlHelper;
 use Mautic\CoreBundle\Model\AbstractCommonModel;
 use Mautic\LeadBundle\Entity\LeadFieldRepository;
 use Mautic\LeadBundle\Helper\TokenHelper;
-use Mautic\PageBundle\Entity\Redirect;
 use Mautic\PageBundle\Entity\Trackable;
 use Mautic\PageBundle\Event\UntrackableUrlsEvent;
 use Mautic\PageBundle\PageEvents;
@@ -867,7 +866,7 @@ class TrackableModel extends AbstractCommonModel
      */
     private function isContactFieldToken($token)
     {
-        return strpos($token, '{contactfield') !== false || strpos($token, '{leadfield') !== false;
+        return strpos($token, '{contactfield') !== false || strpos($token, '{leadfield') !== false || strpos($token, '{pagelink') !== false;
     }
 
     /**

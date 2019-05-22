@@ -476,6 +476,8 @@ class PublicController extends CommonFormController
             $leadArray            = ($lead) ? $primaryCompanyHelper->getProfileFieldsWithPrimaryCompany($lead) : [];
 
             $url = TokenHelper::findLeadTokens($url, $leadArray, true);
+            $url = $this->replacePageTokenUrl($url);
+            $url = $this->replaceAssetTokenUrl($url);
         }
 
         $url = UrlHelper::sanitizeAbsoluteUrl($url);
@@ -497,7 +499,7 @@ class PublicController extends CommonFormController
         if ($this->urlIsToken($url)) {
             $tokens = $this->get('mautic.asset.helper.token')->findAssetTokens($url);
 
-            return isset($tokens[$url]) ? $tokens[$url] : $url;
+            return str_replace(array_keys($tokens), $tokens, $url);
         }
 
         return $url;
@@ -513,7 +515,7 @@ class PublicController extends CommonFormController
         if ($this->urlIsToken($url)) {
             $tokens = $this->get('mautic.page.helper.token')->findPageTokens($url);
 
-            return isset($tokens[$url]) ? $tokens[$url] : $url;
+            return str_replace(array_keys($tokens), $tokens, $url);
         }
 
         return $url;
