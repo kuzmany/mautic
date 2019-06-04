@@ -150,7 +150,7 @@ class ReportSubscriber extends CommonSubscriber
                 $companyColumns
             );
 
-            $this->fieldsBuilder->appendSegmentFilter($filters, 's.');
+            $this->fieldsBuilder->appendSegmentFilter($filters);
 
             $event->addTable(
                 self::CONTEXT_ASSET_DOWNLOAD,

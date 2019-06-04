@@ -289,7 +289,7 @@ class ReportSubscriber extends CommonSubscriber
                 $companyColumns
             );
 
-            $this->fieldsBuilder->appendSegmentFilter($filters, 's.');
+            $this->fieldsBuilder->appendSegmentFilter($filters);
 
             $data = [
                 'display_name' => 'mautic.email.stats.report.table',

@@ -153,11 +153,13 @@ class ReportSubscriber extends CommonSubscriber
                 $this->fieldsBuilder->getLeadFilter('l.', 's.'),
                 $companyColumns
             );
+
             $data = [
                 'display_name' => 'mautic.lead.leads',
                 'columns'      => $columns,
                 'filters'      => $filters,
             ];
+
             $event->addTable(self::CONTEXT_LEADS, $data, self::GROUP_CONTACTS);
 
             $attributionTypes = [
