@@ -398,10 +398,6 @@ class ReportSubscriber extends CommonSubscriber
                         'cut',
                         'e.id = cut.channel_id AND es.lead_id = cut.lead_id'
                     );
-
-                    if ($event->hasFilter('s.leadlist_id')) {
-                        $qb->join('es', MAUTIC_TABLE_PREFIX.'lead_lists_leads', 's', 's.lead_id = es.lead_id AND s.manually_removed = 0');
-                    }
                 }
 
                 if ($event->hasColumn($dncColumns) || $event->hasFilter($dncColumns)) {
@@ -412,6 +408,10 @@ class ReportSubscriber extends CommonSubscriber
 
                 if ($this->companyReportData->eventHasCompanyColumns($event)) {
                     $event->addCompanyLeftJoin($qb);
+                }
+
+                if ($event->hasFilter('s.leadlist_id')) {
+                    $qb->join('es', MAUTIC_TABLE_PREFIX.'lead_lists_leads', 's', 's.lead_id = es.lead_id AND s.manually_removed = 0');
                 }
 
                 break;
