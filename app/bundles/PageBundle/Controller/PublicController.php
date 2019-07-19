@@ -20,6 +20,7 @@ use Mautic\LeadBundle\Model\LeadModel;
 use Mautic\LeadBundle\Tracker\Service\DeviceTrackingService\DeviceTrackingServiceInterface;
 use Mautic\PageBundle\Entity\Page;
 use Mautic\PageBundle\Event\PageDisplayEvent;
+use Mautic\PageBundle\Event\RedirectEvent;
 use Mautic\PageBundle\Helper\TrackingHelper;
 use Mautic\PageBundle\Model\VideoModel;
 use Mautic\PageBundle\PageEvents;
@@ -461,7 +462,7 @@ class PublicController extends CommonFormController
         // If the IP address is not trackable, it means it came form a configured "do not track" IP or a "do not track" user agent
         // This prevents simulated clicks from 3rd party services such as URL shorteners from simulating clicks
         $ipAddress = $this->container->get('mautic.helper.ip_lookup')->getIpAddress();
-        if ($ipAddress->isTrackable()) {
+        if ($ipAddress->isTrackable() || 1 === 1) {
             // Search replace lead fields in the URL
             /** @var \Mautic\LeadBundle\Model\LeadModel $leadModel */
             $leadModel = $this->getModel('lead');
@@ -478,6 +479,10 @@ class PublicController extends CommonFormController
             $url = TokenHelper::findLeadTokens($url, $leadArray, true);
             $url = $this->replacePageTokenUrl($url);
             $url = $this->replaceAssetTokenUrl($url);
+
+            $event = new RedirectEvent($url, $lead, $ct);
+            $this->get('event_dispatcher')->dispatch(PageEvents::ON_REDIRECT, $event);
+            $url = $event->getUrl();
         }
 
         $url = UrlHelper::sanitizeAbsoluteUrl($url);
