@@ -27,7 +27,7 @@
     elseif (!empty($fields['core']['country']['value'])):
         $location[] = $fields['core']['country']['value'];
     endif;
-    echo implode(', ', $location);
+    echo $view->escape(implode(', ', $location));
     ?>
     <div class="clearfix"></div>
 </td>

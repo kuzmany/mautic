@@ -16,6 +16,6 @@
     $style = !empty($color) ? ' style="background-color: '.$color.';"' : '';
     ?>
     <?php if ($item->getStage()):?>
-        <span class="label label-default"<?php echo $style; ?>><?php echo $item->getStage()->getName(); ?></span>
+        <span class="label label-default"<?php echo $style; ?>><?php echo $view->escape($item->getStage()->getName()); ?></span>
     <?php endif?>
 </td>

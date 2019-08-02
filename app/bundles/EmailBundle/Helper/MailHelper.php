@@ -802,7 +802,8 @@ class MailHelper
             // Stash attachment to be processed by the transport
             $this->message->addAttachment($filePath, $fileName, $contentType, $inline);
         } else {
-            if (file_exists($filePath) && is_readable($filePath)) {
+            // filePath can contain the value of a local file path or the value of an URL where the file can be found
+            if (filter_var($filePath, FILTER_VALIDATE_URL) || (file_exists($filePath) && is_readable($filePath))) {
                 try {
                     $attachment = \Swift_Attachment::fromPath($filePath);
 
@@ -1015,9 +1016,17 @@ class MailHelper
      */
     public function setTo($addresses, $name = null)
     {
+        $name = $this->cleanName($name);
+
         if (!is_array($addresses)) {
-            $name      = $this->cleanName($name);
             $addresses = [$addresses => $name];
+        } elseif (array_keys($addresses)[0] === 0) {
+            // We need an array of $email => $name pairs
+            $addresses = array_reduce($addresses, function ($address, $item) use ($name) {
+                $address[$item] = $name;
+
+                return $address;
+            }, []);
         }
 
         $this->checkBatchMaxRecipients(count($addresses));
@@ -1472,8 +1481,10 @@ class MailHelper
         $listUnsubscribeHeader = $this->getUnsubscribeHeader();
         if ($listUnsubscribeHeader) {
             if (!empty($headers['List-Unsubscribe'])) {
-                // Ensure Mautic's is always part of this header
-                $headers['List-Unsubscribe'] .= ','.$listUnsubscribeHeader;
+                if (strpos($headers['List-Unsubscribe'], $listUnsubscribeHeader) === false) {
+                    // Ensure Mautic's is always part of this header
+                    $headers['List-Unsubscribe'] .= ','.$listUnsubscribeHeader;
+                }
             } else {
                 $headers['List-Unsubscribe'] = $listUnsubscribeHeader;
             }
@@ -2120,6 +2131,11 @@ class MailHelper
                     $messageHeaders->addTextHeader($headerKey, $headerValue);
                 }
             }
+        }
+
+        if (array_key_exists('List-Unsubscribe', $headers)) {
+            unset($headers['List-Unsubscribe']);
+            $this->setCustomHeaders($headers, false);
         }
     }
 

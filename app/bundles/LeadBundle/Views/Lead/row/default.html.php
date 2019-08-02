@@ -13,7 +13,7 @@
 <td class="<?php echo $class ?>">
     <?php
     if (isset($fields['core'][$column]['value'])) {
-        echo $fields['core'][$column]['value'];
+        echo $view->escape($fields['core'][$column]['value']);
     }
     ?>
 </td>
