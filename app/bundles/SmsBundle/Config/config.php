@@ -24,7 +24,7 @@ return [
                 'class'     => \Mautic\SmsBundle\EventListener\CampaignReplySubscriber::class,
                 'arguments' => [
                     'mautic.sms.transport_chain',
-                    'mautic.campaign.executioner.realtime',
+                    'mautic.campaign.model.event',
                 ],
             ],
             'mautic.sms.smsbundle.subscriber' => [
@@ -87,7 +87,7 @@ return [
                 'class'     => \Mautic\SmsBundle\EventListener\CampaignDeliverySubscriber::class,
                 'arguments' => [
                     'mautic.sms.transport_chain',
-                    'mautic.campaign.executioner.realtime',
+                    'mautic.campaign.model.event',
                 ],
             ],
         ],
@@ -309,7 +309,7 @@ return [
                     'parent' => 'mautic.core.channels',
                     'checks' => [
                         'integration' => [
-                            'Twilio' => [
+                            'WhatsApp' => [
                                 'enabled' => true,
                             ],
                         ],

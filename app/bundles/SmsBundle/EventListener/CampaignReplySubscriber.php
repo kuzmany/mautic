@@ -15,6 +15,7 @@ use Mautic\CampaignBundle\CampaignEvents;
 use Mautic\CampaignBundle\Event\CampaignBuilderEvent;
 use Mautic\CampaignBundle\Event\DecisionEvent;
 use Mautic\CampaignBundle\Executioner\RealTimeExecutioner;
+use Mautic\CampaignBundle\Model\EventModel;
 use Mautic\SmsBundle\Event\ReplyEvent;
 use Mautic\SmsBundle\Form\Type\CampaignReplyType;
 use Mautic\SmsBundle\Helper\ReplyHelper;
@@ -42,10 +43,10 @@ class CampaignReplySubscriber implements EventSubscriberInterface
     /**
      * CampaignReplySubscriber constructor.
      *
-     * @param TransportChain      $transportChain
-     * @param RealTimeExecutioner $realTimeExecutioner
+     * @param TransportChain $transportChain
+     * @param EventModel     $realTimeExecutioner
      */
-    public function __construct(TransportChain $transportChain, RealTimeExecutioner $realTimeExecutioner)
+    public function __construct(TransportChain $transportChain, EventModel $realTimeExecutioner)
     {
         $this->transportChain      = $transportChain;
         $this->realTimeExecutioner = $realTimeExecutioner;
@@ -119,6 +120,6 @@ class CampaignReplySubscriber implements EventSubscriberInterface
      */
     public function onReply(ReplyEvent $event)
     {
-        $this->realTimeExecutioner->execute(self::TYPE, $event, 'sms');
+        $this->realTimeExecutioner->triggerEvent(self::TYPE, $event, 'sms');
     }
 }

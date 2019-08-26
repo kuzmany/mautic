@@ -14,7 +14,7 @@ namespace Mautic\SmsBundle\EventListener;
 use Mautic\CampaignBundle\CampaignEvents;
 use Mautic\CampaignBundle\Event\CampaignBuilderEvent;
 use Mautic\CampaignBundle\Event\DecisionEvent;
-use Mautic\CampaignBundle\Executioner\RealTimeExecutioner;
+use Mautic\CampaignBundle\Model\EventModel;
 use Mautic\SmsBundle\Event\DeliveryEvent;
 use Mautic\SmsBundle\Sms\TransportChain;
 use Mautic\SmsBundle\Sms\TransportSettingsInterface;
@@ -36,17 +36,17 @@ class CampaignDeliverySubscriber implements EventSubscriberInterface
     private $transportChain;
 
     /**
-     * @var RealTimeExecutioner
+     * @var EventModel
      */
     private $realTimeExecutioner;
 
     /**
      * CampaignReplySubscriber constructor.
      *
-     * @param TransportChain      $transportChain
-     * @param RealTimeExecutioner $realTimeExecutioner
+     * @param TransportChain $transportChain
+     * @param EventModel     $realTimeExecutioner
      */
-    public function __construct(TransportChain $transportChain, RealTimeExecutioner $realTimeExecutioner)
+    public function __construct(TransportChain $transportChain, EventModel $realTimeExecutioner)
     {
         $this->transportChain      = $transportChain;
         $this->realTimeExecutioner = $realTimeExecutioner;
@@ -169,6 +169,6 @@ class CampaignDeliverySubscriber implements EventSubscriberInterface
             return;
         }
 
-        $this->realTimeExecutioner->execute($type, $event, 'sms');
+        $this->realTimeExecutioner->triggerEvent($type, $event, 'sms');
     }
 }

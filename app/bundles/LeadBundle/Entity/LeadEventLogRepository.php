@@ -1,5 +1,6 @@
 <?php
 
+
 /*
  * @copyright   2014 Mautic Contributors. All rights reserved
  * @author      Mautic
@@ -52,39 +53,38 @@ class LeadEventLogRepository extends CommonRepository
     {
         return $this->getEntities(
             array_merge(
-                [
-                    'start'          => 0,
-                    'limit'          => 100,
-                    'orderBy'        => $this->getTableAlias().'.dateAdded',
-                    'orderByDir'     => 'ASC',
-                    'filter'         => [
-                        'force' => [
-                            [
-                                'column' => $this->getTableAlias().'.bundle',
-                                'expr'   => 'eq',
-                                'value'  => $bundle,
-                            ],
-                            [
-                                'column' => $this->getTableAlias().'.object',
-                                'expr'   => 'eq',
-                                'value'  => $object,
-                            ],
-                            [
-                                'column' => $this->getTableAlias().'.action',
-                                'expr'   => 'eq',
-                                'value'  => $action,
-                            ],
-                            [
-                                'column' => $this->getTableAlias().'.objectId',
-                                'expr'   => 'eq',
-                                'value'  => $objectId,
-                            ],
+            [
+                'start'      => 0,
+                'limit'      => 100,
+                'orderBy'    => $this->getTableAlias().'.dateAdded',
+                'orderByDir' => 'ASC',
+                'filter'     => [
+                    'force' => [
+                        [
+                            'column' => $this->getTableAlias().'.bundle',
+                            'expr'   => 'eq',
+                            'value'  => $bundle,
+                        ],
+                        [
+                            'column' => $this->getTableAlias().'.object',
+                            'expr'   => 'eq',
+                            'value'  => $object,
+                        ],
+                        [
+                            'column' => $this->getTableAlias().'.action',
+                            'expr'   => 'eq',
+                            'value'  => $action,
+                        ],
+                        [
+                            'column' => $this->getTableAlias().'.objectId',
+                            'expr'   => 'eq',
+                            'value'  => $objectId,
                         ],
                     ],
-                    'hydration_mode' => 'HYDRATE_ARRAY',
                 ],
-                $args
-            )
+                'hydration_mode' => 'HYDRATE_ARRAY',
+            ],
+            $args)
         );
     }
 
@@ -139,6 +139,71 @@ class LeadEventLogRepository extends CommonRepository
     }
 
     /**
+     * Loads data for specified lead events.
+     *
+     * @param string    $bundle
+     * @param string    $object
+     * @param Lead|null $lead
+     * @param array     $options
+     *
+     * @return array
+     */
+    public function getEventsByLead($bundle, $object, Lead $lead = null, array $options = [])
+    {
+        $alias = $this->getTableAlias();
+        $qb    = $this->getEntityManager()->getConnection()->createQueryBuilder()
+            ->select('*')
+            ->from(MAUTIC_TABLE_PREFIX.'lead_event_log', $alias);
+
+        if ($lead) {
+            $qb->andWhere($alias.'.lead_id = :lead')
+                ->setParameter('lead', $lead->getId());
+        }
+
+        $qb->andWhere($alias.'.bundle = :bundle')
+            ->setParameter('bundle', $bundle)
+            ->andWhere($alias.'.object = :object')
+            ->setParameter('object', $object);
+
+        if (!empty($options['search'])) {
+            $qb->andWhere($qb->expr()->like($alias.'.properties', $qb->expr()->literal('%'.$options['search'].'%')));
+        }
+
+        return $this->getTimelineResults($qb, $options, $alias.'.action', $alias.'.date_added', [], ['date_added']);
+    }
+
+    /**
+     * Loads data for specified lead events by action.
+     *
+     * @param string    $action
+     * @param Lead|null $lead
+     * @param array     $options
+     *
+     * @return array
+     */
+    public function getEventsByAction($action, Lead $lead = null, array $options = [])
+    {
+        $alias = $this->getTableAlias();
+        $qb    = $this->getEntityManager()->getConnection()->createQueryBuilder()
+            ->select('*')
+            ->from(MAUTIC_TABLE_PREFIX.'lead_event_log', $alias);
+
+        if ($lead) {
+            $qb->andWhere($alias.'.lead_id = :lead')
+                ->setParameter('lead', $lead->getId());
+        }
+
+        $qb->andWhere($alias.'.action = :action')
+            ->setParameter('action', $action);
+
+        if (!empty($options['search'])) {
+            $qb->andWhere($qb->expr()->like($alias.'.properties', $qb->expr()->literal('%'.$options['search'].'%')));
+        }
+
+        return $this->getTimelineResults($qb, $options, $alias.'.action', $alias.'.date_added', [], ['date_added']);
+    }
+
+    /**
      * Updates lead ID (e.g. after a lead merge).
      *
      * @param int $fromLeadId
@@ -161,42 +226,5 @@ class LeadEventLogRepository extends CommonRepository
     public function getTableAlias()
     {
         return 'lel';
-    }
-
-    /**
-     * Loads data for specified lead events.
-     *
-     * @deprecated 2.14.1 to be removed in 3.0; use getEvents() instead
-     *
-     * @param string    $bundle
-     * @param string    $object
-     * @param Lead|null $lead
-     * @param array     $options
-     *
-     * @return array
-     */
-    public function getEventsByLead($bundle, $object, Lead $lead = null, array $options = [])
-    {
-        trigger_error('LeadEventLogRepository::getEventsByLead is deprecated. Use LeadEventLogRepository::getEvents instead', E_USER_DEPRECATED);
-
-        return $this->getEvents($lead, $bundle, $object, null, $options);
-    }
-
-    /**
-     * Loads data for specified lead events by action.
-     *
-     * @deprecated 2.14.1 to be removed in 3.0; use getEvents() instead
-     *
-     * @param           $action
-     * @param Lead|null $lead
-     * @param array     $options
-     *
-     * @return array
-     */
-    public function getEventsByAction($action, Lead $lead = null, array $options = [])
-    {
-        trigger_error('LeadEventLogRepository::getEventsByAction is deprecated. Use LeadEventLogRepository::getEvents instead', E_USER_DEPRECATED);
-
-        return $this->getEvents($lead, null, null, $action, $options);
     }
 }
