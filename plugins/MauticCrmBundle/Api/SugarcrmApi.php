@@ -324,7 +324,7 @@ class SugarcrmApi extends CrmApi
         // set relationship
         $module_names     = []; //Contacts or Leads
         $module_ids       = []; //Contacts or leads ids
-        $link_field_names = []; //Array of mtc_webactivities_contacts or mtc_webactivities_leads
+        $link_field_names = []; //Array of as3_mautic_activities_contacts or as3_mautic_activities_leads
         $related_ids      = []; //Array of arrays of web activity array
         $name_value_lists = []; //array of empty arrays
         $delete_array     = []; //Array of 0
@@ -359,13 +359,13 @@ class SugarcrmApi extends CrmApi
                     'name_value_lists' => $set_name_value_lists,
                 ];
             if ($tokenData['version'] == '6') {
-                $resp = $this->request('set_entries', $parameters, 'POST', 'mtc_WebActivities');
+                $resp = $this->request('set_entries', $parameters, 'POST', 'as3_mautic_activities');
             } else {
                 $requests = [];
                 foreach ($s7_records as $fields) {
                     //Create record
                     $request['data']   = $fields;
-                    $request['url']    = '/v10/'.'mtc_WebActivities';
+                    $request['url']    = '/v10/'.'as3_mautic_activities';
                     $request['method'] = 'POST';
                     $requests[]        = $request;
                 }
@@ -388,9 +388,9 @@ class SugarcrmApi extends CrmApi
                         $module_names[] = $object;
                         $module_ids[]   = $sugarId;
                         if ($object == 'Contacts') {
-                            $link_field_names[] = 'mtc_webactivities_contacts';
+                            $link_field_names[] = 'as3_mautic_activities_contacts';
                         } else {
-                            $link_field_names[] = 'mtc_webactivities_leads';
+                            $link_field_names[] = 'as3_mautic_activities_leads';
                         }
                         ++$nbLeads;
                         foreach ($records['records'] as $key => $record) {
@@ -405,7 +405,7 @@ class SugarcrmApi extends CrmApi
                     $parameters = [
                         'module_names'     => $module_names, //Contacts or Leads
                         'module_ids'       => $module_ids, //Contacts or leads ids
-                        'link_field_names' => $link_field_names, //Array of mtc_webactivities_contacts or mtc_webactivities_leads
+                        'link_field_names' => $link_field_names, //Array of as3_mautic_activities_contacts or as3_mautic_activities_leads
                         'related_ids'      => $related_ids, //Array of arrays of web activity array
                         'name_value_lists' => $name_value_lists, //array of empty arrays
                         'delete_array'     => $delete_array, //Array of 0
@@ -418,16 +418,19 @@ class SugarcrmApi extends CrmApi
                     $nbAct = 0;
                     foreach ($activity as $sugarId => $records) {
                         if ($object == 'Contacts') {
-                            $link_field_name = 'mtc_webactivities_contacts';
+                            $link_field_name = 'as3_mautic_activities_contacts';
                         } else {
-                            $link_field_name = 'mtc_webactivities_leads';
+                            $link_field_name = 'as3_mautic_activities_leads';
                         }
                         foreach ($records['records'] as $key => $record) {
                             if (!isset($resp[$nbAct]['contents']['id'])) {
                                 continue;
                             } //current Web activity was not created
                             $wa_id = $resp[$nbAct]['contents']['id'];
-                            $resp2 = $this->request("mtc_WebActivities/$wa_id/link/$link_field_name/$sugarId", [], 'POST');
+                            try {
+                                $resp2 = $this->request("as3_mautic_activities/$wa_id/link/$link_field_name/$sugarId", [], 'POST');
+                            } catch (\Exception $e) {
+                            }
                             ++$nbAct;
                         }
                     }
