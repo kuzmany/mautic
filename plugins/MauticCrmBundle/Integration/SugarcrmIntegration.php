@@ -1001,7 +1001,7 @@ class SugarcrmIntegration extends CrmAbstractIntegration
                 }
             }
             if (!empty($tags) && method_exists($entity, 'setTags')) {
-                $this->leadModel->setTags($entity, $tags);
+                $this->leadModel->modifyTags($entity, $tags);
             }
         }
     }
