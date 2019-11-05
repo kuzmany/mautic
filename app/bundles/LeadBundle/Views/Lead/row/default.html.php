@@ -15,5 +15,8 @@
     if (isset($fields['core'][$column]['value'])) {
         echo $view->escape($fields['core'][$column]['value']);
     }
+    if (isset($fields['social'][$column]['value'])) {
+        echo $view->escape($fields['social'][$column]['value']);
+    }
     ?>
 </td>
