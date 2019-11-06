@@ -133,12 +133,12 @@ class LeadType extends AbstractType
         'companies',
             'company_list',
             [
-                'label'              => 'mautic.company.selectcompany',
-                'label_attr'         => ['class' => 'control-label'],
-                'multiple'           => true,
-                'required'           => false,
-                'mapped'             => false,
-                'data'               => $leadCompanies,
+                'label'      => 'mautic.company.selectcompany',
+                'label_attr' => ['class' => 'control-label'],
+                'multiple'   => true,
+                'required'   => false,
+                'mapped'     => false,
+                'data'       => $leadCompanies,
             ]
         );
 
