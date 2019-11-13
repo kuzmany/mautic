@@ -424,6 +424,12 @@ return [
                     'mautic.lead.reportbundle.fields_builder',
                 ],
             ],
+            'mautic.lead.reportbundle.segment_log_subscriber' => [
+                'class'     => \Mautic\LeadBundle\EventListener\SegmentLogReportSubscriber::class,
+                'arguments' => [
+                    'mautic.lead.reportbundle.fields_builder',
+                ],
+            ],
             'mautic.lead.reportbundle.report_utm_tag_subscriber' => [
                 'class'     => \Mautic\LeadBundle\EventListener\ReportUtmTagSubscriber::class,
                 'arguments' => [
