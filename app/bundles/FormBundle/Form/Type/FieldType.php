@@ -12,6 +12,7 @@
 namespace Mautic\FormBundle\Form\Type;
 
 use Mautic\CoreBundle\Form\EventListener\CleanFormSubscriber;
+use Mautic\CoreBundle\Form\Type\YesNoButtonGroupType;
 use Mautic\LeadBundle\Helper\FormFieldHelper;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\FormBuilderInterface;
@@ -405,6 +406,18 @@ class FieldType extends AbstractType
                     ],
                     'required' => false,
                     'data'     => $data,
+                ]
+            );
+
+            $builder->add(
+                'skipIfExists',
+                YesNoButtonGroupType::class,
+                [
+                    'label' => 'mautic.form.field.form.skipIfExists',
+                    'data'  => isset($options['data']['skipIfExists']) ? $options['data']['skipIfExists'] : false,
+                    'attr'  => [
+                        'tooltip' => 'mautic.form.field.form.skipIfExists.tooltip',
+                    ],
                 ]
             );
         }
