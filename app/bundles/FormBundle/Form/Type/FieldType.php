@@ -410,13 +410,13 @@ class FieldType extends AbstractType
             );
 
             $builder->add(
-                'skipIfExists',
+                'leadFieldNotOverwrite',
                 YesNoButtonGroupType::class,
                 [
-                    'label' => 'mautic.form.field.form.skipIfExists',
-                    'data'  => isset($options['data']['skipIfExists']) ? $options['data']['skipIfExists'] : false,
+                    'label' => 'mautic.form.field.form.leadFieldNotOverwrite',
+                    'data'  => isset($options['data']['leadFieldNotOverwrite']) ? $options['data']['leadFieldNotOverwrite'] : false,
                     'attr'  => [
-                        'tooltip' => 'mautic.form.field.form.skipIfExists.tooltip',
+                        'tooltip' => 'mautic.form.field.form.leadFieldNotOverwrite.tooltip',
                     ],
                 ]
             );
