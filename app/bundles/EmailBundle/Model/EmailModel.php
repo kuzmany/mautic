@@ -751,7 +751,7 @@ class EmailModel extends FormModel implements AjaxLookupModelInterface
             $sentCounts         = $statRepo->getSentCount($emailIds, $lists->getKeys(), $query);
             $readCounts         = $statRepo->getReadCount($emailIds, $lists->getKeys(), $query);
             $failedCounts       = $statRepo->getFailedCount($emailIds, $lists->getKeys(), $query);
-            $clickCounts        = $trackableRepo->getCount('email', $emailIds, $lists->getKeys(), $query);
+            $clickCounts        = $trackableRepo->getCount('email', $emailIds, $lists->getKeys(), $query, false, 'DISTINCT .ph.lead_id');
             $unsubscribedCounts = $dncRepo->getCount('email', $emailIds, DoNotContact::UNSUBSCRIBED, $lists->getKeys(), $query);
             $bouncedCounts      = $dncRepo->getCount('email', $emailIds, DoNotContact::BOUNCED, $lists->getKeys(), $query);
 
@@ -783,7 +783,7 @@ class EmailModel extends FormModel implements AjaxLookupModelInterface
                 $statRepo->getSentCount($emailIds, $lists->getKeys(), $query, true),
                 $statRepo->getReadCount($emailIds, $lists->getKeys(), $query, true),
                 $statRepo->getFailedCount($emailIds, $lists->getKeys(), $query, true),
-                $trackableRepo->getCount('email', $emailIds, $lists->getKeys(), $query, true),
+                $trackableRepo->getCount('email', $emailIds, $lists->getKeys(), $query, true, 'DISTINCT .ph.lead_id'),
                 $dncRepo->getCount('email', $emailIds, DoNotContact::UNSUBSCRIBED, $lists->getKeys(), $query, true),
                 $dncRepo->getCount('email', $emailIds, DoNotContact::BOUNCED, $lists->getKeys(), $query, true),
             ];
@@ -1933,7 +1933,7 @@ class EmailModel extends FormModel implements AjaxLookupModelInterface
         }
 
         if ($flag == 'all' || $flag == 'clicked' || in_array('clicked', $datasets)) {
-            $q = $query->prepareTimeDataQuery('page_hits', 'date_hit', []);
+            $q = $query->prepareTimeDataQuery('page_hits', 'date_hit', [], 'DISTINCT t.lead_id');
 
             if ($segmentId !== null) {
                 $q->innerJoin('t', '(SELECT DISTINCT email_id, lead_id FROM '.MAUTIC_TABLE_PREFIX.'email_stats WHERE list_id = :segmentId)', 'es', 't.source_id = es.email_id');
@@ -1960,7 +1960,6 @@ class EmailModel extends FormModel implements AjaxLookupModelInterface
             $this->addCampaignFilterForEmailSource($q, $campaignId);
             $this->addSegmentFilter($q, $segmentId, 'es');
             $data = $query->loadAndBuildTimeData($q);
-
             $chart->setDataset($this->translator->trans('mautic.email.clicked'), $data);
         }
 
