@@ -1933,7 +1933,7 @@ class EmailModel extends FormModel implements AjaxLookupModelInterface
         }
 
         if ($flag == 'all' || $flag == 'clicked' || in_array('clicked', $datasets)) {
-            $q = $query->prepareTimeDataQuery('page_hits', 'date_hit');
+            $q = $query->prepareTimeDataQuery('page_hits', 'date_hit', []);
 
             if ($segmentId !== null) {
                 $q->innerJoin('t', '(SELECT DISTINCT email_id, lead_id FROM '.MAUTIC_TABLE_PREFIX.'email_stats WHERE list_id = :segmentId)', 'es', 't.source_id = es.email_id');
@@ -1960,6 +1960,7 @@ class EmailModel extends FormModel implements AjaxLookupModelInterface
             $this->addCampaignFilterForEmailSource($q, $campaignId);
             $this->addSegmentFilter($q, $segmentId, 'es');
             $data = $query->loadAndBuildTimeData($q);
+
             $chart->setDataset($this->translator->trans('mautic.email.clicked'), $data);
         }
 
