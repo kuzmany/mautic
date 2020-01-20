@@ -414,6 +414,7 @@ Mautic.updateIframeContent = function(iframeId, content, slot) {
         }
     } else if (slot) {
         slot.html(content);
+        Mautic.emptyPlaceholder(slot.parent());
     }
 };
 
@@ -1252,6 +1253,7 @@ Mautic.initSlotListeners = function() {
             }
 
             slot.append(slotToolbar);
+            Mautic.emptyPlaceholder(slot);
         }, function() {
             if (Mautic.sortActive) {
                 // don't activate while sorting
@@ -1440,6 +1442,7 @@ Mautic.initSlotListeners = function() {
                     // replace DEC with content from the first editor
                     if (!(focusType == 'dynamicContent' && mQuery(this).attr('id').match(/filters/))) {
                         clickedSlot.html(slotHtml.html());
+                        Mautic.emptyPlaceholder(clickedSlot);
                     }
                 });
 
@@ -1994,6 +1997,14 @@ Mautic.getDynamicContentMaxId = function() {
     if (isNaN(maxId) || Number.NEGATIVE_INFINITY === maxId) maxId = 0;
 
     return maxId;
+};
+
+Mautic.emptyPlaceholder = function (slot) {
+    if ((slot.text()).trim() == '') {
+        slot.addClass('empty');
+    } else {
+        slot.removeClass('empty');
+    }
 };
 
 // Init inside the builder's iframe
