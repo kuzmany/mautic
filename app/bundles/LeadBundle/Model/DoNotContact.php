@@ -135,7 +135,6 @@ class DoNotContact
         if ($dnc && $persist) {
             // Use model saveEntity to trigger events for DNC change
             $this->leadModel->saveEntity($contact);
-            $this->getDncRepo()->saveEntity($dnc);
         }
 
         return $dnc;
