@@ -92,6 +92,14 @@ class UrlHelperTest extends \PHPUnit_Framework_TestCase
         );
     }
 
+    public function testSanitizeAbsoluteUrlSanitizePathWhitespace()
+    {
+        $this->assertEquals(
+            'http://username:password@hostname:9090/some%20path%20with%20whitespace',
+            UrlHelper::sanitizeAbsoluteUrl('http://username:password@hostname:9090/some path with whitespace')
+        );
+    }
+
     public function testGetUrlsFromPlaintextWithHttp()
     {
         $this->assertEquals(
@@ -103,7 +111,7 @@ class UrlHelperTest extends \PHPUnit_Framework_TestCase
     public function testGetUrlsFromPlaintextSkipDefaultTokenValues()
     {
         $this->assertEquals(
-            // 1 is skipped because it's set as the token default
+        // 1 is skipped because it's set as the token default
             [0 => 'https://find.this', 2 => '{contactfield=website|http://skip.this}'],
             UrlHelper::getUrlsFromPlaintext('Find this url: https://find.this, but allow this token because we know its a url: {contactfield=website|http://skip.this}! ')
         );
