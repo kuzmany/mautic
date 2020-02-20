@@ -52,6 +52,10 @@ class CategoryTypesEvent extends CommonEvent
      */
     public function addCategoryType($type, $label = null)
     {
+        if (is_int($type)) {
+            $type = $label;
+        }
+
         if ($label === null) {
             $label = 'mautic.'.$type.'.'.$type;
         }
