@@ -39,7 +39,8 @@ class ConfigType extends AbstractType
         ]);
 
         $formModifier = function (FormInterface $form, $currentColumns) {
-            $order = [];
+            $order        = [];
+            $orderColumns = '';
             if (!empty($currentColumns)) {
                 $orderColumns = array_values($currentColumns);
                 $order        = htmlspecialchars(json_encode($orderColumns), ENT_QUOTES, 'UTF-8');
