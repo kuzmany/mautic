@@ -12,6 +12,7 @@
 namespace Mautic\LeadBundle\Form\Type;
 
 use Mautic\CoreBundle\Factory\MauticFactory;
+use Mautic\LeadBundle\Import\ImportDispatcher;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolverInterface;
@@ -24,11 +25,17 @@ class LeadImportFieldType extends AbstractType
     private $factory;
 
     /**
+     * @var ImportDispatcher
+     */
+    private $importDispatcher;
+
+    /**
      * @param MauticFactory $factory
      */
-    public function __construct(MauticFactory $factory)
+    public function __construct(MauticFactory $factory, ImportDispatcher $importDispatcher)
     {
-        $this->factory = $factory;
+        $this->factory          = $factory;
+        $this->importDispatcher = $importDispatcher;
     }
 
     /**
@@ -37,29 +44,8 @@ class LeadImportFieldType extends AbstractType
      */
     public function buildForm(FormBuilderInterface $builder, array $options)
     {
-        $specialFields = [
-            'dateAdded'      => 'mautic.lead.import.label.dateAdded',
-            'createdByUser'  => 'mautic.lead.import.label.createdByUser',
-            'dateModified'   => 'mautic.lead.import.label.dateModified',
-            'modifiedByUser' => 'mautic.lead.import.label.modifiedByUser',
-            'lastActive'     => 'mautic.lead.import.label.lastActive',
-            'dateIdentified' => 'mautic.lead.import.label.dateIdentified',
-            'ip'             => 'mautic.lead.import.label.ip',
-            'points'         => 'mautic.lead.import.label.points',
-            'stage'          => 'mautic.lead.import.label.stage',
-            'doNotEmail'     => 'mautic.lead.import.label.doNotEmail',
-            'ownerusername'  => 'mautic.lead.import.label.ownerusername',
-        ];
-
-        $importChoiceFields = [
-            'mautic.lead.contact'        => $options['lead_fields'],
-            'mautic.lead.company'        => $options['company_fields'],
-            'mautic.lead.special_fields' => $specialFields,
-        ];
-
-        if ($options['object'] !== 'lead') {
-            unset($importChoiceFields['mautic.lead.contact']);
-        }
+        $dispatchBuilder    = $this->importDispatcher->dispatchBuilder();
+        $importChoiceFields = $dispatchBuilder->getFields();
 
         foreach ($options['import_fields'] as $field => $label) {
             $builder->add(
@@ -81,22 +67,24 @@ class LeadImportFieldType extends AbstractType
             'MauticUserBundle:User'
         );
 
-        $builder->add(
-            $builder->create(
-                'owner',
-                'user_list',
-                [
-                    'label'      => 'mautic.lead.lead.field.owner',
-                    'label_attr' => ['class' => 'control-label'],
-                    'attr'       => [
-                        'class' => 'form-control',
-                    ],
-                    'required' => false,
-                    'multiple' => false,
-                ]
-            )
-                ->addModelTransformer($transformer)
-        );
+        if ($options['object'] === 'lead' || $options['object'] === 'company') {
+            $builder->add(
+                $builder->create(
+                    'owner',
+                    'user_list',
+                    [
+                        'label'      => 'mautic.lead.lead.field.owner',
+                        'label_attr' => ['class' => 'control-label'],
+                        'attr'       => [
+                            'class' => 'form-control',
+                        ],
+                        'required'   => false,
+                        'multiple'   => false,
+                    ]
+                )
+                    ->addModelTransformer($transformer)
+            );
+        }
 
         if ($options['object'] === 'lead') {
             $builder->add(
@@ -167,7 +155,7 @@ class LeadImportFieldType extends AbstractType
      */
     public function setDefaultOptions(OptionsResolverInterface $resolver)
     {
-        $resolver->setRequired(['lead_fields', 'import_fields', 'company_fields', 'object']);
+        $resolver->setRequired(['import_fields', 'object']);
         $resolver->setDefaults(['line_count_limit' => 0]);
     }
 

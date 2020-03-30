@@ -20,18 +20,20 @@ use Mautic\CoreBundle\Helper\InputHelper;
 use Mautic\CoreBundle\Helper\PathsHelper;
 use Mautic\CoreBundle\Model\FormModel;
 use Mautic\CoreBundle\Model\NotificationModel;
-use Mautic\LeadBundle\Entity\Company;
+use Mautic\FormBundle\Entity\Form;
+use Mautic\FormBundle\Entity\Submission;
 use Mautic\LeadBundle\Entity\Import;
 use Mautic\LeadBundle\Entity\ImportRepository;
-use Mautic\LeadBundle\Entity\Lead;
 use Mautic\LeadBundle\Entity\LeadEventLog;
 use Mautic\LeadBundle\Entity\LeadEventLogRepository;
 use Mautic\LeadBundle\Event\ImportEvent;
 use Mautic\LeadBundle\Exception\ImportDelayedException;
 use Mautic\LeadBundle\Exception\ImportFailedException;
 use Mautic\LeadBundle\Helper\Progress;
+use Mautic\LeadBundle\Import\ImportDispatcher;
 use Mautic\LeadBundle\LeadEvents;
 use Symfony\Component\EventDispatcher\Event;
+use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpKernel\Exception\MethodNotAllowedHttpException;
 
 /**
@@ -70,6 +72,11 @@ class ImportModel extends FormModel
     protected $leadEventLogRepo;
 
     /**
+     * @var ImportDispatcher
+     */
+    private $importDispatcher;
+
+    /**
      * ImportModel constructor.
      *
      * @param PathsHelper          $pathsHelper
@@ -77,13 +84,15 @@ class ImportModel extends FormModel
      * @param NotificationModel    $notificationModel
      * @param CoreParametersHelper $config
      * @param CompanyModel         $companyModel
+     * @param ImportDispatcher     $importDispatcher
      */
     public function __construct(
         PathsHelper $pathsHelper,
         LeadModel $leadModel,
         NotificationModel $notificationModel,
         CoreParametersHelper $config,
-        CompanyModel $companyModel
+        CompanyModel $companyModel,
+        ImportDispatcher $importDispatcher
     ) {
         $this->pathsHelper       = $pathsHelper;
         $this->leadModel         = $leadModel;
@@ -91,6 +100,7 @@ class ImportModel extends FormModel
         $this->config            = $config;
         $this->leadEventLogRepo  = $leadModel->getEventLogRepository();
         $this->companyModel      = $companyModel;
+        $this->importDispatcher  = $importDispatcher;
     }
 
     /**
@@ -385,7 +395,8 @@ class ImportModel extends FormModel
                 $data = array_combine($headers, $data);
 
                 try {
-                    $entityModel = $import->getObject() === 'company' ? $this->companyModel : $this->leadModel;
+                    $importBuilderEvent = $this->importDispatcher->dispatchBuilder($import);
+                    $entityModel        = $importBuilderEvent->getModel();
 
                     $merged = $entityModel->import(
                         $import->getMatchedFields(),
@@ -395,7 +406,8 @@ class ImportModel extends FormModel
                         $import->getDefault('tags'),
                         true,
                         $eventLog,
-                        $import->getId()
+                        $import->getId(),
+                        $import
                     );
 
                     if ($merged) {
@@ -423,8 +435,10 @@ class ImportModel extends FormModel
             $this->em->detach($eventLog);
             $eventLog = null;
             $data     = null;
-            $this->em->clear(Lead::class);
-            $this->em->clear(Company::class);
+            if (in_array($importBuilderEvent->getObject(), ['lead', 'company'])) {
+                $this->em->clear(Lead::class);
+                $this->em->clear(Company::class);
+            }
 
             // Save Import entity once per batch so the user could see the progress
             if ($batchSize === 0 && $import->isBackgroundProcess()) {

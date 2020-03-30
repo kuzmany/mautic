@@ -15,13 +15,14 @@ use Mautic\CoreBundle\Controller\FormController;
 use Mautic\CoreBundle\Helper\CsvHelper;
 use Mautic\LeadBundle\Entity\Import;
 use Mautic\LeadBundle\Helper\Progress;
+use Mautic\LeadBundle\Import\ImportDispatcher;
 use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\Form\Exception\LogicException;
 use Symfony\Component\Form\Form;
 use Symfony\Component\Form\FormError;
 use Symfony\Component\HttpFoundation\File\Exception\FileException;
 use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Event\FilterControllerEvent;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
 class ImportController extends FormController
@@ -31,6 +32,22 @@ class ImportController extends FormController
     const STEP_MATCH_FIELDS    = 2;
     const STEP_PROGRESS_BAR    = 3;
     const STEP_IMPORT_FROM_CSV = 4;
+
+    /**
+     * @var ImportDispatcher
+     */
+    private $importDispatcher;
+
+    /**
+     * @param FilterControllerEvent $event
+     */
+    public function initialize(FilterControllerEvent $event)
+    {
+        /* @var ImportDispatcher $importDispatcher */
+        $this->importDispatcher = $this->get('mautic.lead.import.dispatcher');
+
+        parent::initialize($event);
+    }
 
     /**
      * @param int $page
@@ -156,7 +173,6 @@ class ImportController extends FormController
         ini_set('auto_detect_line_endings', true);
 
         $object = $this->getObjectFromRequest();
-
         $this->get('session')->set('mautic.import.object', $object);
 
         /** @var \Mautic\LeadBundle\Model\ImportModel $importModel */
@@ -198,11 +214,7 @@ class ImportController extends FormController
                 break;
             case self::STEP_MATCH_FIELDS:
 
-                /** @var \Mautic\LeadBundle\Model\FieldModel $fieldModel */
-                $fieldModel    = $this->getModel('lead.field');
-                $leadFields    = $fieldModel->getFieldList(false, false);
                 $importFields  = $session->get('mautic.'.$object.'.import.importfields', []);
-                $companyFields = $fieldModel->getFieldList(false, false, ['isPublished' => true, 'object' => 'company']);
 
                 try {
                     $form = $this->get('form.factory')->create(
@@ -211,8 +223,6 @@ class ImportController extends FormController
                         [
                             'object'           => $object,
                             'action'           => $action,
-                            'lead_fields'      => $leadFields,
-                            'company_fields'   => $companyFields,
                             'import_fields'    => $importFields,
                             'line_count_limit' => $this->getLineCountLimit(),
                         ]
@@ -357,8 +367,11 @@ class ImportController extends FormController
                             return $this->newAction(0, true);
                         }
 
-                        $owner = $matchedFields['owner'];
-                        unset($matchedFields['owner']);
+                        $owner = null;
+                        if (array_key_exists('owner', $matchedFields)) {
+                            $owner = $matchedFields['owner'];
+                            unset($matchedFields['owner']);
+                        }
 
                         $list = null;
                         if (array_key_exists('list', $matchedFields)) {
@@ -463,7 +476,14 @@ class ImportController extends FormController
 
             return new JsonResponse(['success' => 1, 'ignore_wdt' => 1]);
         } else {
-            $activeLink = $object === 'lead' ? '#mautic_contact_index' : '#mautic_company_index';
+            $importBuilderEvent = $this->importDispatcher->dispatchBuilder($import);
+            $activeLink         = $importBuilderEvent->getActiveLink();
+            $viewParameters     = array_merge(
+                $viewParameters,
+                [
+                    'importBuilderEvent' => $importBuilderEvent,
+                ]
+            );
 
             return $this->delegateView(
                 [
@@ -475,7 +495,7 @@ class ImportController extends FormController
                         'route'         => $this->generateUrl(
                             'mautic_import_action',
                             [
-                                'object'       => $object === 'lead' ? 'contacts' : 'companies',
+                                'object'       => $importBuilderEvent->getObject(),
                                 'objectAction' => 'new',
                             ]
                         ),
@@ -672,17 +692,12 @@ class ImportController extends FormController
         return parent::generateUrl($route, $parameters, $referenceType);
     }
 
+    /**
+     * @return string
+     */
     protected function getObjectFromRequest()
     {
-        $objectInRequest = $this->request->get('object');
-
-        switch ($objectInRequest) {
-            case 'companies':
-                return 'company';
-            case 'contacts':
-            default:
-                return 'lead';
-        }
+        return $this->importDispatcher->dispatchBuilder()->getObjectFromRequest();
     }
 
     /**

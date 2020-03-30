@@ -538,6 +538,20 @@ return [
                     'mautic.core.model.auditlog',
                 ],
             ],
+            'mautic.lead.subscriber.contacts.import' => [
+                'class'     => \Mautic\LeadBundle\EventListener\ImportContactsSubscriber::class,
+                'arguments' => [
+                    'mautic.lead.model.field',
+                    'mautic.lead.model.lead',
+                ],
+            ],
+            'mautic.lead.subscriber.companies.import' => [
+                'class'     => \Mautic\LeadBundle\EventListener\ImportCompaniesSubscriber::class,
+                'arguments' => [
+                    'mautic.lead.model.field',
+                    'mautic.lead.model.company',
+                ],
+            ],
         ],
         'forms' => [
             'mautic.form.type.lead' => [
@@ -640,8 +654,11 @@ return [
                 'alias' => 'lead_import',
             ],
             'mautic.form.type.lead_field_import' => [
-                'class'     => 'Mautic\LeadBundle\Form\Type\LeadImportFieldType',
-                'arguments' => ['mautic.factory'],
+                'class'     => \Mautic\LeadBundle\Form\Type\LeadImportFieldType::class,
+                'arguments' => [
+                    'mautic.factory',
+                    'mautic.lead.import.dispatcher',
+                    ],
                 'alias'     => 'lead_field_import',
             ],
             'mautic.form.type.lead_quickemail' => [
@@ -888,6 +905,13 @@ return [
                     'mautic.campaign.model.campaign',
                     'mautic.helper.cache_storage',
                     '@doctrine.orm.entity_manager',
+                ],
+            ],
+            'mautic.lead.import.dispatcher' => [
+                'class'     => \Mautic\LeadBundle\Import\ImportDispatcher::class,
+                'arguments' => [
+                    'request_stack',
+                    'event_dispatcher',
                 ],
             ],
         ],
@@ -1204,6 +1228,7 @@ return [
                     'mautic.core.model.notification',
                     'mautic.helper.core_parameters',
                     'mautic.lead.model.company',
+                    'mautic.lead.import.dispatcher',
                 ],
             ],
             'mautic.lead.model.tag' => [
