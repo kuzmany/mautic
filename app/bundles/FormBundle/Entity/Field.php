@@ -869,13 +869,23 @@ class Field
      * @param array|null $submissions
      * @param Lead       $lead
      * @param Form       $form
+     * @param int|null   $numberOfDisplayFields
+     * @param array      $viewOnlyFields
      *
      * @return bool
      */
-    public function showForContact($submissions = null, Lead $lead = null, Form $form = null)
+    public function showForContact($submissions = null, Lead $lead = null, Form $form = null, $numberOfDisplayFields = null, $viewOnlyFields = [])
     {
         // Always show in the kiosk mode
         if ($form !== null && $form->getInKioskMode() === true) {
+            return true;
+        }
+
+        if ($form->isProgressiveProfiling()) {
+            if (!in_array($this->getType(), $viewOnlyFields) && $form->getProgressiveProfilingLimit() <= $numberOfDisplayFields) {
+                return false;
+            }
+        } elseif ($this->isAlwaysDisplay()) {
             return true;
         }
 

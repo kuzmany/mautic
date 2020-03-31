@@ -887,6 +887,12 @@ class Form extends FormEntity
 
         // Progressive profiling must be turned off in the kiosk mode
         if ($this->getInKioskMode() === false) {
+            if ($this->isProgressiveProfiling()) {
+                $this->usesProgressiveProfiling = true;
+
+                return $this->usesProgressiveProfiling;
+            }
+
             // Search for a field with a progressive profiling setting on
             foreach ($this->fields->toArray() as $field) {
                 if ($field->getShowWhenValueExists() === false || $field->getShowAfterXSubmissions() > 0) {

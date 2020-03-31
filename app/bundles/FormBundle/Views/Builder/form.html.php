@@ -8,6 +8,7 @@
  *
  * @license     GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
  */
+/** @var \Mautic\FormBundle\Entity\Form $form */
 $formName = '_'.$form->generateFormName().(isset($suffix) ? $suffix : '');
 if (!isset($fields)) {
     $fields = $form->getFields();
@@ -56,6 +57,7 @@ if (!isset($lead)) {
         <div class="mauticform-innerform">
 
             <?php
+            $numberOfDisplayFields = 0;
             /** @var \Mautic\FormBundle\Entity\Field $f */
             foreach ($fields as $fieldId => $f):
                 if (isset($formPages['open'][$fieldId])):
@@ -64,7 +66,7 @@ if (!isset($lead)) {
                     echo "\n          <div class=\"mauticform-page-wrapper mauticform-page-$pageCount\" data-mautic-form-page=\"$pageCount\"$lastFieldAttribute>\n";
                 endif;
 
-                if ($f->showForContact($submissions, $lead, $form)):
+                if (($f->showForContact($submissions, $lead, $form, $numberOfDisplayFields, $viewOnlyFields))):
                     if ($f->isCustom()):
                         if (!isset($fieldSettings[$f->getType()])):
                             continue;
@@ -74,8 +76,10 @@ if (!isset($lead)) {
 
                         $template = $params['template'];
                     else:
-                        if (!$f->getShowWhenValueExists() && $f->getLeadField() && $f->getIsAutoFill() && $lead && !empty($lead->getFieldValue($f->getLeadField()))) {
+                        if (!$f->isAlwaysDisplay() && !$f->getShowWhenValueExists() && $f->getLeadField() && $f->getIsAutoFill() && $lead && !empty($lead->getFieldValue($f->getLeadField()))) {
                             $f->setType('hidden');
+                        } else {
+                            ++$numberOfDisplayFields;
                         }
                         $template = 'MauticFormBundle:Field:'.$f->getType().'.html.php';
                     endif;
