@@ -12,6 +12,7 @@
 namespace Mautic\FormBundle\Entity;
 
 use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\DBAL\Types\Type;
 use Doctrine\ORM\Mapping as ORM;
 use Mautic\ApiBundle\Serializer\Driver\ApiMetadataDriver;
 use Mautic\CoreBundle\Doctrine\Mapping\ClassMetadataBuilder;
@@ -129,6 +130,16 @@ class Form extends FormEntity
     private $noIndex;
 
     /**
+     * @var bool
+     */
+    private $progressiveProfiling;
+
+    /**
+     * @var int
+     */
+    private $progressiveProfilingLimit;
+
+    /**
      * This var is used to cache the result once gained from the loop.
      *
      * @var bool
@@ -228,6 +239,13 @@ class Form extends FormEntity
             ->columnName('no_index')
             ->nullable()
             ->build();
+
+        $builder->createField('progressiveProfiling', Type::BOOLEAN)
+            ->columnName('progressive_profiling')
+            ->nullable()
+            ->build();
+
+        $builder->addNamedField('progressiveProfilingLimit', Type::INTEGER, 'progressive_profiling_limit');
     }
 
     /**
@@ -882,5 +900,55 @@ class Form extends FormEntity
         $this->usesProgressiveProfiling = false;
 
         return $this->usesProgressiveProfiling;
+    }
+
+    /**
+     * @param bool $progressiveProfiling
+     *
+     * @return Form
+     */
+    public function setProgressiveProfiling($progressiveProfiling)
+    {
+        $this->isChanged('progressiveProfiling', $progressiveProfiling);
+        $this->progressiveProfiling = $progressiveProfiling;
+
+        return $this;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isProgressiveProfiling()
+    {
+        return $this->progressiveProfiling;
+    }
+
+    /**
+     * @return bool
+     */
+    public function getProgressiveProfiling()
+    {
+        return $this->progressiveProfiling;
+    }
+
+    /**
+     * @param int $progressiveProfilingLimit
+     *
+     * @return Form
+     */
+    public function setProgressiveProfilingLimit($progressiveProfilingLimit)
+    {
+        $this->isChanged('progressiveProfilingLimit', $progressiveProfilingLimit);
+        $this->progressiveProfilingLimit = $progressiveProfilingLimit;
+
+        return $this;
+    }
+
+    /**
+     * @return int
+     */
+    public function getProgressiveProfilingLimit()
+    {
+        return $this->progressiveProfilingLimit;
     }
 }

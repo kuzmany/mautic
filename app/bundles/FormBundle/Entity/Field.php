@@ -11,6 +11,7 @@
 
 namespace Mautic\FormBundle\Entity;
 
+use Doctrine\DBAL\Types\Type;
 use Doctrine\ORM\Mapping as ORM;
 use Mautic\ApiBundle\Serializer\Driver\ApiMetadataDriver;
 use Mautic\CoreBundle\Doctrine\Mapping\ClassMetadataBuilder;
@@ -147,6 +148,11 @@ class Field
     private $showAfterXSubmissions;
 
     /**
+     * @var bool
+     */
+    private $alwaysDisplay;
+
+    /**
      * Reset properties on clone.
      */
     public function __clone()
@@ -240,6 +246,8 @@ class Field
         $builder->addNullableField('showWhenValueExists', 'boolean', 'show_when_value_exists');
 
         $builder->addNullableField('showAfterXSubmissions', 'integer', 'show_after_x_submissions');
+
+        $builder->addNullableField('alwaysDisplay', Type::BOOLEAN, 'always_display');
     }
 
     /**
@@ -909,5 +917,21 @@ class Field
     public function isFileType()
     {
         return $this->type === 'file';
+    }
+
+    /**
+     * @return bool
+     */
+    public function isAlwaysDisplay()
+    {
+        return $this->alwaysDisplay;
+    }
+
+    /**
+     * @param bool $alwaysDisplay
+     */
+    public function setAlwaysDisplay($alwaysDisplay)
+    {
+        $this->alwaysDisplay = $alwaysDisplay;
     }
 }

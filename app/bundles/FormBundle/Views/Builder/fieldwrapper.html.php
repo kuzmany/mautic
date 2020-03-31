@@ -39,7 +39,9 @@ if (!isset($inBuilder)) {
     );
     ?>
     </div>
-    <?php if ((isset($field['showWhenValueExists']) && $field['showWhenValueExists'] === false) || !empty($field['showAfterXSubmissions'])
+    <?php
+    if ((isset($field['showWhenValueExists']) && $field['showWhenValueExists'] === false) || !empty($field['showAfterXSubmissions'])
+        || (isset($field['alwaysDisplay']) && $field['alwaysDisplay'] === true)
         || !empty($field['leadField'])
     ): ?>
         <div class="panel-footer">
@@ -59,21 +61,28 @@ if (!isset($inBuilder)) {
             ?>
         </span>
             <?php endif; ?>
-            <?php if (isset($field['showWhenValueExists']) && $field['showWhenValueExists'] === false): ?>
-                <i class="fa fa-eye-slash" aria-hidden="true"></i>
+            <?php if (isset($field['alwaysDisplay']) && $field['alwaysDisplay']): ?>
+                <i class="fa fa-eye" aria-hidden="true"></i>
                 <span class="inline-spacer">
+            <?php echo $view['translator']->trans('mautic.form.field.form.always_display'); ?>
+        </span>
+            <?php else: ?>
+                <?php if (isset($field['showWhenValueExists']) && $field['showWhenValueExists'] === false): ?>
+                    <i class="fa fa-eye-slash" aria-hidden="true"></i>
+                    <span class="inline-spacer">
             <?php echo $view['translator']->trans('mautic.form.field.hide.if.value'); ?>
         </span>
-            <?php endif; ?>
-            <?php if (!empty($field['showAfterXSubmissions'])): ?>
-                <i class="fa fa-refresh" aria-hidden="true"></i>
-                <span class="inline-spacer">
+                <?php endif; ?>
+                <?php if (!empty($field['showAfterXSubmissions'])): ?>
+                    <i class="fa fa-refresh" aria-hidden="true"></i>
+                    <span class="inline-spacer">
             <?php echo $view['translator']->transChoice(
                 'mautic.form.field.hide.if.submission.count',
                 (int) $field['showAfterXSubmissions'],
                 ['%count%' => (int) $field['showAfterXSubmissions']]
             ); ?>
         </span>
+                <?php endif; ?>
             <?php endif; ?>
         </div>
     <?php endif; ?>

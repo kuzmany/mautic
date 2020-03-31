@@ -14,7 +14,9 @@ namespace Mautic\FormBundle\Form\Type;
 use Mautic\CoreBundle\Factory\MauticFactory;
 use Mautic\CoreBundle\Form\EventListener\CleanFormSubscriber;
 use Mautic\CoreBundle\Form\EventListener\FormExitSubscriber;
+use Mautic\CoreBundle\Form\Type\YesNoButtonGroupType;
 use Symfony\Component\Form\AbstractType;
+use Symfony\Component\Form\Extension\Core\Type\NumberType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolverInterface;
 
@@ -122,6 +124,28 @@ class FormType extends AbstractType
             [
                 'label' => 'mautic.form.form.no_index',
                 'data'  => $options['data']->getNoIndex() ? $options['data']->getNoIndex() : false,
+            ]
+        );
+
+        $builder->add(
+            'progressiveProfiling',
+            YesNoButtonGroupType::class,
+            [
+                'label' => 'mautic.form.form.enable_progressive_profiling',
+                'data'  => $options['data']->isProgressiveProfiling() ? $options['data']->isProgressiveProfiling() : false,
+            ]
+        );
+
+        $builder->add(
+            'progressiveProfilingLimit',
+            NumberType::class,
+            [
+                'label'       => 'mautic.form.form.progressive_profiling_limit',
+                'attr'        => [
+                    'class'        => 'form-control',
+                    'data-show-on' => '{"mauticform_progressiveProfiling_1": "checked"}',
+                ],
+                'data'  => $options['data']->getNoIndex() ? $options['data']->getProgressiveProfilingLimit() : 1,
             ]
         );
 

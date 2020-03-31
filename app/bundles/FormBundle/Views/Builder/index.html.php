@@ -92,6 +92,14 @@ if (!isset($inBuilder)) {
                                     </select>
                                 </div>
                             </div>
+                            <div class="row">
+                                <div class="col-sm-4">
+                                    <?php echo $view['form']->row($form['progressiveProfiling']); ?>
+                                </div>
+                                <div class="col-sm-3">
+                                    <?php echo $view['form']->row($form['progressiveProfilingLimit']); ?>
+                                </div>
+                            </div>
                             <div class="drop-here">
                             <?php foreach ($formFields as $field): ?>
                                 <?php if (!in_array($field['id'], $deletedFields)) : ?>
