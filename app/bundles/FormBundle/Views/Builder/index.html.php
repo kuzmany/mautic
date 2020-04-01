@@ -69,6 +69,7 @@ if (!isset($inBuilder)) {
                         <div id="mauticforms_fields">
                             <div class="row">
                                 <div class="available-fields mb-md col-sm-4">
+                                    <label for=""></label>
                                     <select class="chosen form-builder-new-component" data-placeholder="<?php echo $view['translator']->trans('mautic.form.form.component.fields'); ?>">
                                         <option value=""></option>
                                         <?php foreach ($fields as $fieldType => $field): ?>
@@ -90,6 +91,16 @@ if (!isset($inBuilder)) {
                                         <?php endforeach; ?>
 
                                     </select>
+                                </div>
+                                <div class="col-sm-4">
+                                </div>
+                                <div class="col-sm-4">
+                                    <?php echo $view['form']->row($form['progressiveProfilingLimit']); ?>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-sm-4">
+                                    <?php echo $view['form']->row($form['progressiveProfiling']); ?>
                                 </div>
                             </div>
                             <div class="drop-here">
@@ -194,8 +205,6 @@ if (!isset($inBuilder)) {
         <div class="pr-lg pl-lg pt-md pb-md">
             <?php
             echo $view['form']->row($form['category']);
-            echo $view['form']->row($form['progressiveProfiling']);
-            echo $view['form']->row($form['progressiveProfilingLimit']);
             echo $view['form']->row($form['isPublished']);
             echo $view['form']->row($form['publishUp']);
             echo $view['form']->row($form['publishDown']);
