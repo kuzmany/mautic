@@ -92,14 +92,6 @@ if (!isset($inBuilder)) {
                                     </select>
                                 </div>
                             </div>
-                            <div class="row">
-                                <div class="col-sm-4">
-                                    <?php echo $view['form']->row($form['progressiveProfiling']); ?>
-                                </div>
-                                <div class="col-sm-3">
-                                    <?php echo $view['form']->row($form['progressiveProfilingLimit']); ?>
-                                </div>
-                            </div>
                             <div class="drop-here">
                             <?php foreach ($formFields as $field): ?>
                                 <?php if (!in_array($field['id'], $deletedFields)) : ?>
@@ -202,6 +194,8 @@ if (!isset($inBuilder)) {
         <div class="pr-lg pl-lg pt-md pb-md">
             <?php
             echo $view['form']->row($form['category']);
+            echo $view['form']->row($form['progressiveProfiling']);
+            echo $view['form']->row($form['progressiveProfilingLimit']);
             echo $view['form']->row($form['isPublished']);
             echo $view['form']->row($form['publishUp']);
             echo $view['form']->row($form['publishDown']);

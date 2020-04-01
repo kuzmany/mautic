@@ -276,6 +276,11 @@ class Form extends FormEntity
         $metadata->addPropertyConstraint('formType', new Assert\Choice([
             'choices' => ['standalone', 'campaign'],
         ]));
+
+        $metadata->addPropertyConstraint('progressiveProfilingLimit', new Assert\GreaterThan([
+            'value'  => 0,
+            'groups' => ['progressiveProfiling'],
+        ]));
     }
 
     /**
@@ -294,6 +299,10 @@ class Form extends FormEntity
             $groups[] = 'messageRequired';
         } elseif ($postAction == 'redirect') {
             $groups[] = 'urlRequired';
+        }
+
+        if ($data->getProgressiveProfiling()) {
+            $groups[] = 'progressiveProfiling';
         }
 
         return $groups;
