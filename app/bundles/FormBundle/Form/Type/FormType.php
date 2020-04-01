@@ -134,7 +134,7 @@ class FormType extends AbstractType
             [
                 'label' => 'mautic.form.form.progressive_profiling_limit',
                 'attr'  => [
-                    'style'       => 'width:100px;',
+                    'style'       => 'width:75px;',
                     'class'       => 'form-control',
                     'tooltip'     => 'mautic.form.form.progressive_profiling_limit.tooltip',
                     'placeholder' => 'mautic.form.form.progressive_profiling_limit_unlimited',
