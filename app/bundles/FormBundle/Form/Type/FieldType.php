@@ -12,7 +12,6 @@
 namespace Mautic\FormBundle\Form\Type;
 
 use Mautic\CoreBundle\Form\EventListener\CleanFormSubscriber;
-use Mautic\CoreBundle\Form\Type\YesNoButtonGroupType;
 use Mautic\LeadBundle\Helper\FormFieldHelper;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\FormBuilderInterface;
@@ -327,7 +326,7 @@ class FieldType extends AbstractType
                     'label' => 'mautic.form.field.form.show.when.value.exists',
                     'data'  => $default,
                     'attr'  => [
-                        'tooltip'      => 'mautic.form.field.help.show.when.value.exists',
+                        'tooltip' => 'mautic.form.field.help.show.when.value.exists',
                     ],
                 ]
             );
