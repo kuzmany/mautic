@@ -25,23 +25,21 @@ if (!isset($inBuilder)) {
         ]);
     ?>
     <div class="row ml-0 mr-0"><?php // wrap in a row to keep bootstrap container classes from affecting builder layout?>
-    <?php echo $view->render(
-        $template,
-        [
-            'field'         => $field,
-            'inForm'        => true,
-            'id'            => $field['id'],
-            'formId'        => $formId,
-            'contactFields' => (isset($contactFields)) ? $contactFields : [],
-            'companyFields' => (isset($companyFields)) ? $companyFields : [],
-            'inBuilder'     => $inBuilder,
-        ]
-    );
-    ?>
+        <?php echo $view->render(
+            $template,
+            [
+                'field'         => $field,
+                'inForm'        => true,
+                'id'            => $field['id'],
+                'formId'        => $formId,
+                'contactFields' => (isset($contactFields)) ? $contactFields : [],
+                'companyFields' => (isset($companyFields)) ? $companyFields : [],
+                'inBuilder'     => $inBuilder,
+            ]
+        );
+        ?>
     </div>
-    <?php
-    if ((isset($field['showWhenValueExists']) && $field['showWhenValueExists'] === false) || !empty($field['showAfterXSubmissions'])
-        || (isset($field['alwaysDisplay']) && $field['alwaysDisplay'] === true)
+    <?php if ((isset($field['showWhenValueExists']) && $field['showWhenValueExists'] === false) || !empty($field['showAfterXSubmissions'])
         || !empty($field['leadField'])
     ): ?>
         <div class="panel-footer">
@@ -51,38 +49,31 @@ if (!isset($inBuilder)) {
                 <i class="fa fa-<?php echo $icon?>" aria-hidden="true"></i>
                 <span class="inline-spacer">
             <?php
-                if (isset($contactFields[$field['leadField']]['label'])) {
-                    echo $contactFields[$field['leadField']]['label'];
-                } elseif ($companyFields[$field['leadField']]['label']) {
-                    echo $companyFields[$field['leadField']]['label'];
-                } else {
-                    ucfirst($field['leadField']);
-                }
+            if (isset($contactFields[$field['leadField']]['label'])) {
+                echo $contactFields[$field['leadField']]['label'];
+            } elseif ($companyFields[$field['leadField']]['label']) {
+                echo $companyFields[$field['leadField']]['label'];
+            } else {
+                ucfirst($field['leadField']);
+            }
             ?>
         </span>
             <?php endif; ?>
-            <?php if (isset($field['alwaysDisplay']) && $field['alwaysDisplay']): ?>
-                <i class="fa fa-eye" aria-hidden="true"></i>
+            <?php if (isset($field['showWhenValueExists']) && $field['showWhenValueExists'] === false): ?>
+                <i class="fa fa-eye-slash" aria-hidden="true"></i>
                 <span class="inline-spacer">
-            <?php echo $view['translator']->trans('mautic.form.field.form.always_display'); ?>
-        </span>
-            <?php else: ?>
-                <?php if (isset($field['showWhenValueExists']) && $field['showWhenValueExists'] === false): ?>
-                    <i class="fa fa-eye-slash" aria-hidden="true"></i>
-                    <span class="inline-spacer">
             <?php echo $view['translator']->trans('mautic.form.field.hide.if.value'); ?>
         </span>
-                <?php endif; ?>
-                <?php if (!empty($field['showAfterXSubmissions'])): ?>
-                    <i class="fa fa-refresh" aria-hidden="true"></i>
-                    <span class="inline-spacer">
+            <?php endif; ?>
+            <?php if (!empty($field['showAfterXSubmissions'])): ?>
+                <i class="fa fa-refresh" aria-hidden="true"></i>
+                <span class="inline-spacer">
             <?php echo $view['translator']->transChoice(
                 'mautic.form.field.hide.if.submission.count',
                 (int) $field['showAfterXSubmissions'],
                 ['%count%' => (int) $field['showAfterXSubmissions']]
             ); ?>
         </span>
-                <?php endif; ?>
             <?php endif; ?>
         </div>
     <?php endif; ?>

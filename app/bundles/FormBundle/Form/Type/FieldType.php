@@ -318,16 +318,6 @@ class FieldType extends AbstractType
         }
 
         if ($addBehaviorFields) {
-            $alwaysDisplay = isset($options['data']['alwaysDisplay']) ? $options['data']['alwaysDisplay'] : false;
-            $builder->add(
-                'alwaysDisplay',
-                YesNoButtonGroupType::class,
-                [
-                    'label' => 'mautic.form.field.form.always_display',
-                    'data'  => $alwaysDisplay,
-                ]
-            );
-
             $default = (!isset($options['data']['showWhenValueExists']) || $options['data']['showWhenValueExists'] === null) ? true
                 : (bool) $options['data']['showWhenValueExists'];
             $builder->add(
@@ -338,7 +328,6 @@ class FieldType extends AbstractType
                     'data'  => $default,
                     'attr'  => [
                         'tooltip'      => 'mautic.form.field.help.show.when.value.exists',
-                        'data-show-on' => '{"formfield_alwaysDisplay_0": "checked"}',
                     ],
                 ]
             );
@@ -352,7 +341,6 @@ class FieldType extends AbstractType
                     'attr'       => [
                         'class'        => 'form-control',
                         'tooltip'      => 'mautic.form.field.help.show.after.x.submissions',
-                        'data-show-on' => '{"formfield_alwaysDisplay_0": "checked"}',
                     ],
                     'required' => false,
                 ]
