@@ -338,8 +338,8 @@ class FieldType extends AbstractType
                     'label'      => 'mautic.form.field.form.show.after.x.submissions',
                     'label_attr' => ['class' => 'control-label'],
                     'attr'       => [
-                        'class'        => 'form-control',
-                        'tooltip'      => 'mautic.form.field.help.show.after.x.submissions',
+                        'class'   => 'form-control',
+                        'tooltip' => 'mautic.form.field.help.show.after.x.submissions',
                     ],
                     'required' => false,
                 ]

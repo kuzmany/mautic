@@ -66,7 +66,7 @@ if (!isset($lead)) {
                     echo "\n          <div class=\"mauticform-page-wrapper mauticform-page-$pageCount\" data-mautic-form-page=\"$pageCount\"$lastFieldAttribute>\n";
                 endif;
 
-                if (($f->showForContact($submissions, $lead, $form, $numberOfDisplayFields, $viewOnlyFields))):
+                if ($f->showForContact($submissions, $lead, $form, $numberOfDisplayFields, $viewOnlyFields)):
                     if ($f->isCustom()):
                         if (!isset($fieldSettings[$f->getType()])):
                             continue;

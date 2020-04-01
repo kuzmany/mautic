@@ -139,7 +139,7 @@ class FormType extends AbstractType
                     'tooltip'     => 'mautic.form.form.progressive_profiling_limit.tooltip',
                     'placeholder' => 'mautic.form.form.progressive_profiling_limit_unlimited',
                 ],
-                'data'  => $options['data']->getNoIndex() ? $options['data']->getProgressiveProfilingLimit() : '',
+                'data'  => $options['data']->getProgressiveProfilingLimit() ? $options['data']->getProgressiveProfilingLimit() : '',
             ]
         );
 

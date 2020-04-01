@@ -925,6 +925,10 @@ class Form extends FormEntity
      */
     public function getProgressiveProfilingLimit()
     {
+        if ($this->progressiveProfilingLimit === 0) {
+            $this->progressiveProfilingLimit = '';
+        }
+
         return $this->progressiveProfilingLimit;
     }
 }

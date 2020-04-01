@@ -97,9 +97,12 @@ if (!isset($inBuilder)) {
                                     <?php echo $view['translator']->trans(
                                         'mautic.form.form.progressive_profiling_limit.display'
                                     ); ?>
-                                    <div class="ml-5 mr-5" style="display:inline-block;"><?php echo $view['form']->widget(
+                                    <div class="ml-5 mr-5" style="display:inline-block;">
+                                        <span id=""></span>
+                                        <?php echo $view['form']->widget(
                                             $form['progressiveProfilingLimit']
-                                        ); ?></div>
+                                        ); ?>
+                                    </div>
                                     <?php echo $view['translator']->trans(
                                         'mautic.form.form.progressive_profiling_limit.max_fields'
                                     ); ?>
