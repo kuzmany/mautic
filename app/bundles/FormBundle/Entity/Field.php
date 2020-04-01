@@ -881,7 +881,7 @@ class Field
             return true;
         }
 
-        if ($form->isProgressiveProfiling()) {
+        if ($form->getProgressiveProfilingLimit() != '') {
             if (!in_array($this->getType(), $viewOnlyFields) && $form->getProgressiveProfilingLimit() <= $numberOfDisplayFields) {
                 return false;
             }

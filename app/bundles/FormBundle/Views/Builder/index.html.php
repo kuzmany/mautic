@@ -69,7 +69,6 @@ if (!isset($inBuilder)) {
                         <div id="mauticforms_fields">
                             <div class="row">
                                 <div class="available-fields mb-md col-sm-4">
-                                    <label for=""></label>
                                     <select class="chosen form-builder-new-component" data-placeholder="<?php echo $view['translator']->trans('mautic.form.form.component.fields'); ?>">
                                         <option value=""></option>
                                         <?php foreach ($fields as $fieldType => $field): ?>
@@ -92,15 +91,18 @@ if (!isset($inBuilder)) {
 
                                     </select>
                                 </div>
-                                <div class="col-sm-4">
-                                </div>
-                                <div class="col-sm-4">
-                                    <?php echo $view['form']->row($form['progressiveProfilingLimit']); ?>
-                                </div>
                             </div>
                             <div class="row">
-                                <div class="col-sm-4">
-                                    <?php echo $view['form']->row($form['progressiveProfiling']); ?>
+                                <div class="col-sm-12 mb-10">
+                                    <?php echo $view['translator']->trans(
+                                        'mautic.form.form.progressive_profiling_limit.display'
+                                    ); ?>
+                                    <div class="ml-5 mr-5" style="display:inline-block;"><?php echo $view['form']->widget(
+                                            $form['progressiveProfilingLimit']
+                                        ); ?></div>
+                                    <?php echo $view['translator']->trans(
+                                        'mautic.form.form.progressive_profiling_limit.max_fields'
+                                    ); ?>
                                 </div>
                             </div>
                             <div class="drop-here">

@@ -129,23 +129,15 @@ class FormType extends AbstractType
         );
 
         $builder->add(
-            'progressiveProfiling',
-            YesNoButtonGroupType::class,
-            [
-                'label' => 'mautic.form.form.enable_progressive_profiling',
-                'data'  => $options['data']->isProgressiveProfiling() ? $options['data']->isProgressiveProfiling() : false,
-            ]
-        );
-
-        $builder->add(
             'progressiveProfilingLimit',
             TextType::class,
             [
-                'label'       => 'mautic.form.form.progressive_profiling_limit',
-                'attr'        => [
-                    'class'        => 'form-control',
-                    'data-show-on' => '{"mauticform_progressiveProfiling_1": "checked"}',
-                    'placeholder'  => 'mautic.form.form.progressive_profiling_limit_unlimited',
+                'label' => 'mautic.form.form.progressive_profiling_limit',
+                'attr'  => [
+                    'style'       => 'width:100px;',
+                    'class'       => 'form-control',
+                    'tooltip'     => 'mautic.form.form.progressive_profiling_limit.tooltip',
+                    'placeholder' => 'mautic.form.form.progressive_profiling_limit_unlimited',
                 ],
                 'data'  => $options['data']->getNoIndex() ? $options['data']->getProgressiveProfilingLimit() : '',
             ]

@@ -130,11 +130,6 @@ class Form extends FormEntity
     private $noIndex;
 
     /**
-     * @var bool
-     */
-    private $progressiveProfiling;
-
-    /**
      * @var int
      */
     private $progressiveProfilingLimit;
@@ -240,11 +235,6 @@ class Form extends FormEntity
             ->nullable()
             ->build();
 
-        $builder->createField('progressiveProfiling', Type::BOOLEAN)
-            ->columnName('progressive_profiling')
-            ->nullable()
-            ->build();
-
         $builder->addNamedField('progressiveProfilingLimit', Type::INTEGER, 'progressive_profiling_limit');
     }
 
@@ -279,7 +269,7 @@ class Form extends FormEntity
 
         $metadata->addPropertyConstraint('progressiveProfilingLimit', new Assert\GreaterThan([
             'value'  => 0,
-            'groups' => ['progressiveProfiling'],
+            'groups' => ['progressiveProfilingLimit'],
         ]));
     }
 
@@ -301,8 +291,8 @@ class Form extends FormEntity
             $groups[] = 'urlRequired';
         }
 
-        if ($data->getProgressiveProfiling()) {
-            $groups[] = 'progressiveProfiling';
+        if ($data->getProgressiveProfilingLimit() != '') {
+            $groups[] = 'progressiveProfilingLimit';
         }
 
         return $groups;
@@ -896,7 +886,7 @@ class Form extends FormEntity
 
         // Progressive profiling must be turned off in the kiosk mode
         if ($this->getInKioskMode() === false) {
-            if ($this->isProgressiveProfiling()) {
+            if ($this->getProgressiveProfilingLimit() != '') {
                 $this->usesProgressiveProfiling = true;
 
                 return $this->usesProgressiveProfiling;
@@ -915,35 +905,6 @@ class Form extends FormEntity
         $this->usesProgressiveProfiling = false;
 
         return $this->usesProgressiveProfiling;
-    }
-
-    /**
-     * @param bool $progressiveProfiling
-     *
-     * @return Form
-     */
-    public function setProgressiveProfiling($progressiveProfiling)
-    {
-        $this->isChanged('progressiveProfiling', $progressiveProfiling);
-        $this->progressiveProfiling = $progressiveProfiling;
-
-        return $this;
-    }
-
-    /**
-     * @return bool
-     */
-    public function isProgressiveProfiling()
-    {
-        return $this->progressiveProfiling;
-    }
-
-    /**
-     * @return bool
-     */
-    public function getProgressiveProfiling()
-    {
-        return $this->progressiveProfiling;
     }
 
     /**
