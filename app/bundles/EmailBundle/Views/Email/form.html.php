@@ -65,7 +65,8 @@ $isCodeMode = ($email->getTemplate() === 'mautic_code_mode');
 if (!isset($previewUrl)) {
     $previewUrl = '';
 }
-
+$fields = $form->vars['fields'];
+$index  = count($form['filters']->vars['value']) ? max(array_keys($form['filters']->vars['value'])) : 0;
 ?>
 
 <?php echo $view['form']->start($form, ['attr' => $attr]); ?>
@@ -96,6 +97,66 @@ if (!isset($previewUrl)) {
                     <div class="tab-pane fade in active bdr-w-0" id="email-container">
                         <div class="row">
                             <div class="col-md-12">
+
+                                <div class="dwc-filter bdr-w-0" id="<?php echo $form->vars['id'] ?>">
+                                    <div class="row">
+                                        <div class="col-xs-7">
+                                            <label><?php echo $view['translator']->trans('Filters'); ?></label>
+                                        </div>
+                                        <div class="col-xs-5">
+                                            <div class="form-group">
+                                                <div class="available-filters mb-md pl-0"
+                                                     data-prototype="<?php echo $view->escape($view['form']->widget($form['filters']->vars['prototype'])); ?>"
+                                                     data-index="<?php echo $index + 1; ?>">
+                                                    <select class="chosen form-control" id="available_filters">
+                                                        <option value=""></option>
+                                                        <?php
+                                                        foreach ($fields as $object => $field):
+                                                            $header = $object;
+                                                            $icon   = ($object == 'company') ? 'building' : 'user';
+                                                            ?>
+                                                            <optgroup label="<?php echo $view['translator']->trans('mautic.lead.'.$header); ?>">
+                                                                <?php foreach ($field as $value => $params):
+                                                                    $list    = (!empty($params['properties']['list'])) ? $params['properties']['list'] : [];
+                                                                    $choices = \Mautic\LeadBundle\Helper\FormFieldHelper::parseList(
+                                                                        $list,
+                                                                        true,
+                                                                        ('boolean' === $params['properties']['type'])
+                                                                    );
+                                                                    $list     = json_encode($choices);
+                                                                    $callback = (!empty($params['properties']['callback']))
+                                                                        ? $params['properties']['callback'] : '';
+                                                                    $operators = (!empty($params['operators'])) ? $view->escape(
+                                                                        json_encode($params['operators'])
+                                                                    ) : '{}';
+                                                                    ?>
+                                                                    <option value="<?php echo $view->escape($value); ?>"
+                                                                            id="available_<?php echo $object.'_'.$value; ?>"
+                                                                            data-field-object="<?php echo $object; ?>"
+                                                                            data-field-type="<?php echo $params['properties']['type']; ?>"
+                                                                            data-field-list="<?php echo $view->escape($list); ?>"
+                                                                            data-field-callback="<?php echo $callback; ?>"
+                                                                            data-field-operators="<?php echo $operators; ?>"
+                                                                            class="segment-filter <?php echo $icon; ?>">
+                                                                        <?php echo $view['translator']->trans($params['label']); ?>
+                                                                    </option>
+                                                                <?php endforeach; ?>
+                                                            </optgroup>
+                                                        <?php endforeach; ?>
+                                                    </select>
+                                                </div>
+                                                <div class="clearfix"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-12">
+                                            <div class="selected-filters" id="dwc_filters" data-filter-container>
+                                                <?php echo $view['form']->widget($form['filters']); ?>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                                 <?php echo $view['form']->row($form['template']); ?>
                             </div>
                         </div>

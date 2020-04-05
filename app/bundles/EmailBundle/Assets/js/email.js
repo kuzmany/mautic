@@ -1,5 +1,12 @@
 /** EmailBundle **/
 Mautic.emailOnLoad = function (container, response) {
+
+    var availableFilters = mQuery('div.dwc-filter').find('select[id="available_filters"]');
+    Mautic.activateChosenSelect(availableFilters, false);
+
+    Mautic.leadlistOnLoad('div.dwc-filter');
+
+
     if (mQuery('#emailform_plainText').length) {
         // @todo initiate the token dropdown
         var plaintext = mQuery('#emailform_plainText');

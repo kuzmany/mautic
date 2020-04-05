@@ -11,6 +11,8 @@
 
 namespace Mautic\EmailBundle\Form\Type;
 
+use DeviceDetector\Parser\Device\DeviceParserAbstract as DeviceParser;
+use DeviceDetector\Parser\OperatingSystem;
 use Mautic\CoreBundle\Factory\MauticFactory;
 use Mautic\CoreBundle\Form\DataTransformer\EmojiToShortTransformer;
 use Mautic\CoreBundle\Form\DataTransformer\IdToEntityModelTransformer;
@@ -18,8 +20,13 @@ use Mautic\CoreBundle\Form\EventListener\CleanFormSubscriber;
 use Mautic\CoreBundle\Form\EventListener\FormExitSubscriber;
 use Mautic\CoreBundle\Form\Type\DynamicContentTrait;
 use Mautic\CoreBundle\Form\Type\SortableListType;
+use Mautic\DynamicContentBundle\Form\Type\DwcEntryFiltersType;
+use Mautic\LeadBundle\Form\DataTransformer\FieldFilterTransformer;
 use Mautic\LeadBundle\Helper\FormFieldHelper;
+use Mautic\LeadBundle\Model\LeadModel;
+use Mautic\LeadBundle\Model\ListModel;
 use Symfony\Component\Form\AbstractType;
+use Symfony\Component\Form\Extension\Core\Type\CollectionType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\Form\FormEvent;
 use Symfony\Component\Form\FormEvents;
@@ -45,26 +52,63 @@ class EmailType extends AbstractType
     private $stageChoices    = [];
     private $localeChoices   = [];
 
+    private $fieldChoices = [];
+
+    private $deviceTypesChoices;
+    private $deviceBrandsChoices;
+    private $deviceOsChoices;
+    private $tagChoices = [];
+
+    /**
+     * @var LeadModel
+     */
+    private $leadModel;
+
+    /**
+     * @var ListModel
+     */
+    private $listModel;
+
     /**
      * @param MauticFactory $factory
      */
     public function __construct(MauticFactory $factory)
     {
-        $this->translator   = $factory->getTranslator();
-        $this->defaultTheme = $factory->getParameter('theme');
-        $this->em           = $factory->getEntityManager();
-        $this->request      = $factory->getRequest();
+        $this->translator     = $factory->getTranslator();
+        $this->defaultTheme   = $factory->getParameter('theme');
+        $this->em             = $factory->getEntityManager();
+        $this->request        = $factory->getRequest();
+        $this->leadModel      = $factory->getModel('lead.lead');
+        $this->listModel      = $factory->getModel('lead.list');
 
         $this->countryChoices  = FormFieldHelper::getCountryChoices();
         $this->regionChoices   = FormFieldHelper::getRegionChoices();
         $this->timezoneChoices = FormFieldHelper::getTimezonesChoices();
         $this->localeChoices   = FormFieldHelper::getLocaleChoices();
+        $this->fieldChoices    = $this->listModel->getChoiceFields();
+        $stages                = $factory->getModel('stage')->getRepository()->getSimpleList();
 
-        $stages = $factory->getModel('stage')->getRepository()->getSimpleList();
+        $this->filterFieldChoices();
+
+        $this->deviceTypesChoices  = array_combine(DeviceParser::getAvailableDeviceTypeNames(), DeviceParser::getAvailableDeviceTypeNames());
+        $this->deviceBrandsChoices = DeviceParser::$deviceBrands;
+        $this->deviceOsChoices     = array_combine(
+            array_keys(OperatingSystem::getAvailableOperatingSystemFamilies()),
+            array_keys(OperatingSystem::getAvailableOperatingSystemFamilies())
+        );
 
         foreach ($stages as $stage) {
             $this->stageChoices[$stage['value']] = $stage['label'];
         }
+    }
+
+    private function filterFieldChoices()
+    {
+        unset($this->fieldChoices['company']);
+        $customFields               = $this->leadModel->getRepository()->getCustomFieldList('lead');
+        $this->fieldChoices['lead'] = array_filter($this->fieldChoices['lead'], function ($key) use ($customFields) {
+            return in_array($key, array_merge(array_keys($customFields[0]), ['date_added', 'date_modified', 'device_brand', 'device_model', 'device_os', 'device_type', 'tags']), true);
+        }, ARRAY_FILTER_USE_KEY);
     }
 
     /**
@@ -509,6 +553,33 @@ class EmailType extends AbstractType
             ]
         );
 
+        $filterModalTransformer = new FieldFilterTransformer($this->translator);
+
+        $builder->add(
+            $builder->create(
+                'filters',
+                CollectionType::class,
+                [
+                    'type'    => DwcEntryFiltersType::class,
+                    'options' => [
+                        'countries'    => $this->countryChoices,
+                        'regions'      => $this->regionChoices,
+                        'timezones'    => $this->timezoneChoices,
+                        'locales'      => $this->localeChoices,
+                        'fields'       => $this->fieldChoices,
+                        'deviceTypes'  => $this->deviceTypesChoices,
+                        'deviceBrands' => $this->deviceBrandsChoices,
+                        'deviceOs'     => $this->deviceOsChoices,
+                        'tags'         => $this->tagChoices,
+                    ],
+                    'error_bubbling' => false,
+                    'mapped'         => true,
+                    'allow_add'      => true,
+                    'allow_delete'   => true,
+                ]
+            )->addModelTransformer($filterModalTransformer)
+        );
+
         if (!empty($options['update_select'])) {
             $builder->add(
                 'updateSelect',
@@ -525,6 +596,16 @@ class EmailType extends AbstractType
         if (!empty($options['action'])) {
             $builder->setAction($options['action']);
         }
+
+        $builder->addEventListener(
+            FormEvents::PRE_SUBMIT,
+            function (FormEvent $event) {
+                // delete default prototype values
+                $data = $event->getData();
+                unset($data['filters']['__name__']);
+                $event->setData($data);
+            }
+        );
     }
 
     /**
@@ -546,11 +627,12 @@ class EmailType extends AbstractType
      */
     public function buildView(FormView $view, FormInterface $form, array $options)
     {
-        $view->vars['countries'] = $this->countryChoices;
-        $view->vars['regions']   = $this->regionChoices;
-        $view->vars['timezones'] = $this->timezoneChoices;
-        $view->vars['stages']    = $this->stageChoices;
-        $view->vars['locales']   = $this->localeChoices;
+        $view->vars['fields']       = $this->fieldChoices;
+        $view->vars['countries']    = $this->countryChoices;
+        $view->vars['regions']      = $this->regionChoices;
+        $view->vars['timezones']    = $this->timezoneChoices;
+        $view->vars['stages']       = $this->stageChoices;
+        $view->vars['locales']      = $this->localeChoices;
     }
 
     /**

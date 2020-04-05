@@ -20,6 +20,7 @@ use Mautic\ApiBundle\Serializer\Driver\ApiMetadataDriver;
 use Mautic\AssetBundle\Entity\Asset;
 use Mautic\CoreBundle\Doctrine\Mapping\ClassMetadataBuilder;
 use Mautic\CoreBundle\Entity\DynamicContentEntityTrait;
+use Mautic\CoreBundle\Entity\FiltersEntityTrait;
 use Mautic\CoreBundle\Entity\FormEntity;
 use Mautic\CoreBundle\Entity\TranslationEntityInterface;
 use Mautic\CoreBundle\Entity\TranslationEntityTrait;
@@ -43,6 +44,7 @@ class Email extends FormEntity implements VariantEntityInterface, TranslationEnt
     use VariantEntityTrait;
     use TranslationEntityTrait;
     use DynamicContentEntityTrait;
+    use FiltersEntityTrait;
 
     /**
      * @var int
@@ -294,6 +296,7 @@ class Email extends FormEntity implements VariantEntityInterface, TranslationEnt
         self::addTranslationMetadata($builder, self::class);
         self::addVariantMetadata($builder, self::class);
         self::addDynamicContentMetadata($builder);
+        self::addFiltersMetadata($builder);
 
         $builder->createManyToOne('unsubscribeForm', Form::class)
             ->addJoinColumn('unsubscribeform_id', 'id', true, false, 'SET NULL')
