@@ -434,6 +434,34 @@ class ReportGeneratorEvent extends AbstractReportEvent
     }
 
     /**
+     * Get filter value from a specific filter.
+     *
+     * @param string $column
+     *
+     * @return mixed
+     *
+     * @throws \UnexpectedValueException
+     */
+    public function getFilterValue($column)
+    {
+        return $this->getReport()->getFilterValue($column);
+    }
+
+    /**
+     * Get filter values from a specific filter.
+     *
+     * @param string $column
+     *
+     * @return array
+     *
+     * @throws \UnexpectedValueException
+     */
+    public function getFilterValues($column)
+    {
+        return $this->getReport()->getFilterValues($column);
+    }
+
+    /**
      * Check if the report has a groupBy columns selected.
      *
      *

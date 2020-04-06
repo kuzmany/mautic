@@ -60,16 +60,24 @@ trait FilterTrait
 
         $field = [];
 
-        if (!isset($data['object'])) {
-            $data['object'] = 'lead';
-        }
-
         if (isset($data['object']) && isset($options['fields'][$data['object']][$fieldName])) {
             $field = $options['fields'][$data['object']][$fieldName];
         }
 
         $customOptions = [];
         switch ($fieldType) {
+            case 'assets':
+                if (!isset($data['filter'])) {
+                    $data['filter'] = [];
+                } elseif (!is_array($data['filter'])) {
+                    $data['filter'] = [$data['filter']];
+                }
+
+                $customOptions['choices']                   = $options['assets'];
+                $customOptions['multiple']                  = true;
+                $customOptions['choice_translation_domain'] = false;
+                $type                                       = 'choice';
+                break;
             case 'leadlist':
                 if (!isset($data['filter'])) {
                     $data['filter'] = [];
