@@ -235,8 +235,7 @@ class Form extends FormEntity
             ->nullable()
             ->build();
 
-        $builder->addNullableField('progressiveProfilingLimit', Type::INTEGER, 'progressive_profiling_limit')
-        ;
+        $builder->addNullableField('progressiveProfilingLimit', Type::INTEGER, 'progressive_profiling_limit');
     }
 
     /**

@@ -28,14 +28,17 @@ class Version20200331160919 extends AbstractMauticMigration
     public function preUp(Schema $schema)
     {
         $formTable   = $schema->getTable($this->prefix.'forms');
+        $fieldsTable = $schema->getTable($this->prefix.'form_fields');
 
-        if ($formTable->hasColumn('progressive_profiling_limit')) {
+        if ($formTable->hasColumn('progressive_profiling_limit') && $fieldsTable->hasColumn('always_display')) {
             throw new SkipMigrationException('Schema includes this migration');
         }
     }
 
     /**
      * @param Schema $schema
+     *
+     * @throws \Doctrine\DBAL\Schema\SchemaException
      */
     public function up(Schema $schema)
     {
@@ -43,6 +46,12 @@ class Version20200331160919 extends AbstractMauticMigration
 
         if (!$formTable->hasColumn('progressive_profiling_limit')) {
             $this->addSql('ALTER TABLE '.$this->prefix.'forms ADD progressive_profiling_limit INT(11)  NOT NULL DEFAULT 0;');
+        }
+
+        $fieldsTable = $schema->getTable($this->prefix.'form_fields');
+
+        if (!$fieldsTable->hasColumn('always_display')) {
+            $this->addSql('ALTER TABLE '.$this->prefix.'forms ADD always_display tinyint(1) DEFAULT NULL');
         }
     }
 }

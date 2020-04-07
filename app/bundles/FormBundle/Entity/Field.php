@@ -15,6 +15,7 @@ use Doctrine\DBAL\Types\Type;
 use Doctrine\ORM\Mapping as ORM;
 use Mautic\ApiBundle\Serializer\Driver\ApiMetadataDriver;
 use Mautic\CoreBundle\Doctrine\Mapping\ClassMetadataBuilder;
+use Mautic\FormBundle\ProgressiveProfiling\DisplayManager;
 use Mautic\LeadBundle\Entity\Lead;
 
 /**
@@ -866,35 +867,26 @@ class Field
     /**
      * Decide if the field should be displayed based on thr progressive profiling conditions.
      *
-     * @param array|null $submissions
-     * @param Lead       $lead
-     * @param Form       $form
-     * @param int|null   $numberOfDisplayFields
-     * @param array      $viewOnlyFields
+     * @param array|null          $submissions
+     * @param Lead                $lead
+     * @param Form                $form
+     * @param DisplayManager|null $displayManager
      *
      * @return bool
      */
-    public function showForContact($submissions = null, Lead $lead = null, Form $form = null, $numberOfDisplayFields = null, $viewOnlyFields = [])
+    public function showForContact($submissions = null, Lead $lead = null, Form $form = null, DisplayManager $displayManager = null)
     {
         // Always show in the kiosk mode
         if ($form !== null && $form->getInKioskMode() === true) {
             return true;
         }
 
-        if ($form->getProgressiveProfilingLimit() != '') {
-            if (!in_array($this->getType(), $viewOnlyFields) && $form->getProgressiveProfilingLimit() <= $numberOfDisplayFields) {
-                return false;
-            }
-        } elseif ($this->isAlwaysDisplay()) {
-            return true;
-        }
-
         // Hide the field if there is the submission count limit and hide it until the limit is overcame
-        if ($this->showAfterXSubmissions > 0 && $this->showAfterXSubmissions > count($submissions)) {
+        if (!$this->alwaysDisplay && $this->showAfterXSubmissions > 0 && $this->showAfterXSubmissions > count($submissions)) {
             return false;
         }
 
-        if ($this->showWhenValueExists === false) {
+        if (!$this->alwaysDisplay && $this->showWhenValueExists === false) {
             // Hide the field if there is the value condition and if we already know the value for this field
             if ($submissions) {
                 foreach ($submissions as $submission) {
@@ -906,6 +898,14 @@ class Field
 
             // Hide the field if the value is already known from the lead profile
             if ($lead !== null && $this->leadField && !empty($lead->getFieldValue($this->leadField)) && !$this->isAutoFill) {
+                return false;
+            }
+        }
+
+        if ($displayManager && $displayManager->useProgressiveProfilingLimit()) {
+            if ($displayManager->showForField($this)) {
+                return true;
+            } else {
                 return false;
             }
         }

@@ -57,7 +57,7 @@ if (!isset($lead)) {
         <div class="mauticform-innerform">
 
             <?php
-            $numberOfDisplayFields = 0;
+            $displayManager = new \Mautic\FormBundle\ProgressiveProfiling\DisplayManager($form, $viewOnlyFields);
             /** @var \Mautic\FormBundle\Entity\Field $f */
             foreach ($fields as $fieldId => $f):
                 if (isset($formPages['open'][$fieldId])):
@@ -66,7 +66,7 @@ if (!isset($lead)) {
                     echo "\n          <div class=\"mauticform-page-wrapper mauticform-page-$pageCount\" data-mautic-form-page=\"$pageCount\"$lastFieldAttribute>\n";
                 endif;
 
-                if ($f->showForContact($submissions, $lead, $form, $numberOfDisplayFields, $viewOnlyFields)):
+                if ($f->showForContact($submissions, $lead, $form, $displayManager)):
                     if ($f->isCustom()):
                         if (!isset($fieldSettings[$f->getType()])):
                             continue;
@@ -79,7 +79,7 @@ if (!isset($lead)) {
                         if (!$f->isAlwaysDisplay() && !$f->getShowWhenValueExists() && $f->getLeadField() && $f->getIsAutoFill() && $lead && !empty($lead->getFieldValue($f->getLeadField()))) {
                             $f->setType('hidden');
                         } else {
-                            ++$numberOfDisplayFields;
+                            $displayManager->getDisplayCounter()->increaseDisplayedFields();
                         }
                         $template = 'MauticFormBundle:Field:'.$f->getType().'.html.php';
                     endif;
