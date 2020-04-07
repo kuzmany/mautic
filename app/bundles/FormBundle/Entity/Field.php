@@ -148,6 +148,11 @@ class Field
     private $showAfterXSubmissions;
 
     /**
+     * @var bool
+     */
+    private $alwaysDisplay;
+
+    /**
      * Reset properties on clone.
      */
     public function __clone()
@@ -241,6 +246,8 @@ class Field
         $builder->addNullableField('showWhenValueExists', 'boolean', 'show_when_value_exists');
 
         $builder->addNullableField('showAfterXSubmissions', 'integer', 'show_after_x_submissions');
+
+        $builder->addNullableField('alwaysDisplay', Type::BOOLEAN, 'always_display');
     }
 
     /**
@@ -878,6 +885,8 @@ class Field
             if (!in_array($this->getType(), $viewOnlyFields) && $form->getProgressiveProfilingLimit() <= $numberOfDisplayFields) {
                 return false;
             }
+        } elseif ($this->isAlwaysDisplay()) {
+            return true;
         }
 
         // Hide the field if there is the submission count limit and hide it until the limit is overcame
@@ -918,5 +927,21 @@ class Field
     public function isFileType()
     {
         return $this->type === 'file';
+    }
+
+    /**
+     * @return bool
+     */
+    public function isAlwaysDisplay()
+    {
+        return $this->alwaysDisplay;
+    }
+
+    /**
+     * @param bool $alwaysDisplay
+     */
+    public function setAlwaysDisplay($alwaysDisplay)
+    {
+        $this->alwaysDisplay = $alwaysDisplay;
     }
 }
