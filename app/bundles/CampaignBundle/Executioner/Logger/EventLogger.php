@@ -21,9 +21,12 @@ use Mautic\CampaignBundle\Helper\ChannelExtractor;
 use Mautic\CoreBundle\Helper\IpLookupHelper;
 use Mautic\LeadBundle\Entity\Lead;
 use Mautic\LeadBundle\Tracker\ContactTracker;
+use Psr\Log\LoggerInterface;
 
 class EventLogger
 {
+    const CONCURRENT_THREAD_THRESHOLD_SECONDS = 60;
+
     /**
      * @var IpLookupHelper
      */
@@ -50,6 +53,11 @@ class EventLogger
     private $persistQueue;
 
     /**
+     * @var LoggerInterface
+     */
+    private $logger;
+
+    /**
      * @var ArrayCollection
      */
     private $logs;
@@ -66,17 +74,20 @@ class EventLogger
      * @param ContactTracker         $contactTracker
      * @param LeadEventLogRepository $leadEventLogRepository
      * @param LeadRepository         $leadRepository
+     * @param LoggerInterface        $logger
      */
     public function __construct(
         IpLookupHelper $ipLookupHelper,
         ContactTracker $contactTracker,
         LeadEventLogRepository $leadEventLogRepository,
-        LeadRepository $leadRepository
+        LeadRepository $leadRepository,
+        LoggerInterface $logger
     ) {
         $this->ipLookupHelper         = $ipLookupHelper;
         $this->contactTracker         = $contactTracker;
         $this->leadEventLogRepository = $leadEventLogRepository;
         $this->leadRepository         = $leadRepository;
+        $this->logger                 = $logger;
 
         $this->persistQueue = new ArrayCollection();
         $this->logs         = new ArrayCollection();
@@ -132,12 +143,44 @@ class EventLogger
         $log->setDateTriggered(new \DateTime());
         $log->setSystemTriggered(defined('MAUTIC_CAMPAIGN_SYSTEM_TRIGGERED'));
 
+        if (!isset($this->contactRotations[$contact->getId()])) {
+            // Likely a single contact handle such as decision processing
+            $this->hydrateContactRotationsForNewLogs([$contact->getId()], $event->getCampaign()->getId());
+        }
+        // A new contact added with master/slave db may still not have a discernible rotation.
         if (isset($this->contactRotations[$contact->getId()])) {
             $log->setRotation($this->contactRotations[$contact->getId()]);
-        } else {
-            // Likely a single contact handle such as decision processing
-            $rotations = $this->leadRepository->getContactRotations([$contact->getId()], $event->getCampaign()->getId());
-            $log->setRotation($rotations[$contact->getId()]);
+        }
+
+        return $this->deDuplicate($log);
+    }
+
+    /**
+     * Given a new log entry, prevent a duplicate insertion by deferring to a previous event, or incrementing rotation.
+     *
+     * @param LeadEventLog $log
+     *
+     * @return LeadEventLog
+     */
+    private function deDuplicate(LeadEventLog $log)
+    {
+        if (Event::TYPE_DECISION !== $log->getEvent()->getEventType()) {
+            $duplicateLog = $this->leadEventLogRepository->findDuplicate($log);
+            if ($duplicateLog) {
+                // By campaign_rotation this event log already exists.
+                if (abs(time() - $duplicateLog->getDateTriggered()->format('U')) <= self::CONCURRENT_THREAD_THRESHOLD_SECONDS) {
+                    // A concurrent thread, do not repeat/recreate the event as it is unintentional.
+                    $log = $duplicateLog;
+                } else {
+                    // A campaign rearrangement occurred. Increment rotation to allow event repetition.
+                    $this->leadRepository->incrementCampaignRotationForContacts(
+                        [$log->getLead()->getId()],
+                        $log->getCampaign()->getId()
+                    );
+                    $this->hydrateContactRotationsForNewLogs([$log->getLead()->getId()], $log->getCampaign()->getId());
+                    $log->setRotation($this->contactRotations[$log->getLead()->getId()]);
+                }
+            }
         }
 
         return $log;
@@ -234,6 +277,13 @@ class EventLogger
         // Ensure each contact has a log entry to prevent them from being picked up again prematurely
         foreach ($contacts as $contact) {
             $log = $this->buildLogEntry($event, $contact, $isInactiveEntry);
+            if ($log->getId()) {
+                $this->logger->debug(
+                    'CAMPAIGN: '.ucfirst($event->getEventType()).' ID# '.$event->getId().' for contact ID# '.$contact->getId()
+                    .' has already generated log entry ID# '.$log->getId()
+                );
+                continue;
+            }
             $log->setIsScheduled(false);
             $log->setDateTriggered(new \DateTime());
             ChannelExtractor::setChannel($log, $event, $config);
@@ -255,7 +305,8 @@ class EventLogger
      */
     public function hydrateContactRotationsForNewLogs(array $contactIds, $campaignId)
     {
-        $this->contactRotations = $this->leadRepository->getContactRotations($contactIds, $campaignId);
+        $rotations              = $this->leadRepository->getContactRotations($contactIds, $campaignId);
+        $this->contactRotations = array_replace($this->contactRotations, $rotations);
     }
 
     private function persistPendingAndInsertIntoLogStack()

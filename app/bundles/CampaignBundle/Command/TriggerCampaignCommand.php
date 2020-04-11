@@ -11,6 +11,8 @@
 
 namespace Mautic\CampaignBundle\Command;
 
+use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
+use Doctrine\ORM\ORMException;
 use Mautic\CampaignBundle\CampaignEvents;
 use Mautic\CampaignBundle\Entity\Campaign;
 use Mautic\CampaignBundle\Entity\CampaignRepository;
@@ -373,12 +375,19 @@ class TriggerCampaignCommand extends ModeratedCommand
                 $this->executeInactive();
             }
         } catch (\Exception $exception) {
+            $this->logger->error('CAMPAIGN '.$this->campaign->getId().': '.$exception->getMessage());
             if ('prod' !== MAUTIC_ENV) {
                 // Throw the exception for dev/test mode
                 throw $exception;
             }
-
-            $this->logger->error('CAMPAIGN: '.$exception->getMessage());
+            if (
+                $exception instanceof UniqueConstraintViolationException
+                || ($exception instanceof ORMException && 'The EntityManager is closed.' === $exception->getMessage())
+            ) {
+                // This is the result of a faulty query or integrity constraint violation.
+                // Better to throw this exception to prevent likely errors with subsequent batches.
+                throw $exception;
+            }
         }
 
         // Don't detach in tests since this command will be ran multiple times in the same process
