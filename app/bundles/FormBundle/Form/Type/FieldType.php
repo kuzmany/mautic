@@ -14,7 +14,6 @@ namespace Mautic\FormBundle\Form\Type;
 use Mautic\CoreBundle\Form\EventListener\CleanFormSubscriber;
 use Mautic\LeadBundle\Helper\FormFieldHelper;
 use Symfony\Component\Form\AbstractType;
-use Symfony\Component\Form\Extension\Core\Type\HiddenType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolverInterface;
 use Symfony\Component\Translation\TranslatorInterface;
@@ -545,13 +544,6 @@ class FieldType extends AbstractType
                     break;
             }
         }
-        $builder->add(
-            'parentId',
-            HiddenType::class,
-            [
-                'label'=> false,
-            ]
-        );
 
         $builder->add(
             'conditions',

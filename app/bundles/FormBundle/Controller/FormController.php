@@ -439,7 +439,6 @@ class FormController extends CommonFormController
             [
                 'viewParameters' => [
                     'fields'         => $fieldHelper->getChoiceList($customComponents['fields']),
-                    'viewOnlyFields' => $customComponents['viewOnlyFields'],
                     'actions'        => $customComponents['choices'],
                     'actionSettings' => $customComponents['actions'],
                     'formFields'     => $modifiedFields,
@@ -703,6 +702,7 @@ class FormController extends CommonFormController
         // Get field and action settings
         $fieldHelper     = $this->get('mautic.helper.form.field_helper');
         $availableFields = $fieldHelper->getChoiceList($customComponents['fields']);
+
         if ($cleanSlate) {
             //clean slate
             $this->clearSessionComponents($objectId);
@@ -815,7 +815,6 @@ class FormController extends CommonFormController
             [
                 'viewParameters' => [
                     'fields'             => $availableFields,
-                    'viewOnlyFields'     => $customComponents['viewOnlyFields'],
                     'actions'            => $customComponents['choices'],
                     'actionSettings'     => $customComponents['actions'],
                     'formFields'         => $modifiedFields,

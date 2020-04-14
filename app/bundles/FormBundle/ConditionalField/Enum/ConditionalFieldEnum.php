@@ -13,13 +13,5 @@ namespace Mautic\FormBundle\ConditionalField\Enum;
 
 class ConditionalFieldEnum
 {
-    private static $conditionalFieldTypes = ['select', 'country'];
-
-    /**
-     * @return array
-     */
-    public static function getConditionalFieldTypes()
-    {
-        return self::$conditionalFieldTypes;
-    }
+    public static $conditionalFieldTypes = ['select', 'country'];
 }

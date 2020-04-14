@@ -112,7 +112,7 @@ class FormFieldConditionType extends AbstractType
     {
         $fields = $this->fieldModel->getSessionFields($formId);
         foreach ($fields as $key => $field) {
-            if (!in_array($field['type'], ConditionalFieldEnum::getConditionalFieldTypes())) {
+            if (!in_array($field['type'], ConditionalFieldEnum::$conditionalFieldTypes)) {
                 unset($fields[$key]);
             } elseif ($field['alias'] === $fieldAlias) {
                 unset($fields[$key]);
