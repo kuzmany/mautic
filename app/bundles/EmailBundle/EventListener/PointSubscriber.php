@@ -129,6 +129,6 @@ class PointSubscriber extends CommonSubscriber
             return;
         }
 
-        $this->pointModel->triggerAction('email.send', $event->getEmail(), null, $lead);
+        $this->pointModel->triggerAction('email.send', $event->getEmail(), null, $lead, true);
     }
 }
