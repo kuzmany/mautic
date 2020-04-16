@@ -32,6 +32,11 @@ class PointSubscriber extends CommonSubscriber
     protected $pointModel;
 
     /**
+     * @var array
+     */
+    private $triggered = [];
+
+    /**
      * PointSubscriber constructor.
      *
      * @param PointModel $pointModel
@@ -129,6 +134,10 @@ class PointSubscriber extends CommonSubscriber
             return;
         }
 
-        $this->pointModel->triggerAction('email.send', $event->getEmail(), null, $lead, true);
+        if (!isset($this->triggered[$lead->getId()][$event->getEmail()->getId()])) {
+            $this->pointModel->triggerAction('email.send', $event->getEmail(), null, $lead, true);
+        }
+
+        $this->triggered[$lead->getId()][$event->getEmail()->getId()] = true;
     }
 }
