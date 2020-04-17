@@ -45,13 +45,13 @@ class Version20200331160919 extends AbstractMauticMigration
         $formTable = $schema->getTable($this->prefix.'forms');
 
         if (!$formTable->hasColumn('progressive_profiling_limit')) {
-            $this->addSql('ALTER TABLE '.$this->prefix.'forms ADD progressive_profiling_limit INT(11)  NOT NULL DEFAULT 0;');
+            $this->addSql('ALTER TABLE '.$this->prefix.'forms ADD progressive_profiling_limit INT(11) DEFAULT NULL;');
         }
 
         $fieldsTable = $schema->getTable($this->prefix.'form_fields');
 
         if (!$fieldsTable->hasColumn('always_display')) {
-            $this->addSql('ALTER TABLE '.$this->prefix.'forms ADD always_display tinyint(1) DEFAULT NULL');
+            $this->addSql('ALTER TABLE '.$this->prefix.'form_fields ADD always_display tinyint(1) DEFAULT NULL');
         }
     }
 }
