@@ -210,6 +210,14 @@ class ZohoIntegration extends CrmAbstractIntegration
             /** @var array $objects */
             foreach ($objects as $recordId => $entityData) {
                 $isModified = false;
+
+                // Normalize
+                foreach ($entityData as $key=>$value) {
+                    if (is_array($value) && isset($value['name'])) {
+                        $entityData[$key] = $value['name'];
+                    }
+                }
+
                 if ('Accounts' === $object) {
                     $recordId = $entityData['id'];
                     // first try to find integration entity
@@ -401,15 +409,14 @@ class ZohoIntegration extends CrmAbstractIntegration
 
                     if ($entity) {
                         $result[] = $entity->getEmail();
-
                         // Associate lead company
-                        if (!empty($entityData['AccountName'])
-                            && $entityData['AccountName'] !== $this->translator->trans(
+                        if (!empty($entityData['Account_Name'])
+                            && $entityData['Account_Name'] !== $this->translator->trans(
                                 'mautic.integration.form.lead.unknown'
                             )
                         ) {
                             $company = IdentifyCompanyHelper::identifyLeadsCompany(
-                                ['company' => $entityData['AccountName']],
+                                ['company' => $entityData['Account_Name']],
                                 null,
                                 $this->companyModel
                             );
