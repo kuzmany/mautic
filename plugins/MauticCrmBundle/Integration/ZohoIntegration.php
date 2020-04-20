@@ -409,6 +409,7 @@ class ZohoIntegration extends CrmAbstractIntegration
 
                     if ($entity) {
                         $result[] = $entity->getEmail();
+
                         // Associate lead company
                         if (!empty($entityData['Account_Name'])
                             && $entityData['Account_Name'] !== $this->translator->trans(
