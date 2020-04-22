@@ -324,6 +324,9 @@ class FieldType extends AbstractType
                 YesNoButtonGroupType::class,
                 [
                     'label' => 'mautic.form.field.form.always_display',
+                    'attr'  => [
+                        'tooltip' => 'mautic.form.field.form.always_display.tooltip',
+                    ],
                     'data'  => $alwaysDisplay,
                 ]
             );
