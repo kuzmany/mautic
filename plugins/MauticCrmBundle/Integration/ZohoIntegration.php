@@ -20,9 +20,11 @@ use Mautic\PluginBundle\Entity\IntegrationEntityRepository;
 use Mautic\PluginBundle\Exception\ApiErrorException;
 use MauticPlugin\MauticCrmBundle\Api\Zoho\Mapper;
 use MauticPlugin\MauticCrmBundle\Api\ZohoApi;
+use MauticPlugin\MauticCrmBundle\Helper\IntegrationConfigHelper;
 use Symfony\Component\Console\Helper\ProgressBar;
 use Symfony\Component\Console\Output\ConsoleOutput;
 use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\FormBuilder;
 
 /**
@@ -267,7 +269,7 @@ class ZohoIntegration extends CrmAbstractIntegration
                         }
 
                         if (count($newMatchedFields)) {
-                            $this->companyModel->setFieldValues($entity, $newMatchedFields, false);
+                            $this->companyModel->setFieldValues($entity, $newMatchedFields, IntegrationConfigHelper::hasOverwriteWithBlank($config));
                             $this->companyModel->saveEntity($entity, false);
                             $isModified = true;
                         }
@@ -322,7 +324,7 @@ class ZohoIntegration extends CrmAbstractIntegration
                             }
                         }
                         if (count($newMatchedFields)) {
-                            $this->leadModel->setFieldValues($entity, $newMatchedFields, false, false);
+                            $this->leadModel->setFieldValues($entity, $newMatchedFields, IntegrationConfigHelper::hasOverwriteWithBlank($config), false);
                             $this->leadModel->saveEntity($entity, false);
                             $isModified = true;
                         }
@@ -396,9 +398,8 @@ class ZohoIntegration extends CrmAbstractIntegration
                                 unset($newMatchedFields[$k]);
                             }
                         }
-
                         if (count($newMatchedFields)) {
-                            $this->leadModel->setFieldValues($entity, $newMatchedFields, false, false);
+                            $this->leadModel->setFieldValues($entity, $newMatchedFields, IntegrationConfigHelper::hasOverwriteWithBlank($config), false);
                             $this->leadModel->saveEntity($entity, false);
                             $isModified = true;
                         }
@@ -725,6 +726,22 @@ class ZohoIntegration extends CrmAbstractIntegration
                     'required'    => false,
                 ]
             );
+
+            $builder->add(
+                'overwriteWithBlank',
+                ChoiceType::class,
+                [
+                    'choices'     => [
+                        'overwriteWithBlank' => 'mautic.zoho.form.blanks',
+                    ],
+                    'expanded'    => true,
+                    'multiple'    => true,
+                    'label'       => 'mautic.zoho.form.blanks.label',
+                    'label_attr'  => ['class' => 'control-label'],
+                    'empty_value' => false,
+                    'required'    => false,
+                ]
+            );
         }
         if ($formArea === 'keys') {
             $builder->add(
@@ -1028,6 +1045,7 @@ class ZohoIntegration extends CrmAbstractIntegration
 
         // update leads and contacts
         $mapper = new Mapper($availableFields);
+        $mapper->setConfig($config);
         foreach (['Leads', 'Contacts'] as $zObject) {
             $counter = 1;
             $mapper->setObject($zObject);
@@ -1127,6 +1145,7 @@ class ZohoIntegration extends CrmAbstractIntegration
 
         $mapper = new Mapper($availableFields);
         $mapper->setObject($zObject);
+        $mapper->setConfig($config);
 
         $integrationEntityRepo = $this->em->getRepository('MauticPluginBundle:IntegrationEntity');
         $integrationId         = $integrationEntityRepo->getIntegrationsEntityId('Zoho', $zObject, 'lead', $lead->getId());
