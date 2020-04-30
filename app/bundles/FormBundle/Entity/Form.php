@@ -268,8 +268,9 @@ class Form extends FormEntity
         ]));
 
         $metadata->addPropertyConstraint('progressiveProfilingLimit', new Assert\GreaterThan([
-            'value'  => 0,
-            'groups' => ['progressiveProfilingLimit'],
+            'value'   => 0,
+            'message' => 'mautic.form.form.progressive_profiling_limit.error',
+            'groups'  => ['progressiveProfilingLimit'],
         ]));
     }
 
