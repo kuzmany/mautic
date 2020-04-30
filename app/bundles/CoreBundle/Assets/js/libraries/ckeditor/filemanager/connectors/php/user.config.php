@@ -44,8 +44,13 @@ try {
     $container->get('event_dispatcher')->dispatch(KernelEvents::REQUEST, $event);
 
     $session       = $container->get('session');
+    $userDir       = $session->get('mautic.imagepath', false);
+    $baseDir       = $session->get('mautic.basepath', false);
+    $docRoot       = $session->get('mautic.docroot', false);
+
     $securityToken = $container->get('security.token_storage');
     $token         = $securityToken->getToken();
+    session_abort();
     $authenticated = ($token instanceof TokenInterface) ? count($token->getRoles()) : false;
 } catch (\Exception $exception) {
     error_log($exception);
@@ -81,10 +86,6 @@ function auth()
 $fm = new Filemanager();
 
 if ($authenticated) {
-    $userDir = $session->get('mautic.imagepath', false);
-    $baseDir = $session->get('mautic.basepath', false);
-    $docRoot = $session->get('mautic.docroot', false);
-
     if (substr($userDir, -1) !== '/') {
         $userDir .= '/';
     }
