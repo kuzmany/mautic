@@ -24,6 +24,14 @@ return [
                 'path'       => '/messages/{objectAction}/{objectId}',
                 'controller' => 'MauticChannelBundle:Message:execute',
             ],
+            'mautic_channel_batch_contact_set' => [
+                'path'       => '/channels/batch/contact/set',
+                'controller' => 'MauticChannelBundle:BatchContact:set',
+            ],
+            'mautic_channel_batch_contact_view' => [
+                'path'       => '/channels/batch/contact/view',
+                'controller' => 'MauticChannelBundle:BatchContact:index',
+            ],
         ],
         'api' => [
             'mautic_api_messagetandard' => [
@@ -86,6 +94,13 @@ return [
                     'mautic.lead.model.company_report_data',
                 ],
             ],
+            'mautic.channel.button.subscriber' => [
+                'class'     => \Mautic\ChannelBundle\EventListener\ButtonSubscriber::class,
+                'arguments' => [
+                    'router',
+                    'translator',
+                ],
+            ],
         ],
         'forms' => [
             \Mautic\ChannelBundle\Form\Type\MessageType::class => [
@@ -136,6 +151,21 @@ return [
                     'mautic.lead.model.lead',
                     'mautic.lead.model.company',
                     'mautic.helper.core_parameters',
+                ],
+            ],
+            'mautic.channel.model.channel.action' => [
+                'class'     => \Mautic\ChannelBundle\Model\ChannelActionModel::class,
+                'arguments' => [
+                    'mautic.lead.model.lead',
+                    'mautic.lead.model.dnc',
+                    'translator',
+                ],
+            ],
+            'mautic.channel.model.frequency.action' => [
+                'class'     => \Mautic\ChannelBundle\Model\FrequencyActionModel::class,
+                'arguments' => [
+                    'mautic.lead.model.lead',
+                    'mautic.lead.repository.frequency_rule',
                 ],
             ],
         ],

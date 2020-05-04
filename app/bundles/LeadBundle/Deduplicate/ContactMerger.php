@@ -11,6 +11,7 @@
 
 namespace Mautic\LeadBundle\Deduplicate;
 
+use Mautic\CoreBundle\Helper\ArrayHelper;
 use Mautic\LeadBundle\Deduplicate\Exception\SameContactException;
 use Mautic\LeadBundle\Deduplicate\Exception\ValueNotMergeableException;
 use Mautic\LeadBundle\Deduplicate\Helper\MergeValueHelper;
@@ -127,8 +128,13 @@ class ContactMerger
             $winner->setLastActive($loser->getLastActive());
         }
 
-        // The winner should keep the oldest date identified timestamp
-        if ($loser->getDateIdentified() < $winner->getDateIdentified()) {
+        /*
+         * The winner should keep the oldest date identified timestamp
+         * as long as the loser's date identified is not null.
+         * Alternatively, if the winner's date identified is null,
+         * use the loser's date identified (doesn't matter if it is null).
+         */
+        if (($loser->getDateIdentified() !== null && $loser->getDateIdentified() < $winner->getDateIdentified()) || $winner->getDateIdentified() === null) {
             $winner->setDateIdentified($loser->getDateIdentified());
         }
 
@@ -193,13 +199,20 @@ class ContactMerger
             }
 
             try {
-                $newValue = MergeValueHelper::getMergeValue($newestFields[$field], $oldestFields[$field], $winner->getFieldValue($field));
+                $defaultValue = ArrayHelper::getValue('default_value', $winner->getField($field));
+                $newValue     = MergeValueHelper::getMergeValue(
+                    $newestFields[$field],
+                    $oldestFields[$field],
+                    $winner->getFieldValue($field),
+                    $defaultValue,
+                    $newest->isAnonymous()
+                );
                 $winner->addUpdatedField($field, $newValue);
 
                 $fromValue = empty($oldestFields[$field]) ? 'empty' : $oldestFields[$field];
-                $this->logger->debug("CONTACT: Updated $field from $fromValue to $newValue for {$winner->getId()}");
+                $this->logger->debug("CONTACT: Updated {$field} from {$fromValue} to {$newValue} for {$winner->getId()}");
             } catch (ValueNotMergeableException $exception) {
-                $this->logger->info("CONTACT: $field is not mergeable for {$winner->getId()} - ".$exception->getMessage());
+                $this->logger->info("CONTACT: {$field} is not mergeable for {$winner->getId()} - {$exception->getMessage()}");
             }
         }
 
