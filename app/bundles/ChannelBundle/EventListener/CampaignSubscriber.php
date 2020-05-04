@@ -16,14 +16,17 @@ use Mautic\CampaignBundle\CampaignEvents;
 use Mautic\CampaignBundle\Entity\Event;
 use Mautic\CampaignBundle\Entity\LeadEventLog;
 use Mautic\CampaignBundle\Event\CampaignBuilderEvent;
+use Mautic\CampaignBundle\Event\ConditionEvent;
 use Mautic\CampaignBundle\Event\PendingEvent;
 use Mautic\CampaignBundle\EventCollector\Accessor\Event\ActionAccessor;
 use Mautic\CampaignBundle\EventCollector\EventCollector;
 use Mautic\CampaignBundle\Executioner\Dispatcher\ActionDispatcher;
 use Mautic\CampaignBundle\Executioner\Exception\NoContactsFoundException;
 use Mautic\ChannelBundle\ChannelEvents;
+use Mautic\ChannelBundle\Form\Type\ChannelsItemsType;
 use Mautic\ChannelBundle\Model\MessageModel;
 use Mautic\ChannelBundle\PreferenceBuilder\PreferenceBuilder;
+use Mautic\PageBundle\Model\PageModel;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\Translation\TranslatorInterface;
@@ -79,6 +82,11 @@ class CampaignSubscriber implements EventSubscriberInterface
     protected $messageChannels = [];
 
     /**
+     * @var PageModel
+     */
+    private $pageModel;
+
+    /**
      * CampaignSubscriber constructor.
      *
      * @param MessageModel        $messageModel
@@ -86,19 +94,22 @@ class CampaignSubscriber implements EventSubscriberInterface
      * @param EventCollector      $collector
      * @param LoggerInterface     $logger
      * @param TranslatorInterface $translator
+     * @param PageModel           $pageModel
      */
     public function __construct(
         MessageModel $messageModel,
         ActionDispatcher $actionDispatcher,
         EventCollector $collector,
         LoggerInterface $logger,
-        TranslatorInterface $translator
+        TranslatorInterface $translator,
+        PageModel $pageModel
     ) {
         $this->messageModel     = $messageModel;
         $this->actionDispatcher = $actionDispatcher;
         $this->eventCollector   = $collector;
         $this->logger           = $logger;
         $this->translator       = $translator;
+        $this->pageModel        = $pageModel;
     }
 
     /**
@@ -107,8 +118,9 @@ class CampaignSubscriber implements EventSubscriberInterface
     public static function getSubscribedEvents()
     {
         return [
-            CampaignEvents::CAMPAIGN_ON_BUILD       => ['onCampaignBuild', 0],
-            ChannelEvents::ON_CAMPAIGN_BATCH_ACTION => ['onCampaignTriggerAction', 0],
+            CampaignEvents::CAMPAIGN_ON_BUILD            => ['onCampaignBuild', 0],
+            ChannelEvents::ON_CAMPAIGN_BATCH_ACTION      => ['onCampaignTriggerAction', 0],
+            ChannelEvents::ON_CAMPAIGN_TRIGGER_CONDITION => ['onCampaignTriggerCondition', 0],
         ];
     }
 
@@ -145,6 +157,39 @@ class CampaignSubscriber implements EventSubscriberInterface
             ],
         ];
         $event->addAction('message.send', $action);
+
+        $trigger = [
+            'label'       => 'mautic.campaign.channel.has_click',
+            'description' => 'mautic.campaign.channel.has_click.desc',
+            'formType'    => ChannelsItemsType::class,
+            'eventName'   => ChannelEvents::ON_CAMPAIGN_TRIGGER_CONDITION,
+        ];
+        $event->addCondition('channel.has_click', $trigger);
+    }
+
+    /**
+     * @param ConditionEvent $event
+     */
+    public function onCampaignTriggerCondition(ConditionEvent $event)
+    {
+        $contact       = $event->getLead();
+        $config        = $event->getConfig();
+        $channels      = $this->messageModel->getChannels();
+        $channelsItems = [];
+        foreach ($channels as $channel=>$channelConfig) {
+            if (!empty($config[$channel])) {
+                $channelsItems[$channel] = $config[$channel];
+            }
+        }
+        $includeUrls     = (array) $config['includeUrls']['list'];
+        $excludeUrls     = (array) $config['excludeUrls']['list'];
+        $hitRepo         = $this->pageModel->getHitRepository();
+        $hits            = $hitRepo->getContactIdsFromHitsBySourceAndSourceId($contact->getId(), $channelsItems, $includeUrls, $excludeUrls);
+        if (!empty($hits)) {
+            return $event->pass();
+        } else {
+            return $event->fail();
+        }
     }
 
     /**
