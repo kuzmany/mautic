@@ -373,6 +373,13 @@ class ReportSubscriber extends CommonSubscriber
                         )
                         ->where('cut2.channel = \'email\' AND ph.source = \'email\'')
                         ->groupBy('cut2.channel_id, ph.lead_id');
+
+                    if ($event->hasFilter('e.id')) {
+                        $filterParam = $event->createParameterName();
+                        $qbcut->andWhere($qb->expr()->in('cut2.channel_id', ":{$filterParam}"));
+                        $qb->setParameter($filterParam, $event->getFilterValues('e.id'), Connection::PARAM_INT_ARRAY);
+                    }
+
                     $qb->leftJoin(
                         'e',
                         sprintf('(%s)', $qbcut->getSQL()),
