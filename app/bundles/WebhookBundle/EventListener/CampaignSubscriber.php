@@ -14,11 +14,13 @@ namespace Mautic\WebhookBundle\EventListener;
 use Mautic\CampaignBundle\CampaignEvents;
 use Mautic\CampaignBundle\Event as Events;
 use Mautic\CampaignBundle\Event\CampaignExecutionEvent;
-use Mautic\CoreBundle\EventListener\CommonSubscriber;
+use Mautic\WebhookBundle\Event\SendWebhookEvent;
 use Mautic\WebhookBundle\Helper\CampaignHelper;
 use Mautic\WebhookBundle\WebhookEvents;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
+use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
-class CampaignSubscriber extends CommonSubscriber
+class CampaignSubscriber implements EventSubscriberInterface
 {
     /**
      * @var CampaignHelper
@@ -26,11 +28,18 @@ class CampaignSubscriber extends CommonSubscriber
     protected $campaignHelper;
 
     /**
-     * @param CampaignHelper $campaignHelper
+     * @var EventDispatcherInterface
      */
-    public function __construct(CampaignHelper $campaignHelper)
+    private $dispatcher;
+
+    /**
+     * @param CampaignHelper           $campaignHelper
+     * @param EventDispatcherInterface $dispatcher
+     */
+    public function __construct(CampaignHelper $campaignHelper, EventDispatcherInterface $dispatcher)
     {
         $this->campaignHelper = $campaignHelper;
+        $this->dispatcher     = $dispatcher;
     }
 
     /**
@@ -55,6 +64,12 @@ class CampaignSubscriber extends CommonSubscriber
             try {
                 $this->campaignHelper->fireWebhook($event->getConfig(), $event->getLead());
                 $event->setResult(true);
+
+                if ($this->dispatcher->hasListeners(WebhookEvents::ON_WEBHOOK_RESPONSE)) {
+                    $sendWebhookEvent = new SendWebhookEvent($this->campaignHelper->getResponse(), $event->getLead());
+                    $this->dispatcher->dispatch(WebhookEvents::ON_WEBHOOK_RESPONSE, $sendWebhookEvent);
+                    unset($sendWebhookEvent);
+                }
             } catch (\Exception $e) {
                 $event->setFailed($e->getMessage());
             }
