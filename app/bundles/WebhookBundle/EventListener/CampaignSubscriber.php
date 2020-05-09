@@ -17,6 +17,7 @@ use Mautic\CampaignBundle\Event\CampaignExecutionEvent;
 use Mautic\WebhookBundle\Event\SendWebhookEvent;
 use Mautic\WebhookBundle\Helper\CampaignHelper;
 use Mautic\WebhookBundle\WebhookEvents;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 class CampaignSubscriber implements EventSubscriberInterface
@@ -27,11 +28,18 @@ class CampaignSubscriber implements EventSubscriberInterface
     protected $campaignHelper;
 
     /**
-     * @param CampaignHelper $campaignHelper
+     * @var EventDispatcherInterface
      */
-    public function __construct(CampaignHelper $campaignHelper)
+    private $dispatcher;
+
+    /**
+     * @param CampaignHelper           $campaignHelper
+     * @param EventDispatcherInterface $dispatcher
+     */
+    public function __construct(CampaignHelper $campaignHelper, EventDispatcherInterface $dispatcher)
     {
         $this->campaignHelper = $campaignHelper;
+        $this->dispatcher     = $dispatcher;
     }
 
     /**
