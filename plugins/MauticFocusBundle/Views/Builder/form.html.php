@@ -54,22 +54,23 @@ if (empty($preview)):
             if (message) {
                 document.getElementById('mauticform<?php echo $formName ?>_' + messageType).innerHTML = message;
             }
+            if(messageType != 'message') {
+                setTimeout(function () {
+                    if (headline.length) {
+                        <?php if ($style == 'bar'): ?>
+                        headline[0].style.display = "inline-block";
+                        <?php else : ?>
+                        headline[0].style.display = "block";
+                        <?php endif; ?>
+                    }
+                    if (tagline.length) {
+                        tagline[0].style.display = "inherit";
+                    }
 
-            setTimeout(function () {
-                if (headline.length) {
-                    <?php if ($style == 'bar'): ?>
-                    headline[0].style.display = "inline-block";
-                    <?php else : ?>
-                    headline[0].style.display = "block";
-                    <?php endif; ?>
-                }
-                if (tagline.length) {
-                    tagline[0].style.display = "inherit";
-                }
-
-                innerForm[0].style.display = "inherit";
-                document.getElementById('mauticform<?php echo $formName ?>_' + messageType).innerHTML = '';
-            }, (messageType == 'error') ? 1500 : 5000);
+                    innerForm[0].style.display = "inherit";
+                    document.getElementById('mauticform<?php echo $formName ?>_' + messageType).innerHTML = '';
+                }, (messageType == 'error') ? 1500 : 5000);
+            }
         }
         if (typeof MauticFormCallback == 'undefined') {
             var MauticFormCallback = {};
