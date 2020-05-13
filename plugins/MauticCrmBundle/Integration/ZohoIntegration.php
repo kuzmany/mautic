@@ -11,6 +11,7 @@
 
 namespace MauticPlugin\MauticCrmBundle\Integration;
 
+use Mautic\CoreBundle\Helper\ArrayHelper;
 use Mautic\FormBundle\Entity\Form;
 use Mautic\LeadBundle\Entity\Company;
 use Mautic\LeadBundle\Entity\Lead;
@@ -1037,17 +1038,32 @@ class ZohoIntegration extends CrmAbstractIntegration
         }
         unset($leadsToCreate);
 
+        // If exists in Zoho, but not exists integration entity
+        foreach (['Leads', 'Contacts'] as $zObject) {
+            foreach ($leadsToCreateInZ as $key=>$lead) {
+                $existingPerson = $this->getExistingRecord('Email', $lead['email'], $zObject);
+                if (!empty($existingPerson) && isset($existingPerson['id'])) {
+                    $leadsToUpdateInZ[$key]                          = $leadsToCreateInZ[$key];
+                    $leadsToUpdateInZ[$key]['existingPerson']        = $existingPerson;
+                    $leadsToUpdateInZ[$key]['integration_entity']    = $zObject;
+                    $leadsToUpdateInZ[$key]['integration_entity_id'] = (string) $existingPerson['id'];
+                    unset($leadsToCreateInZ[$key]);
+                    continue;
+                }
+            }
+        }
+
         if (count($integrationEntities)) {
             // Persist updated entities if applicable
             $integrationEntityRepo->saveEntities($integrationEntities);
             $this->em->clear(IntegrationEntity::class);
         }
 
-        // update leads and contacts
-        $mapper = new Mapper($availableFields);
-        $mapper->setConfig($config);
         foreach (['Leads', 'Contacts'] as $zObject) {
             $counter = 1;
+            // update leads and contacts
+            $mapper = new Mapper($availableFields);
+            $mapper->setConfig($config);
             $mapper->setObject($zObject);
             foreach ($leadsToUpdateInZ as $email => $lead) {
                 if ($zObject !== $lead['integration_entity']) {
@@ -1058,9 +1074,10 @@ class ZohoIntegration extends CrmAbstractIntegration
                     $progress->advance();
                 }
 
-                $existingPerson           = $this->getExistingRecord('Email', $lead['email'], $zObject);
-                $objectFields             = $this->prepareFieldsForPush($availableFields[$zObject]);
-                $fieldsToUpdate[$zObject] = $this->getBlankFieldsToUpdate($fieldsToUpdate[$zObject], $existingPerson, $objectFields, $config);
+                $existInZohoWihtoutIntegrationEntity = isset($lead['existingPerson']);
+                $existingPerson                      = isset($lead['existingPerson']) ? $lead['existingPerson'] : $this->getExistingRecord('Email', $lead['email'], $zObject);
+                $objectFields                        = $this->prepareFieldsForPush($availableFields[$zObject]);
+                $fieldsToUpdate[$zObject]            = $this->getBlankFieldsToUpdate($fieldsToUpdate[$zObject], $existingPerson, $objectFields, $config);
 
                 $totalUpdated += $mapper
                     ->setMappedFields($fieldsToUpdate[$zObject])
@@ -1070,13 +1087,13 @@ class ZohoIntegration extends CrmAbstractIntegration
 
                 // ONLY 100 RECORDS CAN BE SENT AT A TIME
                 if ($maxRecords === $counter) {
-                    $this->updateContactInZoho($mapper, $zObject, $totalUpdated, $totalErrors);
+                    $this->updateContactInZoho($mapper, $zObject, $totalUpdated, $totalErrors, $existInZohoWihtoutIntegrationEntity);
                     $counter = 1;
                 }
             }
 
             if ($counter > 1) {
-                $this->updateContactInZoho($mapper, $zObject, $totalUpdated, $totalErrors);
+                $this->updateContactInZoho($mapper, $zObject, $totalUpdated, $totalErrors, $existInZohoWihtoutIntegrationEntity);
             }
         }
 
@@ -1136,14 +1153,21 @@ class ZohoIntegration extends CrmAbstractIntegration
         $fieldsToUpdate['Leads']    = array_intersect_key($config['leadFields'], array_flip($fieldsToUpdate['Leads']));
         $fieldsToUpdate['Contacts'] = array_intersect_key($config['leadFields'], array_flip($fieldsToUpdate['Contacts']));
         $objectFields               = $this->prepareFieldsForPush($availableFields[$zObject]);
-        $existingPerson             = $this->getExistingRecord('Email', $lead->getEmail(), $zObject);
-        $fieldsToUpdate[$zObject]   = $this->getBlankFieldsToUpdate($fieldsToUpdate[$zObject], $existingPerson, $objectFields, $config);
 
         if (empty($config['leadFields'])) {
             return [];
         }
 
-        $mapper = new Mapper($availableFields);
+        foreach (['Leads', 'Contacts'] as $zObjectForExistingPerson) {
+            $existingPerson             = $this->getExistingRecord('Email', $lead->getEmail(), $zObjectForExistingPerson);
+            if (!empty($existingPerson)) {
+                $zObject = $zObjectForExistingPerson;
+                break;
+            }
+        }
+
+        $fieldsToUpdate[$zObject]   = $this->getBlankFieldsToUpdate($fieldsToUpdate[$zObject], $existingPerson, $objectFields, $config);
+        $mapper                     = new Mapper($availableFields);
         $mapper->setObject($zObject);
         $mapper->setConfig($config);
 
@@ -1326,11 +1350,15 @@ class ZohoIntegration extends CrmAbstractIntegration
      * @param string $object
      * @param int    $counter
      * @param int    $errorCounter
+     * @param bool   $createIntegrationEntity
+     *
+     * @throws ApiErrorException
+     * @throws \MauticPlugin\MauticCrmBundle\Api\Zoho\Exception\MatchingKeyNotFoundException
      */
-    private function updateContactInZoho(Mapper $mapper, $object, &$counter, &$errorCounter)
+    private function updateContactInZoho(Mapper $mapper, $object, &$counter, &$errorCounter, $createIntegrationEntity = false)
     {
         $response     = $this->getApiHelper()->updateLead($mapper->getArray(), $object);
-        $failed       = $this->consumeResponse($response, $object, false, $mapper);
+        $failed       = $this->consumeResponse($response, $object, $createIntegrationEntity, $mapper);
         $counter -= $failed;
         $errorCounter += $failed;
     }

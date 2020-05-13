@@ -90,7 +90,7 @@ class Mapper
     public function setContact(array $contact)
     {
         foreach ($contact as $field => &$value) {
-            if (strpos($value, '|') !== false) {
+            if (is_string($value) && strpos($value, '|') !== false) {
                 $value = explode('|', $value);
             }
         }
