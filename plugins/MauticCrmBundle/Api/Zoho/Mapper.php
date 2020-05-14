@@ -141,7 +141,10 @@ class Mapper
                 $mapped   = 1;
                 $apiField = $field['api_name'];
                 $apiValue = $this->contact[$mauticField];
-
+                // skip If required field is empty
+                if (!empty($field['required']) && $apiValue == '') {
+                    return 0;
+                }
                 $objectMappedValues[$apiField] = $apiValue;
             }
 

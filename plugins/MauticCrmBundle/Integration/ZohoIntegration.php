@@ -930,15 +930,6 @@ class ZohoIntegration extends CrmAbstractIntegration
         $totalToCreate = $integrationEntityRepo->findLeadsToCreate('Zoho', $fields, false, $params['start'], $params['end']);
         $totalCount    = $totalToCreate + $totalToUpdate;
 
-        if (defined('IN_MAUTIC_CONSOLE')) {
-            // start with update
-            if ($totalToUpdate + $totalToCreate) {
-                $output = new ConsoleOutput();
-                $output->writeln("About $totalToUpdate to update and about $totalToCreate to create/update");
-                $progress = new ProgressBar($output, $totalCount);
-            }
-        }
-
         // Start with contacts so we know who is a contact when we go to process converted leads
         $leadsToCreateInZ    = [];
         $leadsToUpdateInZ    = [];
@@ -1059,10 +1050,22 @@ class ZohoIntegration extends CrmAbstractIntegration
             $this->em->clear(IntegrationEntity::class);
         }
 
+        $totalToCreate = count($leadsToCreateInZ);
+        $totalToUpdate = count($leadsToUpdateInZ);
+
+        if (defined('IN_MAUTIC_CONSOLE')) {
+            // start with update
+            if ($totalToUpdate + $totalToCreate) {
+                $output = new ConsoleOutput();
+                $output->writeln("About $totalToUpdate to update and about $totalToCreate to create/update");
+                $progress = new ProgressBar($output, $totalCount);
+            }
+        }
+
+        // update leads and contacts
         foreach (['Leads', 'Contacts'] as $zObject) {
             $counter = 1;
-            // update leads and contacts
-            $mapper = new Mapper($availableFields);
+            $mapper  = new Mapper($availableFields);
             $mapper->setConfig($config);
             $mapper->setObject($zObject);
             foreach ($leadsToUpdateInZ as $email => $lead) {
@@ -1100,6 +1103,8 @@ class ZohoIntegration extends CrmAbstractIntegration
         // create leads and contacts
         foreach (['Leads', 'Contacts'] as $zObject) {
             $counter = 1;
+            $mapper  = new Mapper($availableFields);
+            $mapper->setConfig($config);
             $mapper->setObject($zObject);
             foreach ($leadsToCreateInZ as $email => $lead) {
                 if ($zObject !== $lead['integration_entity']) {
@@ -1371,10 +1376,12 @@ class ZohoIntegration extends CrmAbstractIntegration
      */
     private function createContactInZoho(Mapper $mapper, $object, &$counter, &$errorCounter)
     {
-        $response     = $this->getApiHelper()->createLead($mapper->getArray(), $object);
-        $failed       = $this->consumeResponse($response, $object, true, $mapper);
-        $counter -= $failed;
-        $errorCounter += $failed;
+        if (!empty($mapper->getArray())) {
+            $response     = $this->getApiHelper()->createLead($mapper->getArray(), $object);
+            $failed       = $this->consumeResponse($response, $object, true, $mapper);
+            $counter -= $failed;
+            $errorCounter += $failed;
+        }
     }
 
     /**
