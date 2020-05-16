@@ -395,6 +395,14 @@ return [
                     'mautic.email.model.email',
                 ],
             ],
+            'mautic.lead.formbundle.contact.avatar.subscriber' => [
+                'class'     => \Mautic\LeadBundle\EventListener\SetContactAvatarFormSubscriber::class,
+                'arguments' => [
+                    'mautic.helper.template.avatar',
+                    'mautic.form.helper.form_uploader',
+                    'mautic.lead.model.lead',
+                ],
+            ],
             'mautic.lead.campaignbundle.subscriber' => [
                 'class'     => 'Mautic\LeadBundle\EventListener\CampaignSubscriber',
                 'arguments' => [
@@ -413,6 +421,13 @@ return [
                    'mautic.campaign.helper.removed_contact_tracker',
                 ],
             ],
+            'mautic.lead.campaignbundle.action_dnc.subscriber' => [
+                'class'     => \Mautic\LeadBundle\EventListener\CampaignActionDNCSubscriber::class,
+                'arguments' => [
+                   'mautic.lead.model.dnc',
+                   'mautic.lead.model.lead',
+                ],
+            ],
             'mautic.lead.reportbundle.subscriber' => [
                 'class'     => \Mautic\LeadBundle\EventListener\ReportSubscriber::class,
                 'arguments' => [
@@ -428,6 +443,16 @@ return [
                 'class'     => \Mautic\LeadBundle\EventListener\SegmentReportSubscriber::class,
                 'arguments' => [
                     'mautic.lead.reportbundle.fields_builder',
+                ],
+            ],
+            'mautic.lead.reportbundle.report_dnc_subscriber' => [
+                'class'     => \Mautic\LeadBundle\EventListener\ReportDNCSubscriber::class,
+                'arguments' => [
+                    'mautic.lead.reportbundle.fields_builder',
+                    'mautic.lead.model.company_report_data',
+                    'translator',
+                    'router',
+                    'mautic.channel.helper.channel_list',
                 ],
             ],
             'mautic.lead.reportbundle.report_utm_tag_subscriber' => [
@@ -538,6 +563,7 @@ return [
                     'mautic.category.model.category',
                     'mautic.helper.user',
                     'mautic.campaign.model.campaign',
+                    'mautic.asset.model.asset',
                 ],
                 'alias' => 'leadlist',
             ],
@@ -770,6 +796,12 @@ return [
                 'class' => Mautic\LeadBundle\Form\Type\ConfigType::class,
                 'alias' => 'leadconfig',
             ],
+            'mautic.form.type.preference.channels' => [
+                'class'     => \Mautic\LeadBundle\Form\Type\PreferenceChannelsType::class,
+                'arguments' => [
+                    'mautic.lead.model.lead',
+                ],
+            ],
         ],
         'other' => [
             'mautic.lead.doctrine.subscriber' => [
@@ -838,6 +870,31 @@ return [
             'mautic.lead.validator.length' => [
                 'class'     => Mautic\LeadBundle\Validator\Constraints\LengthValidator::class,
                 'tag'       => 'validator.constraint_validator',
+            ],
+            'mautic.lead.segment.stat.dependencies' => [
+                'class'     => \Mautic\LeadBundle\Segment\Stat\SegmentDependencies::class,
+                'arguments' => [
+                    '@doctrine.orm.entity_manager',
+                    'mautic.email.model.email',
+                    'mautic.campaign.model.campaign',
+                    'mautic.form.model.action',
+                    'mautic.lead.model.list',
+                    'mautic.point.model.triggerevent',
+                    'mautic.report.model.report',
+                ],
+            ],
+            'mautic.lead.segment.stat.chart.query.factory' => [
+                'class'     => \Mautic\LeadBundle\Segment\Stat\SegmentChartQueryFactory::class,
+                'arguments' => [
+                ],
+            ],
+            'mautic.lead.segment.stat.campaign.share' => [
+                'class'     => \Mautic\LeadBundle\Segment\Stat\SegmentCampaignShare::class,
+                'arguments' => [
+                    'mautic.campaign.model.campaign',
+                    'mautic.helper.cache_storage',
+                    '@doctrine.orm.entity_manager',
+                ],
             ],
             'mautic.lead.note.uploader' => [
                 'class'     => \Mautic\LeadBundle\Uploader\LeadNoteUploader::class,
@@ -1019,6 +1076,7 @@ return [
                 'arguments' => [
                     'mautic.helper.core_parameters',
                     'mautic.lead.model.lead_segment_service',
+                    'mautic.lead.segment.stat.chart.query.factory',
                 ],
             ],
             'mautic.lead.repository.lead_segment_filter_descriptor' => [
@@ -1113,6 +1171,13 @@ return [
                 'arguments' => [
                     'mautic.lead.model.lead_segment_decorator_date',
                     'mautic.lead.model.relative_date',
+                    'mautic.lead.model.lead_segment.timezoneResolver',
+                ],
+            ],
+            'mautic.lead.model.lead_segment.timezoneResolver' => [
+                'class'     => \Mautic\LeadBundle\Segment\Decorator\Date\TimezoneResolver::class,
+                'arguments' => [
+                    'mautic.helper.core_parameters',
                 ],
             ],
             'mautic.lead.model.random_parameter_name' => [
@@ -1122,7 +1187,7 @@ return [
                 'class'     => \Mautic\LeadBundle\Segment\OperatorOptions::class,
             ],
             'mautic.lead.model.note' => [
-                'class'     => 'Mautic\LeadBundle\Model\NoteModel',
+                'class'     => \Mautic\LeadBundle\Model\NoteModel::class,
                 'arguments' => [
                     'mautic.lead.note.uploader',
                 ],
