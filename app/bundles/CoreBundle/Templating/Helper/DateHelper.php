@@ -11,6 +11,7 @@
 
 namespace Mautic\CoreBundle\Templating\Helper;
 
+use Mautic\CoreBundle\Helper\CoreParametersHelper;
 use Mautic\CoreBundle\Helper\DateTimeHelper;
 use Symfony\Component\Templating\Helper\Helper;
 use Symfony\Component\Translation\TranslatorInterface;
@@ -33,6 +34,11 @@ class DateHelper extends Helper
     protected $translator;
 
     /**
+     * @var CoreParametersHelper
+     */
+    private $coreParametersHelper;
+
+    /**
      * DateHelper constructor.
      *
      * @param string              $dateFullFormat
@@ -46,7 +52,8 @@ class DateHelper extends Helper
         $dateShortFormat,
         $dateOnlyFormat,
         $timeOnlyFormat,
-        TranslatorInterface $translator
+        TranslatorInterface $translator,
+        CoreParametersHelper $coreParametersHelper
     ) {
         $this->formats = [
             'datetime' => $dateFullFormat,
@@ -55,8 +62,9 @@ class DateHelper extends Helper
             'time'     => $timeOnlyFormat,
         ];
 
-        $this->helper     = new DateTimeHelper(null, null, 'local');
-        $this->translator = $translator;
+        $this->helper               = new DateTimeHelper(null, null, 'local');
+        $this->translator           = $translator;
+        $this->coreParametersHelper = $coreParametersHelper;
     }
 
     /**
@@ -176,7 +184,7 @@ class DateHelper extends Helper
         $dt       = $this->helper->getLocalDateTime();
 
         if ($textDate) {
-            return $this->translator->trans('mautic.core.date.'.$textDate, ['%time%' => $dt->format('g:i a')]);
+            return $this->translator->trans('mautic.core.date.'.$textDate, ['%time%' => $dt->format($this->coreParametersHelper->getParameter('date_format_timeonly'))]);
         } else {
             $interval = $this->helper->getDiff('now', null, true);
 
