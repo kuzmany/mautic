@@ -129,7 +129,7 @@ class PointSubscriber extends CommonSubscriber
      */
     public function onEmailSend(EmailSendEvent $event)
     {
-        if ($leadArray = $event->getLead()) {
+        if ($leadArray = $event->getLead() && !empty($leadArray['id'])) {
             $lead = $this->em->getReference('MauticLeadBundle:Lead', $leadArray['id']);
         } else {
             return;
