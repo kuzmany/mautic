@@ -389,7 +389,9 @@ class SubmissionModel extends CommonFormModel
 
             $displayManager = new DisplayManager($form, $this->formModel->getCustomComponents()['viewOnlyFields']);
             foreach ($fields as $field) {
-                if (isset($validationErrors[$field->getAlias()]) && !$field->showForContact($leadSubmissions, $lead, $form, $displayManager)) {
+                if ($field->showForContact($leadSubmissions, $lead, $form, $displayManager)) {
+                    $displayManager->increaseDisplayedFields($field);
+                } elseif (isset($validationErrors[$field->getAlias()])) {
                     unset($validationErrors[$field->getAlias()]);
                 }
             }

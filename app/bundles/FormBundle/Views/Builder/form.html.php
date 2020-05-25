@@ -79,7 +79,7 @@ if (!isset($lead)) {
                         if (!$f->isAlwaysDisplay() && !$f->getShowWhenValueExists() && $f->getLeadField() && $f->getIsAutoFill() && $lead && !empty($lead->getFieldValue($f->getLeadField()))) {
                             $f->setType('hidden');
                         } else {
-                            $displayManager->getDisplayCounter()->increaseDisplayedFields();
+                            $displayManager->increaseDisplayedFields($f);
                         }
                         $template = 'MauticFormBundle:Field:'.$f->getType().'.html.php';
                     endif;
