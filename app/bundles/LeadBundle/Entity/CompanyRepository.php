@@ -389,12 +389,13 @@ class CompanyRepository extends CommonRepository implements CustomFieldRepositor
      * @param null                     $labelColumn
      * @param string                   $valueColumn
      * @param int                      $limit
+     * @param array                    $include
      *
      * @return array
      *
      * @throws \ReflectionException
      */
-    public function getAjaxSimpleList(CompositeExpression $expr = null, array $parameters = [], $labelColumn = null, $valueColumn = 'id', $limit = 100)
+    public function getAjaxSimpleList(CompositeExpression $expr = null, array $parameters = [], $labelColumn = null, $valueColumn = 'id', $limit = 100, $include = [])
     {
         $q = $this->_em->getConnection()->createQueryBuilder();
 
@@ -430,10 +431,13 @@ class CompanyRepository extends CommonRepository implements CustomFieldRepositor
 
         if ($expr !== null && $expr->count()) {
             $q->where($expr);
+            if (!empty($parameters)) {
+                $q->setParameters($parameters);
+            }
         }
 
-        if (!empty($parameters)) {
-            $q->setParameters($parameters);
+        if (!empty($include)) {
+            $q->andWhere($q->expr()->in('comp.id', $include));
         }
 
         // Published only
