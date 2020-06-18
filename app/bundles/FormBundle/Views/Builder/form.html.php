@@ -57,7 +57,10 @@ if (!isset($lead)) {
         <div class="mauticform-innerform">
 
             <?php
-            $displayManager = new \Mautic\FormBundle\ProgressiveProfiling\DisplayManager($form, $viewOnlyFields);
+            $displayManager = new \Mautic\FormBundle\ProgressiveProfiling\DisplayManager(
+                $form,
+                !empty($viewOnlyFields) ? $viewOnlyFields : []
+            );
             /** @var \Mautic\FormBundle\Entity\Field $f */
             foreach ($fields as $fieldId => $f):
                 if (isset($formPages['open'][$fieldId])):
