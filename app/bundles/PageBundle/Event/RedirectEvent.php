@@ -35,11 +35,11 @@ class RedirectEvent extends CommonEvent
     /**
      * RedirectEvent constructor.
      *
-     * @param string $url
-     * @param Lead   $lead
-     * @param string $ct
+     * @param string    $url
+     * @param Lead|null $lead
+     * @param string    $ct
      */
-    public function __construct($url, Lead $lead, $ct)
+    public function __construct($url, Lead $lead = null, $ct = '')
     {
         $this->url          = $url;
         $this->lead         = $lead;
