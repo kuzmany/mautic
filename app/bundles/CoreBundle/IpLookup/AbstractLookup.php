@@ -20,6 +20,7 @@ abstract class AbstractLookup
     public $region       = '';
     public $zipcode      = '';
     public $country      = '';
+    public $countryIsoCode = '';
     public $latitude     = '';
     public $longitude    = '';
     public $isp          = '';
@@ -112,16 +113,17 @@ abstract class AbstractLookup
     public function getDetails()
     {
         return [
-            'city'         => $this->city,
-            'region'       => $this->region,
-            'zipcode'      => $this->zipcode,
-            'country'      => $this->country,
-            'latitude'     => $this->latitude,
-            'longitude'    => $this->longitude,
-            'isp'          => $this->isp,
-            'organization' => $this->organization,
-            'timezone'     => $this->timezone,
-            'extra'        => $this->extra,
+            'city'             => $this->city,
+            'region'           => $this->region,
+            'zipcode'          => $this->zipcode,
+            'country'          => $this->country,
+            'countryIsoCode' => $this->countryIsoCode,
+            'latitude'         => $this->latitude,
+            'longitude'        => $this->longitude,
+            'isp'              => $this->isp,
+            'organization'     => $this->organization,
+            'timezone'         => $this->timezone,
+            'extra'            => $this->extra,
         ];
     }
 }
