@@ -16,16 +16,17 @@ use Psr\Log\LoggerInterface;
 
 abstract class AbstractLookup
 {
-    public $city         = '';
-    public $region       = '';
-    public $zipcode      = '';
-    public $country      = '';
-    public $latitude     = '';
-    public $longitude    = '';
-    public $isp          = '';
-    public $organization = '';
-    public $timezone     = '';
-    public $extra        = '';
+    public $city           = '';
+    public $region         = '';
+    public $zipcode        = '';
+    public $country        = '';
+    public $countryIsoCode = '';
+    public $latitude       = '';
+    public $longitude      = '';
+    public $isp            = '';
+    public $organization   = '';
+    public $timezone       = '';
+    public $extra          = '';
 
     /**
      * @var Http|null
@@ -108,16 +109,17 @@ abstract class AbstractLookup
     public function getDetails()
     {
         return [
-            'city'         => $this->city,
-            'region'       => $this->region,
-            'zipcode'      => $this->zipcode,
-            'country'      => $this->country,
-            'latitude'     => $this->latitude,
-            'longitude'    => $this->longitude,
-            'isp'          => $this->isp,
-            'organization' => $this->organization,
-            'timezone'     => $this->timezone,
-            'extra'        => $this->extra,
+            'city'             => $this->city,
+            'region'           => $this->region,
+            'zipcode'          => $this->zipcode,
+            'country'          => $this->country,
+            'countryIsoCode'   => $this->countryIsoCode,
+            'latitude'         => $this->latitude,
+            'longitude'        => $this->longitude,
+            'isp'              => $this->isp,
+            'organization'     => $this->organization,
+            'timezone'         => $this->timezone,
+            'extra'            => $this->extra,
         ];
     }
 }

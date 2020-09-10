@@ -68,13 +68,13 @@ class MaxmindDownloadLookup extends AbstractLocalDataLookup
                     $this->region = $record->subdivisions[0]->name;
                 }
             }
-
-            $this->city      = $record->city->name;
-            $this->country   = $record->country->name;
-            $this->latitude  = $record->location->latitude;
-            $this->longitude = $record->location->longitude;
-            $this->timezone  = $record->location->timeZone;
-            $this->zipcode   = $record->location->postalCode;
+            $this->city           = $record->city->name;
+            $this->country        = $record->country->name;
+            $this->countryIsoCode = $record->country->isoCode;
+            $this->latitude       = $record->location->latitude;
+            $this->longitude      = $record->location->longitude;
+            $this->timezone       = $record->location->timeZone;
+            $this->zipcode        = $record->location->postalCode;
         } catch (\Exception $exception) {
         }
     }
