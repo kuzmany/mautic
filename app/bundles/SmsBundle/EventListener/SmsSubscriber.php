@@ -19,6 +19,7 @@ use Mautic\LeadBundle\Entity\Lead;
 use Mautic\LeadBundle\Helper\TokenHelper;
 use Mautic\PageBundle\Entity\Trackable;
 use Mautic\PageBundle\Helper\TokenHelper as PageTokenHelper;
+use Mautic\PageBundle\Model\RedirectModel;
 use Mautic\PageBundle\Model\TrackableModel;
 use Mautic\SmsBundle\Event\SmsEvent;
 use Mautic\SmsBundle\Helper\SmsHelper;
@@ -55,6 +56,11 @@ class SmsSubscriber extends CommonSubscriber
     protected $smsHelper;
 
     /**
+     * @var RedirectModel
+     */
+    private $redirectModel;
+
+    /**
      * DynamicContentSubscriber constructor.
      *
      * @param AuditLogModel    $auditLogModel
@@ -62,19 +68,22 @@ class SmsSubscriber extends CommonSubscriber
      * @param PageTokenHelper  $pageTokenHelper
      * @param AssetTokenHelper $assetTokenHelper
      * @param SmsHelper        $smsHelper
+     * @param RedirectModel    $redirectModel
      */
     public function __construct(
         AuditLogModel $auditLogModel,
         TrackableModel $trackableModel,
         PageTokenHelper $pageTokenHelper,
         AssetTokenHelper $assetTokenHelper,
-        SmsHelper $smsHelper
+        SmsHelper $smsHelper,
+        RedirectModel $redirectModel
     ) {
         $this->auditLogModel    = $auditLogModel;
         $this->trackableModel   = $trackableModel;
         $this->pageTokenHelper  = $pageTokenHelper;
         $this->assetTokenHelper = $assetTokenHelper;
         $this->smsHelper        = $smsHelper;
+        $this->redirectModel = $redirectModel;
     }
 
     /**
@@ -158,7 +167,11 @@ class SmsSubscriber extends CommonSubscriber
                  * @var Trackable $trackable
                  */
                 foreach ($trackables as $token => $trackable) {
-                    $tokens[$token] = $this->trackableModel->generateTrackableUrl($trackable, $clickthrough, true);
+                    $tokens[$token] = ($trackable instanceof Trackable)
+                        ?
+                        $this->pageTrackableModel->generateTrackableUrl($trackable, $clickthrough, true)
+                        :
+                        $this->redirectModel->generateRedirectUrl($trackable, $clickthrough, true);
                 }
             }
 

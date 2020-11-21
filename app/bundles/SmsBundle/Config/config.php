@@ -35,6 +35,7 @@ return [
                     'mautic.page.helper.token',
                     'mautic.asset.helper.token',
                     'mautic.helper.sms',
+                    'mautic.page.model.redirect'
                 ],
             ],
             'mautic.sms.channel.subscriber' => [
