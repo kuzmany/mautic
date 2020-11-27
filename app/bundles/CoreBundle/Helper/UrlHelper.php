@@ -89,16 +89,14 @@ class UrlHelper
     {
         $path = $host = $scheme = '';
 
-        $base = 'http';
-        if (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on') {
-            $base .= 's';
-        }
-        $base .= '://';
-        if ($_SERVER['SERVER_PORT'] != '80') {
-            $base .= $_SERVER['SERVER_NAME'].':'.$_SERVER['SERVER_PORT'].$_SERVER['REQUEST_URI'];
-        } else {
-            $base .= $_SERVER['SERVER_NAME'].$_SERVER['REQUEST_URI'];
-        }
+        $ssl    = !empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on';
+        $scheme = strtolower($_SERVER['SERVER_PROTOCOL']);
+        $scheme = substr($scheme, 0, strpos($scheme, '/')).($ssl ? 's' : '');
+        $port   = $_SERVER['SERVER_PORT'];
+        $port   = ((!$ssl && $port == '80') || ($ssl && $port == '443')) ? '' : ":$port";
+        $host   = isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : null;
+        $host   = isset($host) ? $host : $_SERVER['SERVER_NAME'].$port;
+        $base   = "$scheme://$host".$_SERVER['REQUEST_URI'];
 
         $base = str_replace('/index_dev.php', '', $base);
         $base = str_replace('/index.php', '', $base);
@@ -174,9 +172,12 @@ class UrlHelper
         $urls = array_merge($urls, $matches[0]);
 
         foreach ($urls as $key => $url) {
+            // Remove dangling punctuation
+            $urls[$key] = $url = self::removeTrailingNonAlphaNumeric($url);
+
             // We don't want to match URLs in token default values
             // like {contactfield=website|http://ignore.this.url}
-            if (preg_match_all("#{(.*?)\|$url}#", $text, $matches)) {
+            if (preg_match_all("/{(.*?)\|".preg_quote($url, '/').'}/', $text, $matches)) {
                 unset($urls[$key]);
 
                 // We know this is a URL due to the default so let's include it as a trackable
@@ -203,6 +204,7 @@ class UrlHelper
         }
 
         $url = self::sanitizeUrlScheme($url);
+        $url = self::sanitizeUrlPath($url);
         $url = self::sanitizeUrlQuery($url);
 
         return $url;
@@ -244,6 +246,23 @@ class UrlHelper
      *
      * @return string
      */
+    private static function sanitizeUrlPath($url)
+    {
+        $path = parse_url($url, PHP_URL_PATH);
+
+        if (!empty($path)) {
+            $sanitizedPath = str_replace(' ', '%20', $path);
+            $url           = str_replace($path, $sanitizedPath, $url);
+        }
+
+        return $url;
+    }
+
+    /**
+     * @param string $url
+     *
+     * @return string
+     */
     private static function sanitizeUrlQuery($url)
     {
         $query = parse_url($url, PHP_URL_QUERY);
@@ -258,5 +277,29 @@ class UrlHelper
         }
 
         return $url;
+    }
+
+    /**
+     * @param string $string
+     *
+     * @return string
+     */
+    private static function removeTrailingNonAlphaNumeric($string)
+    {
+        // Special handling of closing bracket
+        if (substr($string, -1) === '}' && preg_match('/^[^{\r\n]*\}.*?$/', $string)) {
+            $string = substr($string, 0, -1);
+
+            return self::removeTrailingNonAlphaNumeric($string);
+        }
+
+        // Ensure only alphanumeric allowed
+        if (!preg_match("/^.*?[a-zA-Z0-9}\/]$/i", $string)) {
+            $string = substr($string, 0, -1);
+
+            return self::removeTrailingNonAlphaNumeric($string);
+        }
+
+        return $string;
     }
 }

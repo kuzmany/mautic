@@ -13,6 +13,7 @@ namespace Mautic\LeadBundle\Entity;
 
 use Mautic\CoreBundle\Doctrine\Mapping\ClassMetadataBuilder;
 use Mautic\LeadBundle\Helper\CustomFieldHelper;
+use Mautic\LeadBundle\Helper\CustomFieldValueHelper;
 use Mautic\LeadBundle\Model\FieldModel;
 
 trait CustomFieldEntityTrait
@@ -88,7 +89,7 @@ trait CustomFieldEntityTrait
      */
     public function setFields($fields)
     {
-        $this->fields = $fields;
+        $this->fields = CustomFieldValueHelper::normalizeValues($fields);
     }
 
     /**
@@ -247,11 +248,14 @@ trait CustomFieldEntityTrait
             $fieldValues = [
                 'id' => $this->id,
             ];
-            if (isset($this->fields['core'])) {
-                foreach ($this->fields as $group => $fields) {
-                    foreach ($fields as $alias => $field) {
-                        $fieldValues[$alias] = $field['value'];
-                    }
+
+            foreach ($this->fields as $group => $fields) {
+                if ('all' === $group) {
+                    continue;
+                }
+
+                foreach ($fields as $alias => $field) {
+                    $fieldValues[$alias] = $field['value'];
                 }
             }
 

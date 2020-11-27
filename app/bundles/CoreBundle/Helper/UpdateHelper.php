@@ -11,8 +11,8 @@
 
 namespace Mautic\CoreBundle\Helper;
 
-use Joomla\Http\HttpFactory;
-use Mautic\CoreBundle\Factory\MauticFactory;
+use Joomla\Http\Http;
+use Monolog\Logger;
 
 /**
  * Helper class for fetching update data.
@@ -20,23 +20,39 @@ use Mautic\CoreBundle\Factory\MauticFactory;
 class UpdateHelper
 {
     /**
-     * @var \Joomla\Http\Http
+     * @var Http
      */
     private $connector;
 
     /**
-     * @var MauticFactory
+     * @var PathsHelper
      */
-    private $factory;
+    private $pathsHelper;
 
     /**
-     * @param MauticFactory $factory
+     * @var Logger
      */
-    public function __construct(MauticFactory $factory)
-    {
-        $this->factory = $factory;
+    private $logger;
 
-        $this->connector = HttpFactory::getHttp();
+    /**
+     * @var CoreParametersHelper
+     */
+    private $coreParametersHelper;
+
+    /**
+     * UpdateHelper constructor.
+     *
+     * @param PathsHelper          $pathsHelper
+     * @param Logger               $logger
+     * @param CoreParametersHelper $coreParametersHelper
+     * @param Http                 $connector
+     */
+    public function __construct(PathsHelper $pathsHelper, Logger $logger, CoreParametersHelper $coreParametersHelper, Http $connector)
+    {
+        $this->pathsHelper          = $pathsHelper;
+        $this->logger               = $logger;
+        $this->coreParametersHelper = $coreParametersHelper;
+        $this->connector            = $connector;
     }
 
     /**
@@ -52,8 +68,7 @@ class UpdateHelper
         try {
             $data = $this->connector->get($package);
         } catch (\Exception $exception) {
-            $logger = $this->factory->getLogger();
-            $logger->addError('An error occurred while attempting to fetch the package: '.$exception->getMessage());
+            $this->logger->addError('An error occurred while attempting to fetch the package: '.$exception->getMessage());
 
             return [
                 'error'   => true,
@@ -69,7 +84,7 @@ class UpdateHelper
         }
 
         // Set the filesystem target
-        $target = $this->factory->getSystemPath('cache').'/'.basename($package);
+        $target = $this->pathsHelper->getSystemPath('cache').'/'.basename($package);
 
         // Write the response to the filesystem
         file_put_contents($target, $data->body);
@@ -105,14 +120,14 @@ class UpdateHelper
      */
     public function fetchData($overrideCache = false)
     {
-        $cacheFile = $this->factory->getSystemPath('cache').'/lastUpdateCheck.txt';
+        $cacheFile = $this->pathsHelper->getSystemPath('cache').'/lastUpdateCheck.txt';
 
         // Check if we have a cache file and try to return cached data if so
         if (!$overrideCache && is_readable($cacheFile)) {
             $update = (array) json_decode(file_get_contents($cacheFile));
 
             // Check if the user has changed the update channel, if so the cache is invalidated
-            if ($update['stability'] == $this->factory->getParameter('update_stability')) {
+            if ($update['stability'] == $this->coreParametersHelper->getParameter('update_stability')) {
                 // If we're within the cache time, return the cached data
                 if ($update['checkedTime'] > strtotime('-3 hours')) {
                     return $update;
@@ -123,18 +138,21 @@ class UpdateHelper
         // Before processing the update data, send up our metrics
         try {
             // Generate a unique instance ID for the site
-            $instanceId = hash('sha1', $this->factory->getParameter('secret_key').'Mautic'.$this->factory->getParameter('db_driver'));
+            $instanceId = hash(
+                'sha1',
+                $this->coreParametersHelper->getParameter('secret_key').'Mautic'.$this->coreParametersHelper->getParameter('db_driver')
+            );
 
             $data = array_map(
                 'trim',
                 [
                     'application'   => 'Mautic',
-                    'version'       => $this->factory->getVersion(),
+                    'version'       => MAUTIC_VERSION,
                     'phpVersion'    => PHP_VERSION,
-                    'dbDriver'      => $this->factory->getParameter('db_driver'),
+                    'dbDriver'      => $this->coreParametersHelper->getParameter('db_driver'),
                     'serverOs'      => $this->getServerOs(),
                     'instanceId'    => $instanceId,
-                    'installSource' => $this->factory->getParameter('install_source', 'Mautic'),
+                    'installSource' => $this->coreParametersHelper->getParameter('install_source', 'Mautic'),
                 ]
             );
 
@@ -148,18 +166,75 @@ class UpdateHelper
             $appData = array_map(
                 'trim',
                 [
-                    'appVersion' => $this->factory->getVersion(),
+                    'appVersion' => MAUTIC_VERSION,
                     'phpVersion' => PHP_VERSION,
-                    'stability'  => $this->factory->getParameter('update_stability'),
+                    'stability'  => $this->coreParametersHelper->getParameter('update_stability'),
                 ]
             );
 
-            $data   = $this->connector->post('https://updates.mautic.org/index.php?option=com_mauticdownload&task=checkUpdates', $appData, [], 10);
+            $data   = $this->connector->post($this->coreParametersHelper->getParameter('system_update_url'), $appData, [], 10);
             $update = json_decode($data->body);
         } catch (\Exception $exception) {
             // Log the error
-            $logger = $this->factory->getLogger();
-            $logger->addError('An error occurred while attempting to fetch updates: '.$exception->getMessage());
+            $this->logger->addError('An error occurred while attempting to fetch updates: '.$exception->getMessage());
+
+            return [
+                'error'   => true,
+                'message' => 'mautic.core.updater.error.fetching.updates',
+            ];
+        }
+
+        // Check if Mautic 3 upgrade is available
+        try {
+            $m3CacheFile = $this->pathsHelper->getSystemPath('cache').'/lastM3UpgradeCheck.txt';
+
+            if ($this->coreParametersHelper->getParameter('block_mautic_3_upgrade', null) === null) {
+                $m3Data   = $this->connector->get('https://updates.mautic.org/upgrade-configs/m2-to-m3.json', [], 10);
+                $m3Update = json_decode($m3Data->body);
+
+                if ($m3Data->code != 200) {
+                    // Log the error
+                    $this->logger->addError(
+                        sprintf(
+                            'An unexpected %1$s code was returned while attempting to fetch the Mautic 3 upgrade.  The message received was: %2$s',
+                            $data->code,
+                            is_string($data->body) ? $data->body : implode('; ', $data->body)
+                        )
+                    );
+
+                    return [
+                        'error'   => true,
+                        'message' => 'mautic.core.updater.error.fetching.updates',
+                    ];
+                }
+
+                // If the kill switch is activated for the upgrade, we don't offer the upgrade to the user.
+                if (isset($m3Update->killSwitchActivated) && $m3Update->killSwitchActivated === false) {
+                    $m3Data = [
+                        'error'             => false,
+                        'message'           => 'mautic.core.updater.update.available',
+                        'version'           => $m3Update->version,
+                        'announcement'      => $m3Update->announcement,
+                        'package'           => $m3Update->mautic3downloadUrl,
+                        'checkedTime'       => time(),
+                        'isMautic3Upgrade'  => true,
+                        'mautic3UpgradeUrl' => $this->coreParametersHelper->getParameter('site_url').'/upgrade_v3.php',
+                    ];
+
+                    file_put_contents($m3CacheFile, json_encode($m3Data));
+
+                    return $m3Data;
+                }
+            } else {
+                // If the user blocked the Mautic 3 upgrade after we already checked for updates before,
+                // we delete the cache file so that the upgrade isn't offered anymore.
+                if (file_exists($m3CacheFile)) {
+                    unlink($m3CacheFile);
+                }
+            }
+        } catch (\Exception $exception) {
+            // Log the error
+            $this->logger->addError('An error occurred while attempting to check if Mautic 3 is available: '.$exception->getMessage());
 
             return [
                 'error'   => true,
@@ -169,8 +244,7 @@ class UpdateHelper
 
         if ($data->code != 200) {
             // Log the error
-            $logger = $this->factory->getLogger();
-            $logger->addError(
+            $this->logger->addError(
                 sprintf(
                     'An unexpected %1$s code was returned while attempting to fetch updates.  The message received was: %2$s',
                     $data->code,
@@ -193,7 +267,7 @@ class UpdateHelper
         }
 
         // Last sanity check, if the $update->version is older than our current version
-        if (version_compare($this->factory->getVersion(), $update->version, 'ge')) {
+        if (version_compare(MAUTIC_VERSION, $update->version, 'ge')) {
             return [
                 'error'   => false,
                 'message' => 'mautic.core.updater.running.latest.version',
@@ -208,7 +282,7 @@ class UpdateHelper
             'announcement' => $update->announcement,
             'package'      => $update->package,
             'checkedTime'  => time(),
-            'stability'    => $this->factory->getParameter('update_stability'),
+            'stability'    => $this->coreParametersHelper->getParameter('update_stability'),
         ];
 
         file_put_contents($cacheFile, json_encode($data));
