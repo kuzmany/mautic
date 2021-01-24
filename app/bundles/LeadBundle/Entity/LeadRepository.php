@@ -601,12 +601,14 @@ class LeadRepository extends CommonRepository implements CustomFieldRepositoryIn
             );
         }
 
-        $qb->join(
-            $this->getTableAlias(),
-            MAUTIC_TABLE_PREFIX.$joinTable,
-            'entity',
-            $joinCondition
-        );
+        if ($joinTable) {
+            $qb->join(
+                $this->getTableAlias(),
+                MAUTIC_TABLE_PREFIX.$joinTable,
+                'entity',
+                $joinCondition
+            );
+        }
 
         if (is_array($additionalJoins)) {
             foreach ($additionalJoins as $t) {
@@ -689,7 +691,6 @@ class LeadRepository extends CommonRepository implements CustomFieldRepositoryIn
 
         // This will be switched by some commands that use join tables as NOT EXISTS queries will be used
         $exprType = ($filter->not) ? 'negate_expr' : 'expr';
-
         $operators = $this->getFilterExpressionFunctions();
         $operators = array_merge($operators, [
             'x' => [

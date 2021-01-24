@@ -29,6 +29,8 @@ trait OperatorListTrait
                 'startsWith',
                 'endsWith',
                 'contains',
+                'ltLength',
+                'gtLength',
             ],
         ],
         'select' => [

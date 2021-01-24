@@ -117,6 +117,16 @@ class OperatorOptions
             'expr'        => 'contains',
             'negate_expr' => 'contains',
         ],
+        'ltLength' => [
+            'label'       => 'mautic.lead.list.form.operator.lt.length',
+            'expr'        => 'ltLength',
+            'negate_expr' => 'notLtLength',
+        ],
+        'gtLength' => [
+            'label'       => 'mautic.lead.list.form.operator.gt.length',
+            'expr'        => 'gtLength',
+            'negate_expr' => 'notGtLength',
+        ],
     ];
 
     public static function getFilterExpressionFunctions()

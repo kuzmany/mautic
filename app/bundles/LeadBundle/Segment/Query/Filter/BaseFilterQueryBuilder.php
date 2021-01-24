@@ -109,6 +109,23 @@ class BaseFilterQueryBuilder implements FilterQueryBuilderInterface
                     $filterParametersHolder
                 );
                 break;
+            case 'ltLength':
+            case 'gtLength':
+            $expr       = strtolower(str_replace('Length', '', $filterOperator));
+            if ($expr === 'gt') {
+                $expression = $queryBuilder->expr()->$expr(
+                    sprintf("LENGTH(l.%s)", $filter->getField()),
+                    $filterParametersHolder
+                );
+            }else{
+                $expression = $queryBuilder->expr()->orX(
+                    $queryBuilder->expr()->$expr(
+                        sprintf("LENGTH(l.%s)", $filter->getField()),
+                        $filterParametersHolder),
+                    $queryBuilder->expr()->isNull( sprintf("LENGTH(l.%s)", $filter->getField()))
+                );
+            }
+                break;
             case 'notLike':
             case 'notBetween': //Used only for date with week combination (NOT EQUAL [this week, next week, last week])
             case 'notIn':
