@@ -52,7 +52,9 @@ class FormUploader
                 $alias           = $field->getAlias();
                 $uploadDir       = $this->getUploadDir($field);
                 $fileName        = $this->fileUploader->upload($uploadDir, $fileFieldCrate->getUploadedFile());
-                $result[$alias]  = $fileName;
+                if (false !== $field->getSaveResult()) {
+                    $result[$alias]  = $fileName;
+                }
                 $uploadedFile    = $uploadDir.DIRECTORY_SEPARATOR.$fileName;
                 $this->fixRotationJPG($uploadedFile);
                 $uploadedFiles[] =$uploadedFile;
