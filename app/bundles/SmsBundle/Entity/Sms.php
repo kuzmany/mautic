@@ -88,6 +88,11 @@ class Sms extends FormEntity
      */
     private $smsType = 'template';
 
+    /**
+     * @var array
+     */
+    private $properties = [];
+
     public function __clone()
     {
         $this->id        = null;
@@ -141,6 +146,8 @@ class Sms extends FormEntity
         $builder->createField('sentCount', 'integer')
             ->columnName('sent_count')
             ->build();
+
+        $builder->addField('properties', 'json_array');
 
         $builder->addCategory();
 
@@ -477,5 +484,26 @@ class Sms extends FormEntity
     {
         $this->isChanged('smsType', $smsType);
         $this->smsType = $smsType;
+    }
+
+    /**
+     * @return array
+     */
+    public function getProperties()
+    {
+        return $this->properties;
+    }
+
+    /**
+     * @param array $properties
+     *
+     * @return Sms
+     */
+    public function setProperties($properties)
+    {
+        $this->isChanged('properties', $properties);
+        $this->properties = $properties;
+
+        return $this;
     }
 }

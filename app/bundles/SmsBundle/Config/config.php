@@ -105,6 +105,12 @@ return [
             'mautic.form.type.sms.campaign_reply_type' => [
                 'class' => \Mautic\SmsBundle\Form\Type\CampaignReplyType::class,
             ],
+            'mautic.form.type.sms.properties' => [
+                'class'     => \Mautic\SmsBundle\Form\Type\SmsPropertiesType::class,
+                'arguments' => [
+                    'event_dispatcher',
+                ],
+            ],
         ],
         'helpers' => [
             'mautic.helper.sms' => [
