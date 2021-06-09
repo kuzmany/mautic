@@ -15,6 +15,7 @@ use libphonenumber\NumberParseException;
 use libphonenumber\PhoneNumberFormat;
 use libphonenumber\PhoneNumberUtil;
 use Mautic\LeadBundle\Entity\Lead;
+use Mautic\SmsBundle\Entity\Stat;
 use Mautic\SmsBundle\Sms\TransportInterface;
 use Psr\Log\LoggerInterface;
 use Twilio\Exceptions\ConfigurationException;
@@ -61,7 +62,7 @@ class TwilioTransport implements TransportInterface
      *
      * @return bool|string
      */
-    public function sendSms(Lead $lead, $content)
+    public function sendSms(Lead $lead, $content, Stat $stat)
     {
         $number = $lead->getLeadPhoneNumber();
 
