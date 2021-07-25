@@ -92,12 +92,24 @@ return [
                     'mautic.lead.repository.lead_event_log',
                 ],
             ],
+            'mautic.sms.subscriber.delivery' => [
+                'class'     => \Mautic\SmsBundle\EventListener\DeliverySubscriber::class,
+                'arguments' => [
+                    'mautic.sms.model.stat',
+                ],
+            ],
         ],
         'forms' => [
             'mautic.form.type.sms' => [
                 'class'     => \Mautic\SmsBundle\Form\Type\SmsType::class,
                 'arguments' => [
                     'doctrine.orm.entity_manager',
+                ],
+            ],
+            'mautic.form.type.sms.properties' => [
+                'class'     => \Mautic\SmsBundle\Form\Type\SmsPropertiesType::class,
+                'arguments' => [
+                    'event_dispatcher',
                 ],
             ],
             'mautic.form.type.smsconfig' => [
@@ -133,12 +145,17 @@ return [
             ],
         ],
         'other' => [
+            'mautic.sms.model.stat' => [
+                'class'     => \Mautic\SmsBundle\Model\StatModel::class,
+                'arguments' => [
+                    'mautic.sms.model.sms',
+                ],
+            ],
             'mautic.sms.transport_chain' => [
                 'class'     => \Mautic\SmsBundle\Sms\TransportChain::class,
                 'arguments' => [
                     '%mautic.sms_transport%',
                     'mautic.helper.integration',
-                    'monolog.logger.mautic',
                 ],
             ],
             'mautic.sms.callback_handler_container' => [
@@ -152,12 +169,13 @@ return [
                     'mautic.helper.phone_number',
                 ],
             ],
-            'mautic.sms.helper.reply' => [
-                'class'     => \Mautic\SmsBundle\Helper\ReplyHelper::class,
+            'mautic.sms.helper.callback' => [
+                'class'     => \Mautic\SmsBundle\Helper\CallbackHelper::class,
                 'arguments' => [
                     'event_dispatcher',
                     'monolog.logger.mautic',
                     'mautic.tracker.contact',
+                    'mautic.sms.model.sms',
                 ],
             ],
             'mautic.sms.twilio.configuration' => [
@@ -260,11 +278,11 @@ return [
             ],
         ],
         'controllers' => [
-            'mautic.sms.controller.reply' => [
-                'class'     => \Mautic\SmsBundle\Controller\ReplyController::class,
+            'mautic.sms.controller.callback' => [
+                'class'     => \Mautic\SmsBundle\Controller\CallbackController::class,
                 'arguments' => [
                     'mautic.sms.callback_handler_container',
-                    'mautic.sms.helper.reply',
+                    'mautic.sms.helper.callback',
                 ],
                 'methodCalls' => [
                     'setContainer' => [
@@ -292,7 +310,7 @@ return [
         'public' => [
             'mautic_sms_callback' => [
                 'path'       => '/sms/{transport}/callback',
-                'controller' => 'MauticSmsBundle:Reply:callback',
+                'controller' => 'MauticSmsBundle:Callback:callback',
             ],
             /* @deprecated as this was Twilio specific */
             'mautic_receive_sms' => [
