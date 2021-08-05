@@ -12,6 +12,8 @@
 namespace Mautic\LeadBundle\Controller;
 
 use Mautic\CoreBundle\Controller\FormController;
+use Mautic\CoreBundle\FileStorage\DTO\UploadFileDTO;
+use Mautic\CoreBundle\FileStorage\FileStorage;
 use Mautic\CoreBundle\Helper\CsvHelper;
 use Mautic\LeadBundle\Entity\Import;
 use Mautic\LeadBundle\Event\ImportInitEvent;
@@ -25,7 +27,10 @@ use Symfony\Component\Form\Exception\LogicException;
 use Symfony\Component\Form\Form;
 use Symfony\Component\Form\FormError;
 use Symfony\Component\HttpFoundation\File\Exception\FileException;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpKernel\Event\ControllerEvent;
+use Symfony\Component\HttpKernel\Event\FilterControllerEvent;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 
@@ -36,6 +41,17 @@ class ImportController extends FormController
     const STEP_MATCH_FIELDS    = 2;
     const STEP_PROGRESS_BAR    = 3;
     const STEP_IMPORT_FROM_CSV = 4;
+
+    /**
+     * @var FileStorage
+     */
+    private $fileStorage;
+
+    public function initialize(FilterControllerEvent $event)
+    {
+        /** @var FileStorage fileStorage */
+        $this->fileStorage = $this->get('mautic.file.storage');
+    }
 
     /**
      * @param int $page
@@ -293,6 +309,7 @@ class ImportController extends FormController
                                 unlink($fullPath);
                             }
 
+                            /** @var UploadedFile $fileData */
                             $fileData = $form['file']->getData();
                             if (!empty($fileData)) {
                                 $errorMessage    = null;
@@ -301,7 +318,8 @@ class ImportController extends FormController
                                     // Create the import dir recursively
                                     $fs->mkdir($importDir);
 
-                                    $fileData->move($importDir, $fileName);
+                                    $uploadFileDTO = new UploadFileDTO($fileData, $importDir, $fileName);
+                                    $this->fileStorage->getStorage()->moveFromFileData($uploadFileDTO);
 
                                     $file = new \SplFileObject($fullPath);
 

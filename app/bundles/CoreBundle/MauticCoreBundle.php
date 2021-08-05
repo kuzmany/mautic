@@ -23,6 +23,7 @@ class MauticCoreBundle extends Bundle
     public function build(ContainerBuilder $container)
     {
         $container->addCompilerPass(new Compiler\ConfiguratorPass());
+        $container->addCompilerPass(new Compiler\FileStoragePass());
         $container->addCompilerPass(new Compiler\TemplatingPass());
         $container->addCompilerPass(new Compiler\TranslationsPass());
         $container->addCompilerPass(new Compiler\ModelPass());
