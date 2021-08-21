@@ -1352,7 +1352,7 @@ Mautic.isSlotInitiated = function(slot) {
 };
 
 Mautic.isCodeMode = function() {
-    return mQuery('a[data-theme=mautic_code_mode]').first().hasClass('hide');
+    return mQuery('a[data-theme=mautic_code_mode]').first().hasClass('hide') && mQuery('.email-builder.code-mode').hasClass('builder-active');
 };
 
 window.document.fileManagerInsertImageCallback = function(selector, url) {
