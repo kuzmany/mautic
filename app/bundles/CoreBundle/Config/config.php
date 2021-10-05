@@ -399,10 +399,6 @@ return [
             'mautic.helper.template.date' => [
                 'class'     => \Mautic\CoreBundle\Templating\Helper\DateHelper::class,
                 'arguments' => [
-                    '%mautic.date_format_full%',
-                    '%mautic.date_format_short%',
-                    '%mautic.date_format_dateonly%',
-                    '%mautic.date_format_timeonly%',
                     'translator',
                     'mautic.helper.core_parameters',
                 ],

@@ -45,18 +45,14 @@ class DateHelper extends Helper
      * @param string $timeOnlyFormat
      */
     public function __construct(
-        $dateFullFormat,
-        $dateShortFormat,
-        $dateOnlyFormat,
-        $timeOnlyFormat,
         TranslatorInterface $translator,
         CoreParametersHelper $coreParametersHelper
     ) {
         $this->formats = [
-            'datetime' => $dateFullFormat,
-            'short'    => $dateShortFormat,
-            'date'     => $dateOnlyFormat,
-            'time'     => $timeOnlyFormat,
+            'datetime' => $coreParametersHelper->get('date_format_full'),
+            'short'    => $coreParametersHelper->get('date_format_short'),
+            'date'     => $coreParametersHelper->get('date_format_dateonly'),
+            'time'     => $coreParametersHelper->get('date_format_timeonly'),
         ];
 
         $this->helper               = new DateTimeHelper(null, null, 'local');
