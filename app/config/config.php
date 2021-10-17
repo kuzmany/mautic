@@ -223,6 +223,9 @@ $container->loadFromExtension('jms_serializer', [
 
 $container->loadFromExtension('framework', [
     'cache' => [
+        'app' => 'cache.adapter.redis',
+        'default_redis_provider' => 'redis://redis',
+        'prefix_seed' => 'abcd',
         'pools' => [
             'api_rate_limiter_cache' => $configParameterBag->get('api_rate_limiter_cache'),
         ],
