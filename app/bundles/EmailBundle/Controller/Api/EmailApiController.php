@@ -117,7 +117,7 @@ class EmailApiController extends CommonApiController
             $post       = $this->request->request->all();
             $tokens     = (!empty($post['tokens'])) ? $post['tokens'] : [];
             $assetsIds  = (!empty($post['assetAttachments'])) ? $post['assetAttachments'] : [];
-            $ignoreDNC  = ($post['ignoreDNC'] === 'true') ? true : false;
+            $ignoreDNC  = InputHelper::boolean($post['ignoreDNC'] ?? false);
             $response   = ['success' => false];
 
             $cleanTokens = [];
