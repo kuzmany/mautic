@@ -12,13 +12,17 @@
 namespace Mautic\NotificationBundle\Form\Type;
 
 use Mautic\CategoryBundle\Form\Type\CategoryListType;
-use Mautic\CoreBundle\Form\EventListener\CleanFormSubscriber;
 use Mautic\CoreBundle\Form\EventListener\FormExitSubscriber;
 use Mautic\CoreBundle\Form\Type\FormButtonsType;
 use Mautic\CoreBundle\Form\Type\YesNoButtonGroupType;
 use Mautic\EmailBundle\Form\Type\EmailUtmTagsType;
+use Mautic\NotificationBundle\Helper\NotificationUploader;
+use Mautic\NotificationBundle\Model\NotificationModel;
 use Symfony\Component\Form\AbstractType;
+use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
+use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\DateTimeType;
+use Symfony\Component\Form\Extension\Core\Type\FileType;
 use Symfony\Component\Form\Extension\Core\Type\HiddenType;
 use Symfony\Component\Form\Extension\Core\Type\LocaleType;
 use Symfony\Component\Form\Extension\Core\Type\TextareaType;
@@ -26,15 +30,41 @@ use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\Extension\Core\Type\UrlType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
+use Symfony\Component\Translation\TranslatorInterface;
+use Symfony\Component\Validator\Constraints\File;
+use Symfony\Component\Validator\Constraints\NotBlank;
 
 /**
  * Class NotificationType.
  */
 class NotificationType extends AbstractType
 {
+    const PROPERTY_ALLOWED_FILE_EXTENSIONS = 'png,gif';
+
+    /**
+     * @var TranslatorInterface
+     */
+    protected $translator;
+
+    /**
+     * @var NotificationUploader
+     */
+    protected $notificationUploader;
+
+    /**
+     * @var NotificationModel
+     */
+    protected $notificationModel;
+
+    public function __construct(TranslatorInterface $translator, NotificationUploader $notificationUploader, NotificationModel $notificationModel)
+    {
+        $this->translator           = $translator;
+        $this->notificationUploader = $notificationUploader;
+        $this->notificationModel    = $notificationModel;
+    }
+
     public function buildForm(FormBuilderInterface $builder, array $options)
     {
-        $builder->addEventSubscriber(new CleanFormSubscriber(['content' => 'html', 'customHtml' => 'html']));
         $builder->addEventSubscriber(new FormExitSubscriber('notification.notification', $options));
 
         $builder->add(
@@ -76,10 +106,14 @@ class NotificationType extends AbstractType
             'heading',
             TextType::class,
             [
-                'label'      => 'mautic.notification.form.heading',
-                'label_attr' => ['class' => 'control-label'],
-                'attr'       => ['class' => 'form-control'],
-                'required'   => false,
+                'label'       => 'mautic.notification.form.heading',
+                'label_attr'  => ['class' => 'control-label'],
+                'attr'        => ['class' => 'form-control'],
+                'constraints' => [
+                    new NotBlank(
+                        ['message' => 'mautic.core.value.required']
+                    ),
+                ],
             ]
         );
 
@@ -93,7 +127,12 @@ class NotificationType extends AbstractType
                     'class' => 'form-control',
                     'rows'  => 6,
                 ],
-                'required' => true,
+                'required'    => true,
+                'constraints' => [
+                    new NotBlank(
+                        ['message' => 'mautic.core.value.required']
+                    ),
+                ],
             ]
         );
 
@@ -107,6 +146,39 @@ class NotificationType extends AbstractType
                     'class'   => 'form-control',
                     'tooltip' => 'mautic.notification.form.url.tooltip',
                 ],
+                'required'    => true,
+                'constraints' => [
+                    new NotBlank(
+                        ['message' => 'mautic.core.value.required']
+                    ),
+                ],
+            ]
+        );
+
+        $builder->add(
+            'actionButtonUrl1',
+            UrlType::class,
+            [
+                'label'      => 'mautic.notification.form.button.url',
+                'label_attr' => ['class' => 'control-label'],
+                'attr'       => [
+                    'class'  => 'form-control',
+                    'tooltip'=> 'mautic.notification.form.button.url.tooltip',
+                ],
+                'required' => false,
+            ]
+        );
+
+        $builder->add(
+            'actionButtonUrl2',
+            UrlType::class,
+            [
+                'label'      => 'mautic.notification.form.button.url',
+                'label_attr' => ['class' => 'control-label'],
+                'attr'       => [
+                    'class'  => 'form-control',
+                    'tooltip'=> 'mautic.notification.form.button.url.tooltip',
+                ],
                 'required' => false,
             ]
         );
@@ -115,16 +187,111 @@ class NotificationType extends AbstractType
             'button',
             TextType::class,
             [
-                'label'      => 'mautic.notification.form.button',
+                'label'      => 'mautic.notification.form.button.text',
                 'label_attr' => ['class' => 'control-label'],
                 'attr'       => [
                     'class'   => 'form-control',
-                    'tooltip' => 'mautic.notification.form.button.tooltip',
+                    'tooltip' => 'mautic.notification.form.button.text.tooltip',
                 ],
                 'required' => false,
             ]
         );
 
+        $builder->add(
+            'actionButtonText2',
+            TextType::class,
+            [
+                'label'      => 'mautic.notification.form.button.text',
+                'label_attr' => ['class' => 'control-label'],
+                'attr'       => [
+                    'class'   => 'form-control',
+                    'tooltip' => 'mautic.notification.form.button.text.tooltip',
+                ],
+                'required' => false,
+            ]
+        );
+
+        $builder->add(
+            'actionButtonIcon1',
+            FileType::class,
+            [
+                'label'      => 'mautic.notification.form.button.icon',
+                'label_attr' => ['class' => 'control-label'],
+                'required'   => false,
+                'attr'       => [
+                    'class'   => 'form-control',
+                    'tooltip' => 'mautic.notification.form.button.icon.tooltip',
+                ],
+                'mapped'      => false,
+                'constraints' => [
+                    new File(
+                        [
+                            'mimeTypes' => [
+                                'image/gif',
+                                'image/jpeg',
+                                'image/png',
+                            ],
+                            'mimeTypesMessage' => 'mautic.lead.avatar.types_invalid',
+                        ]
+                    ),
+                ],
+            ]
+        );
+
+        $fileName = '';
+        if ($options['data']->getId()) {
+            $notification =  $this->notificationModel->getEntity($options['data']->getId());
+            $fileName     = $notification->getActionButtonIcon1();
+        }
+        $builder->add(
+            'actionButtonIcon1_delete',
+            CheckboxType::class,
+            [
+                'label'      => $this->translator->trans('mautic.notification.form.delete', ['%url%'=> $this->notificationUploader->getFullUrl($options['data'], 'actionButtonIcon1'), '%file%'=>$fileName]),
+                'label_attr' => ['class' => 'control-label'],
+                'mapped'     => false,
+                'data'       => false,
+            ]
+        );
+
+        $builder->add(
+            'actionButtonIcon2',
+            FileType::class,
+            [
+                'label'      => 'mautic.notification.form.button.icon',
+                'label_attr' => ['class' => 'control-label'],
+                'required'   => false,
+                'attr'       => [
+                    'class'   => 'form-control',
+                    'tooltip' => 'mautic.notification.form.button.icon.tooltip',
+                ],
+                'mapped'      => false,
+                'constraints' => [
+                    new File(
+                        [
+                            'mimeTypes' => [
+                                'image/gif',
+                                'image/jpeg',
+                                'image/png',
+                            ],
+                            'mimeTypesMessage' => 'mautic.lead.avatar.types_invalid',
+                        ]
+                    ),
+                ],
+            ]
+        );
+        $builder->add(
+            'actionButtonIcon2_delete',
+            CheckboxType::class,
+            [
+                'label'      => $this->translator->trans('mautic.notification.form.delete', ['%url%'=> $this->notificationUploader->getFullUrl($options['data'], 'actionButtonIcon2'), '%file%'=>$options['data']->getActionButtonIcon2()]),
+                'label_attr' => ['class' => 'control-label'],
+                'mapped'     => false,
+                'data'       => false,
+            ]
+        );
+
+        $builder->add('isPublished', 'yesno_button_group');
         $builder->add('isPublished', YesNoButtonGroupType::class);
 
         $builder->add(
@@ -181,6 +348,116 @@ class NotificationType extends AbstractType
             ]
         );
 
+        $builder->add(
+            'priority',
+            ChoiceType::class,
+            [
+                'choices'     => $this->getRangeChoices(1, 10),
+                'expanded'    => false,
+                'multiple'    => false,
+                'label'       => 'mautic.notification.form.priority',
+                'label_attr'  => ['class' => 'control-label'],
+                'placeholder' => false,
+                'required'    => false,
+                'attr'        => [
+                    'class'   => 'form-control',
+                    'tooltip' => 'mautic.notification.form.priority.tooltip',
+                ],
+            ]
+        );
+
+        $builder->add(
+            'ttl',
+            ChoiceType::class,
+            [
+                'choices'     => $this->getRangeChoices(1, 72),
+                'expanded'    => false,
+                'multiple'    => false,
+                'label'       => 'mautic.notification.form.time.to.live',
+                'label_attr'  => ['class' => 'control-label'],
+                'placeholder' => false,
+                'required'    => false,
+                'attr'        => [
+                    'class'   => 'form-control',
+                    'tooltip' => 'mautic.notification.form.time.to.live.tooltip',
+                ],
+            ]
+        );
+
+        $builder->add(
+            'icon',
+            FileType::class,
+            [
+                'label'      => 'mautic.notification.form.icon',
+                'label_attr' => ['class' => 'control-label'],
+                'required'   => false,
+                'attr'       => [
+                    'class'   => 'form-control',
+                    'tooltip' => 'mautic.notification.form.icon.tooltip',
+                ],
+                'mapped'      => false,
+                'constraints' => [
+                    new File(
+                        [
+                            'mimeTypes' => [
+                                'image/gif',
+                                'image/jpeg',
+                                'image/png',
+                            ],
+                            'mimeTypesMessage' => 'mautic.lead.avatar.types_invalid',
+                        ]
+                    ),
+                ],
+            ]
+        );
+        $builder->add(
+            'icon_delete',
+            CheckboxType::class,
+            [
+                'label'      => $this->translator->trans('mautic.notification.form.delete', ['%url%'=> $this->notificationUploader->getFullUrl($options['data'], 'icon'), '%file%'=>$options['data']->getIcon()]),
+                'label_attr' => ['class' => 'control-label'],
+                'mapped'     => false,
+                'data'       => false,
+            ]
+        );
+
+        $builder->add(
+            'image',
+            FileType::class,
+            [
+                'label'      => 'mautic.notification.form.image',
+                'label_attr' => ['class' => 'control-label'],
+                'required'   => false,
+                'attr'       => [
+                    'class'   => 'form-control',
+                    'tooltip' => 'mautic.notification.form.image.tooltip',
+                ],
+                'mapped'      => false,
+                'constraints' => [
+                    new File(
+                        [
+                            'mimeTypes' => [
+                                'image/gif',
+                                'image/jpeg',
+                                'image/png',
+                            ],
+                            'mimeTypesMessage' => 'mautic.lead.avatar.types_invalid',
+                        ]
+                    ),
+                ],
+            ]
+        );
+        $builder->add(
+            'image_delete',
+            CheckboxType::class,
+            [
+                'label'      => $this->translator->trans('mautic.notification.form.delete', ['%url%'=> $this->notificationUploader->getFullUrl($options['data'], 'image'), '%file%'=>$options['data']->getImage()]),
+                'label_attr' => ['class' => 'control-label'],
+                'mapped'     => false,
+                'data'       => false,
+            ]
+        );
+
         $builder->add('buttons', FormButtonsType::class);
 
         if (!empty($options['update_select'])) {
@@ -209,6 +486,22 @@ class NotificationType extends AbstractType
         if (!empty($options['action'])) {
             $builder->setAction($options['action']);
         }
+    }
+
+    /**
+     * @param int $min
+     * @param int $max
+     *
+     * @return array
+     */
+    private function getRangeChoices($min, $max)
+    {
+        $choices = [];
+        for ($i = $min; $i <= $max; ++$i) {
+            $choices[$i] = $i;
+        }
+
+        return $choices;
     }
 
     public function configureOptions(OptionsResolver $resolver)

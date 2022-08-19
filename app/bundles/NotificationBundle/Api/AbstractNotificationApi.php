@@ -14,6 +14,7 @@ namespace Mautic\NotificationBundle\Api;
 use Joomla\Http\Http;
 use Joomla\Http\Response;
 use Mautic\NotificationBundle\Entity\Notification;
+use Mautic\NotificationBundle\Helper\NotificationUploader;
 use Mautic\PageBundle\Model\TrackableModel;
 use Mautic\PluginBundle\Helper\IntegrationHelper;
 
@@ -35,13 +36,19 @@ abstract class AbstractNotificationApi
     protected $integrationHelper;
 
     /**
+     * @var NotificationUploader
+     */
+    protected $notificationUploader;
+
+    /**
      * AbstractNotificationApi constructor.
      */
-    public function __construct(Http $http, TrackableModel $trackableModel, IntegrationHelper $integrationHelper)
+    public function __construct(Http $http, TrackableModel $trackableModel, IntegrationHelper $integrationHelper, NotificationUploader $notificationUploader)
     {
-        $this->http              = $http;
-        $this->trackableModel    = $trackableModel;
-        $this->integrationHelper = $integrationHelper;
+        $this->http                 = $http;
+        $this->trackableModel       = $trackableModel;
+        $this->integrationHelper    = $integrationHelper;
+        $this->notificationUploader = $notificationUploader;
     }
 
     /**
@@ -57,7 +64,7 @@ abstract class AbstractNotificationApi
      *
      * @return mixed
      */
-    abstract public function sendNotification($id, Notification $notification);
+    abstract public function sendNotification($id, Notification $sendNotification, Notification $notification);
 
     /**
      * Convert a non-tracked url to a tracked url.
