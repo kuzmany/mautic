@@ -13,7 +13,6 @@ use Mautic\WebhookBundle\Entity\WebhookQueue;
 use Mautic\WebhookBundle\Entity\WebhookQueueRepository;
 use Mautic\WebhookBundle\Model\WebhookModel;
 use PHPUnit\Framework\Assert;
-use Symfony\Component\EventDispatcher\EventDispatcher;
 
 class WebhookSubscriberFunctionalTest extends MauticMysqlTestCase
 {
@@ -25,7 +24,6 @@ class WebhookSubscriberFunctionalTest extends MauticMysqlTestCase
                 'queue_mode' => WebhookModel::COMMAND_PROCESS,
             ]
         );
-        $this->dispatcher = new EventDispatcher();
         $this->truncateTables('leads', 'webhooks', 'webhook_queue', 'webhook_events');
     }
 
