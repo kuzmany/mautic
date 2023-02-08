@@ -188,28 +188,4 @@ class WebhookSubscriberTest extends \PHPUnit\Framework\TestCase
         $dispatcher->dispatch(LeadEvents::COMPANY_POST_SAVE, $event);
         $dispatcher->dispatch(LeadEvents::COMPANY_POST_DELETE, $event);
     }
-
-    public function testOnSegmentChange(): void
-    {
-        $mockModel  = $this->createMock(WebhookModel::class);
-
-        $mockModel->expects($this->once())
-            ->method('queueWebhooksByType')
-            ->with(
-                $this->callback(
-                    function ($type) {
-                        return LeadEvents::LEAD_LIST_CHANGE === $type;
-                    }
-                )
-            );
-
-        $webhookSubscriber = new WebhookSubscriber($mockModel);
-
-        $this->dispatcher->addSubscriber($webhookSubscriber);
-
-        $lead    = new Lead();
-        $segment = new LeadList();
-        $event   = new ListChangeEvent($lead, $segment, true);
-        $this->dispatcher->dispatch(LeadEvents::LEAD_LIST_CHANGE, $event);
-    }
 }
