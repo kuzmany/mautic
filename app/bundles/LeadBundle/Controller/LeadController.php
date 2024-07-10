@@ -565,20 +565,12 @@ class LeadController extends FormController
 
                     $inQuickForm = $request->get('qf', false);
 
-                    if ($inQuickForm) {
-                        $viewParameters = ['page' => $page];
-                        $returnUrl      = $this->generateUrl('mautic_contact_index', $viewParameters);
-                        $template       = 'Mautic\LeadBundle\Controller\LeadController::indexAction';
-                    } elseif ($this->getFormButton($form, ['buttons', 'save'])->isClicked()) {
-                        $viewParameters = [
-                            'objectAction' => 'view',
-                            'objectId'     => $lead->getId(),
-                        ];
-                        $returnUrl = $this->generateUrl('mautic_contact_action', $viewParameters);
-                        $template  = 'Mautic\LeadBundle\Controller\LeadController::viewAction';
-                    } else {
-                        return $this->editAction($request, $userHelper, $avatarHelper, $lead->getId(), true);
-                    }
+                    $viewParameters = [
+                        'objectAction' => 'view',
+                        'objectId'     => $lead->getId(),
+                    ];
+                    $returnUrl = $this->generateUrl('mautic_contact_action', $viewParameters);
+                    $template  = 'Mautic\LeadBundle\Controller\LeadController::viewAction';
                 } else {
                     if ($request->get('qf', false)) {
                         return $this->quickAddAction($request);
