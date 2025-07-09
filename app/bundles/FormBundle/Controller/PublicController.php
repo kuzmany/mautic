@@ -8,7 +8,6 @@ use Mautic\CoreBundle\Helper\ThemeHelper;
 use Mautic\CoreBundle\Twig\Helper\AnalyticsHelper;
 use Mautic\CoreBundle\Twig\Helper\AssetsHelper;
 use Mautic\CoreBundle\Twig\Helper\DateHelper;
-use Mautic\CoreBundle\Twig\Helper\SlotsHelper;
 use Mautic\FormBundle\Event\SubmissionEvent;
 use Mautic\FormBundle\Model\FieldModel;
 use Mautic\FormBundle\Model\FormModel;
@@ -272,7 +271,7 @@ class PublicController extends CommonFormController
      * @throws \Exception
      * @throws \Mautic\CoreBundle\Exception\FileNotFoundException
      */
-    public function previewAction(Request $request, AnalyticsHelper $analyticsHelper, AssetsHelper $assetsHelper, ThemeHelper $themeHelper, SlotsHelper $slotsHelper, int $id = 0)
+    public function previewAction(Request $request, AnalyticsHelper $analyticsHelper, AssetsHelper $assetsHelper, ThemeHelper $themeHelper, int $id = 0)
     {
         $model = $this->getModel('form.form');
         \assert($model instanceof FormModel);
@@ -303,7 +302,7 @@ class PublicController extends CommonFormController
             // Use form specific template or system-wide default theme
             $template = $form->getTemplate() ?? $this->coreParametersHelper->get('theme');
             if (!empty($template)) {
-                $theme = $this->factory->getTheme($template);
+                $theme = $themeHelper->getTheme($template);
                 if ($theme->getTheme() != $template) {
                     $config = $theme->getConfig();
                     if (in_array('form', $config['features'])) {
@@ -324,8 +323,6 @@ class PublicController extends CommonFormController
             foreach ($customStylesheets as $css) {
                 $assetsHelper->addStylesheet($css);
             }
-
-            $slotsHelper->set('pageTitle', $form->getName());
 
             if (!empty($analytics)) {
                 $assetsHelper->addCustomDeclaration($analytics);

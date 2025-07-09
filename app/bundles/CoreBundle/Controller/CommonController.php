@@ -5,7 +5,6 @@ namespace Mautic\CoreBundle\Controller;
 use Doctrine\Persistence\ManagerRegistry;
 use Mautic\CoreBundle\CoreEvents;
 use Mautic\CoreBundle\Event\CustomTemplateEvent;
-use Mautic\CoreBundle\Factory\MauticFactory;
 use Mautic\CoreBundle\Factory\ModelFactory;
 use Mautic\CoreBundle\Helper\CoreParametersHelper;
 use Mautic\CoreBundle\Helper\DataExporterHelper;
@@ -42,7 +41,6 @@ class CommonController extends AbstractController implements MauticController
      */
     public function __construct(
         protected ManagerRegistry $doctrine,
-        protected MauticFactory $factory,
         protected ModelFactory $modelFactory,
         UserHelper $userHelper,
         protected CoreParametersHelper $coreParametersHelper,
@@ -111,6 +109,26 @@ class CommonController extends AbstractController implements MauticController
         $subRequest          = $this->requestStack->getCurrentRequest()->duplicate($query, $request, $path);
 
         return $this->container->get('http_kernel')->handle($subRequest, HttpKernelInterface::SUB_REQUEST);
+    }
+
+    /**
+     * eventAwareRenderView.
+     *
+     * @param array<string, string> $parameters
+     */
+    public function eventAwareRenderView(string &$contentTemplate, array &$parameters, Request $request = null): string
+    {
+        if ($this->dispatcher->hasListeners(CoreEvents::VIEW_INJECT_CUSTOM_TEMPLATE)) {
+            $event = $this->dispatcher->dispatch(
+                new CustomTemplateEvent($request, $contentTemplate, $parameters),
+                CoreEvents::VIEW_INJECT_CUSTOM_TEMPLATE
+            );
+
+            $contentTemplate   = $event->getTemplate();
+            $parameters        = $event->getVars();
+        }
+
+        return $this->renderView($contentTemplate, $parameters);
     }
 
     /**
@@ -313,6 +331,7 @@ class CommonController extends AbstractController implements MauticController
 
         // Ajax call so respond with json
         $newContent = '';
+        $ignoreAjax = $request->get('ignoreAjax', false); // get the value here as the forward can overwrite it.
         if ($contentTemplate) {
             if ($forward) {
                 // the content is from another controller action so we must retrieve the response from it instead of
@@ -327,8 +346,11 @@ class CommonController extends AbstractController implements MauticController
                     $newContent = $newContentResponse->getContent();
                 }
             } else {
+                $parameters['mauticTemplate']     = $contentTemplate;
+                $parameters['mauticTemplateVars'] = $parameters;
+
                 $GLOBALS['MAUTIC_AJAX_DIRECT_RENDER'] = 1; // for error handling
-                $newContent                           = $this->renderView($contentTemplate, $parameters);
+                $newContent                           = $this->eventAwareRenderView($contentTemplate, $parameters, $request);
 
                 unset($GLOBALS['MAUTIC_AJAX_DIRECT_RENDER']);
             }
@@ -336,7 +358,7 @@ class CommonController extends AbstractController implements MauticController
 
         // there was a redirect within the controller leading to a double call of this function so just return the content
         // to prevent newContent from being json
-        if ($request->get('ignoreAjax', false)) {
+        if ($ignoreAjax) {
             return new Response($newContent, $code);
         }
 

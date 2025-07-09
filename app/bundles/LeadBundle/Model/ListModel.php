@@ -13,6 +13,7 @@ use Mautic\CoreBundle\Helper\DateTimeHelper;
 use Mautic\CoreBundle\Helper\ProgressBarHelper;
 use Mautic\CoreBundle\Helper\UserHelper;
 use Mautic\CoreBundle\Model\FormModel;
+use Mautic\CoreBundle\Model\GlobalSearchInterface;
 use Mautic\CoreBundle\Security\Permissions\CorePermissions;
 use Mautic\CoreBundle\Translation\Translator;
 use Mautic\LeadBundle\Entity\Lead;
@@ -49,7 +50,7 @@ use Symfony\Contracts\EventDispatcher\Event;
 /**
  * @extends FormModel<LeadList>
  */
-class ListModel extends FormModel
+class ListModel extends FormModel implements GlobalSearchInterface
 {
     use OperatorListTrait;
 
@@ -131,13 +132,13 @@ class ListModel extends FormModel
         // make sure alias is not already taken
         $repo      = $this->getRepository();
         $testAlias = $alias;
-        $existing  = $repo->getLists(null, $testAlias, $entity->getId());
+        $existing  = $repo->getLists(null, $testAlias, $entity->getId(), false);
         $count     = count($existing);
         $aliasTag  = $count;
 
         while ($count) {
             $testAlias = $alias.$aliasTag;
-            $existing  = $repo->getLists(null, $testAlias, $entity->getId());
+            $existing  = $repo->getLists(null, $testAlias, $entity->getId(), false);
             $count     = count($existing);
             ++$aliasTag;
         }
@@ -509,8 +510,12 @@ class ListModel extends FormModel
             }
         }
 
-        $totalLeadCount = $this->getRepository()->getLeadCount($segmentId);
-        $this->segmentCountCacheHelper->setSegmentContactCount($segmentId, (int) $totalLeadCount);
+        if ($this->coreParametersHelper->get('update_segment_contact_count_in_background', false)) {
+            $this->segmentCountCacheHelper->invalidateSegmentContactCount($segmentId);
+        } else {
+            $totalLeadCount = $this->getRepository()->getLeadCount($segmentId);
+            $this->segmentCountCacheHelper->setSegmentContactCount($segmentId, (int) $totalLeadCount);
+        }
 
         return $leadsProcessed;
     }
@@ -630,7 +635,11 @@ class ListModel extends FormModel
                 $dispatchEvents[] = $listId;
             }
 
-            $this->segmentCountCacheHelper->incrementSegmentContactCount($listId);
+            if ($this->coreParametersHelper->get('update_segment_contact_count_in_background', false)) {
+                $this->segmentCountCacheHelper->invalidateSegmentContactCount($listId);
+            } else {
+                $this->segmentCountCacheHelper->incrementSegmentContactCount($listId);
+            }
         }
 
         if (!empty($persistLists)) {
@@ -748,7 +757,11 @@ class ListModel extends FormModel
                 $dispatchEvents[] = $listId;
             }
 
-            $this->segmentCountCacheHelper->decrementSegmentContactCount($listId);
+            if ($this->coreParametersHelper->get('update_segment_contact_count_in_background', false)) {
+                $this->segmentCountCacheHelper->invalidateSegmentContactCount($listId);
+            } else {
+                $this->segmentCountCacheHelper->decrementSegmentContactCount($listId);
+            }
 
             unset($listLead);
         }
@@ -1232,9 +1245,9 @@ class ListModel extends FormModel
                     continue;
                 }
 
-                $idsNotToBeDeleted = array_unique(array_merge($idsNotToBeDeleted, $eachFilter['filter']));
                 $bcFilterValue     = $eachFilter['filter'] ?? [];
                 $filterValue       = $eachFilter['properties']['filter'] ?? $bcFilterValue;
+                $idsNotToBeDeleted = array_unique(array_merge($idsNotToBeDeleted, $filterValue));
                 foreach ($filterValue as $val) {
                     if (!empty($dependency[$val])) {
                         $dependency[$val] = array_merge($dependency[$val], [$entity->getId()]);

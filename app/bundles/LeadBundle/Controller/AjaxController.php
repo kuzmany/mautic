@@ -9,21 +9,21 @@ use Mautic\CoreBundle\Controller\AjaxLookupControllerTrait;
 use Mautic\CoreBundle\Helper\InputHelper;
 use Mautic\CoreBundle\Helper\Tree\JsPlumbFormatter;
 use Mautic\CoreBundle\Security\Permissions\CorePermissions;
+use Mautic\EmailBundle\Helper\MailHelper;
 use Mautic\EmailBundle\Model\EmailModel;
 use Mautic\LeadBundle\Entity\DoNotContact;
 use Mautic\LeadBundle\Entity\LeadField;
 use Mautic\LeadBundle\Entity\UtmTag;
-use Mautic\LeadBundle\Event\LeadTimelineEvent;
 use Mautic\LeadBundle\Form\Type\FieldType;
 use Mautic\LeadBundle\Form\Type\FilterPropertiesType;
 use Mautic\LeadBundle\Helper\FormFieldHelper;
-use Mautic\LeadBundle\LeadEvents;
 use Mautic\LeadBundle\Model\CompanyModel;
 use Mautic\LeadBundle\Model\DoNotContact as DoNotContactModel;
 use Mautic\LeadBundle\Model\FieldModel;
 use Mautic\LeadBundle\Model\LeadModel;
 use Mautic\LeadBundle\Model\ListModel;
 use Mautic\LeadBundle\Provider\FormAdjustmentsProviderInterface;
+use Mautic\LeadBundle\Segment\SegmentFilterIconTrait;
 use Mautic\LeadBundle\Segment\Stat\SegmentCampaignShare;
 use Mautic\LeadBundle\Services\ContactColumnsDictionary;
 use Mautic\LeadBundle\Services\SegmentDependencyTreeFactory;
@@ -32,11 +32,11 @@ use Symfony\Component\Form\FormFactoryInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\HttpFoundation\Session\Session;
 
 class AjaxController extends CommonAjaxController
 {
     use AjaxLookupControllerTrait;
+    use SegmentFilterIconTrait;
 
     public function userListAction(Request $request): JsonResponse
     {
@@ -318,58 +318,6 @@ class AjaxController extends CommonAjaxController
         return $this->sendJsonResponse($dataArray);
     }
 
-    /**
-     * Updates the timeline events and gets returns updated HTML.
-     */
-    protected function updateTimelineAction(Request $request, Session $session): JsonResponse
-    {
-        $dataArray     = ['success' => 0];
-        $includeEvents = InputHelper::clean($request->request->all()['includeEvents'] ?? []);
-        $excludeEvents = InputHelper::clean($request->request->all()['excludeEvents'] ?? []);
-        $search        = InputHelper::clean($request->request->get('search'));
-        $leadId        = (int) $request->request->get('leadId');
-
-        if (!empty($leadId)) {
-            // find the lead
-            $model = $this->getModel('lead.lead');
-            $lead  = $model->getEntity($leadId);
-
-            if (null !== $lead) {
-                $filter = [
-                    'search'        => $search,
-                    'includeEvents' => $includeEvents,
-                    'excludeEvents' => $excludeEvents,
-                ];
-
-                $session->set('mautic.lead.'.$leadId.'.timeline.filters', $filter);
-
-                // Trigger the TIMELINE_ON_GENERATE event to fetch the timeline events from subscribed bundles
-                $dispatcher = $this->dispatcher;
-                $event      = new LeadTimelineEvent($lead, $filter);
-                $dispatcher->dispatch($event, LeadEvents::TIMELINE_ON_GENERATE);
-
-                $events     = $event->getEvents();
-                $eventTypes = $event->getEventTypes();
-
-                $timeline = $this->renderView(
-                    'MauticLeadBundle:Lead:history.html.php',
-                    [
-                        'events'       => $events,
-                        'eventTypes'   => $eventTypes,
-                        'eventFilters' => $filter,
-                        'lead'         => $lead,
-                    ]
-                );
-
-                $dataArray['success']      = 1;
-                $dataArray['timeline']     = $timeline;
-                $dataArray['historyCount'] = count($events);
-            }
-        }
-
-        return $this->sendJsonResponse($dataArray);
-    }
-
     protected function toggleLeadListAction(Request $request): JsonResponse
     {
         $dataArray = ['success' => 0];
@@ -602,7 +550,7 @@ class AjaxController extends CommonAjaxController
         return $this->sendJsonResponse($dataArray);
     }
 
-    public function getEmailTemplateAction(Request $request, EmailModel $model): JsonResponse
+    public function getEmailTemplateAction(Request $request, EmailModel $model, MailHelper $mailHelper): JsonResponse
     {
         $data    = ['success' => 1, 'body' => '', 'subject' => ''];
         $emailId = $request->query->get('template');
@@ -617,11 +565,10 @@ class AjaxController extends CommonAjaxController
                 $email->getCreatedBy()
             )
         ) {
-            $mailer = $this->factory->getMailer();
-            $mailer->setEmail($email, true, [], [], true);
+            $mailHelper->setEmail($email, true, [], true);
 
-            $data['body']    = $mailer->getBody();
-            $data['subject'] = $mailer->getSubject();
+            $data['body']    = $mailHelper->getBody();
+            $data['subject'] = $mailHelper->getSubject();
         }
 
         return $this->sendJsonResponse($data);
@@ -876,16 +823,20 @@ class AjaxController extends CommonAjaxController
     {
         $id = (int) InputHelper::clean($request->get('id'));
 
-        $leadListExists = $model->leadListExists($id);
-
-        if (!$leadListExists) {
-            return new JsonResponse($this->prepareJsonResponse(0), Response::HTTP_NOT_FOUND);
+        $leadList = $model->getEntity($id);
+        if (!$leadList) {
+            return new JsonResponse($this->prepareJsonResponse(0, false), Response::HTTP_NOT_FOUND);
         }
 
         $leadCounts = $model->getSegmentContactCount([$id]);
         $leadCount  = $leadCounts[$id];
 
-        return new JsonResponse($this->prepareJsonResponse($leadCount));
+        return new JsonResponse(
+            $this->prepareJsonResponse(
+                $leadCount,
+                $leadList->needsRebuild(),
+            )
+        );
     }
 
     public function getSegmentDependencyTreeAction(Request $request, SegmentDependencyTreeFactory $segmentDependencyTreeFactory, ListModel $model): JsonResponse
@@ -906,13 +857,14 @@ class AjaxController extends CommonAjaxController
     /**
      * @return array<string, mixed>
      */
-    private function prepareJsonResponse(int $leadCount): array
+    private function prepareJsonResponse(int $leadCount, bool $needsRebuild): array
     {
         return [
-            'html' => $this->translator->trans(
-                'mautic.lead.list.viewleads_count',
+            'html'      => $this->translator->trans(
+                $needsRebuild ? 'mautic.lead.list.building' : 'mautic.lead.list.viewleads_count',
                 ['%count%' => $leadCount]
             ),
+            'className' => sprintf('label %s col-count', $needsRebuild ? 'label-info' : 'label-gray'),
             'leadCount' => $leadCount,
         ];
     }

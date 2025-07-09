@@ -300,7 +300,7 @@ class FormEntity extends CommonEntity
     /**
      * Set modifiedBy.
      *
-     * @param User $modifiedBy
+     * @param User|int|null $modifiedBy
      *
      * @return mixed
      */
