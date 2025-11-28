@@ -22,7 +22,8 @@
     },
   "require": {
     "composer/installers": "^2.3",
-    "mautic/core-lib": "^7.0"
+    "mautic/core-lib": "^7.0",
+    "symfony/rate-limiter": "*"
   },
   "require-dev": {
     "codeception/codeception": "^5.1",

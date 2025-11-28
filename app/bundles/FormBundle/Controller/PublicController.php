@@ -8,7 +8,11 @@ use Mautic\CoreBundle\Helper\ThemeHelper;
 use Mautic\CoreBundle\Twig\Helper\AnalyticsHelper;
 use Mautic\CoreBundle\Twig\Helper\AssetsHelper;
 use Mautic\CoreBundle\Twig\Helper\DateHelper;
+use Mautic\FormBundle\Entity\FormAbandonment;
+use Mautic\FormBundle\Event\FormAbandonmentEvent;
 use Mautic\FormBundle\Event\SubmissionEvent;
+use Mautic\FormBundle\FormEvents;
+use Mautic\FormBundle\Model\AbandonedSubmissionModel;
 use Mautic\FormBundle\Model\FieldModel;
 use Mautic\FormBundle\Model\FormModel;
 use Mautic\FormBundle\Model\SubmissionModel;
@@ -243,6 +247,86 @@ class PublicController extends CommonFormController
 
             return $this->redirectToRoute('mautic_form_postmessage');
         }
+    }
+
+    public function abandonAction(Request $request): JsonResponse
+    {
+        defined('MAUTIC_NON_TRACKABLE_REQUEST') || define('MAUTIC_NON_TRACKABLE_REQUEST', 1);
+
+        $payload = json_decode((string) $request->getContent(), true);
+        if (!is_array($payload)) {
+            $payload = $request->request->all();
+        }
+
+        $formId = (int) ($payload['formId'] ?? 0);
+        if (!$formId) {
+            return new JsonResponse(['success' => false, 'error' => 'invalid_form'], Response::HTTP_BAD_REQUEST);
+        }
+
+        /** @var FormModel $formModel */
+        $formModel = $this->getModel('form.form');
+        $form      = $formModel->getEntity($formId);
+
+        if (null === $form || !$form->isPublished()) {
+            return new JsonResponse(['success' => false], Response::HTTP_NOT_FOUND);
+        }
+
+        $components     = $formModel->getCustomComponents();
+        $viewOnlyFields = $components['viewOnlyFields'] ?? [];
+        $allowedAliases = [];
+
+        foreach ($form->getFields() as $field) {
+            if (!in_array($field->getType(), $viewOnlyFields)) {
+                $allowedAliases[$field->getAlias()] = true;
+            }
+        }
+
+        $data = [];
+        foreach (($payload['data'] ?? []) as $alias => $value) {
+            if (!isset($allowedAliases[$alias])) {
+                continue;
+            }
+
+            if (is_scalar($value)) {
+                $data[$alias] = InputHelper::_($value, 'string');
+            }
+        }
+
+        if (!$data) {
+            return new JsonResponse(['success' => false, 'error' => 'no_fields'], Response::HTTP_BAD_REQUEST);
+        }
+
+        $sessionId = InputHelper::clean($payload['sessionId'] ?? $this->contactTracker->getTrackingId());
+
+        /** @var AbandonedSubmissionModel $abandonedModel */
+        $abandonedModel = $this->getModel('form.abandoned_submission');
+        $abandonedModel->saveAbandoned($form, $data, $sessionId);
+
+        // Dispatch form abandonment event for campaign triggers
+        $abandonment = new FormAbandonment();
+        $abandonment->setForm($form)
+            ->setTrackingId($sessionId)
+            ->setDateAbandoned(new \DateTime())
+            ->setFilledFields(array_keys($data))
+            ->setAbandonmentPercentage((int) ($payload['abandonmentPercentage'] ?? 0))
+            ->setTimeSpentSeconds((int) ($payload['timeSpent'] ?? 0));
+
+        // Try to find and set the lead if available
+        $lead = $this->contactTracker->getContact();
+        if ($lead && $lead->getId()) {
+            $abandonment->setLead($lead);
+        }
+
+        // Set IP address if available
+        $ipAddress = $this->contactTracker->getIpAddress();
+        if ($ipAddress) {
+            $abandonment->setIpAddress($ipAddress);
+        }
+
+        $event = new FormAbandonmentEvent($abandonment);
+        $this->dispatcher->dispatch($event, FormEvents::FORM_ON_ABANDON);
+
+        return new JsonResponse(['success' => true]);
     }
 
     /**
