@@ -7,6 +7,7 @@ use Mautic\CampaignBundle\Event\CampaignBuilderEvent;
 use Mautic\CampaignBundle\Event\CampaignExecutionEvent;
 use Mautic\CampaignBundle\Executioner\RealTimeExecutioner;
 use Mautic\CoreBundle\Helper\InputHelper;
+use Mautic\FormBundle\Event\FormAbandonmentEvent;
 use Mautic\FormBundle\Event\SubmissionEvent;
 use Mautic\FormBundle\Form\Type\CampaignEventFormFieldValueType;
 use Mautic\FormBundle\Form\Type\CampaignEventFormSubmitType;
@@ -31,6 +32,7 @@ class CampaignSubscriber implements EventSubscriberInterface
         return [
             CampaignEvents::CAMPAIGN_ON_BUILD         => ['onCampaignBuild', 0],
             FormEvents::FORM_ON_SUBMIT                => ['onFormSubmit', 0],
+            FormEvents::FORM_ON_ABANDON               => ['onFormAbandon', 0],
             FormEvents::ON_CAMPAIGN_TRIGGER_DECISION  => ['onCampaignTriggerDecision', 0],
             FormEvents::ON_CAMPAIGN_TRIGGER_CONDITION => ['onCampaignTriggerCondition', 0],
         ];
@@ -50,6 +52,14 @@ class CampaignSubscriber implements EventSubscriberInterface
         $event->addDecision('form.submit', $trigger);
 
         $trigger = [
+            'label'       => 'mautic.form.campaign.event.abandon',
+            'description' => 'mautic.form.campaign.event.abandon_descr',
+            'formType'    => CampaignEventFormSubmitType::class,
+            'eventName'   => FormEvents::ON_CAMPAIGN_TRIGGER_DECISION,
+        ];
+        $event->addDecision('form.abandon', $trigger);
+
+        $trigger = [
             'label'       => 'mautic.form.campaign.event.field_value',
             'description' => 'mautic.form.campaign.event.field_value_descr',
             'formType'    => CampaignEventFormFieldValueType::class,
@@ -66,6 +76,15 @@ class CampaignSubscriber implements EventSubscriberInterface
     {
         $form = $event->getSubmission()->getForm();
         $this->realTimeExecutioner->execute('form.submit', $form, 'form', $form->getId());
+    }
+
+    /**
+     * Trigger campaign event for when a form is abandoned.
+     */
+    public function onFormAbandon(FormAbandonmentEvent $event): void
+    {
+        $form = $event->getForm();
+        $this->realTimeExecutioner->execute('form.abandon', $form, 'form', $form->getId());
     }
 
     public function onCampaignTriggerDecision(CampaignExecutionEvent $event)

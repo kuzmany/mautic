@@ -90,6 +90,7 @@ class SubmissionModel extends CommonFormModel
         private ContactTracker $contactTracker,
         private ContactMerger $contactMerger,
         private FieldsWithUniqueIdentifier $fieldsWithUniqueIdentifier,
+        private AbandonedSubmissionModel $abandonedSubmissionModel,
         EntityManager $em,
         CorePermissions $security,
         EventDispatcherInterface $dispatcher,
@@ -395,6 +396,8 @@ class SubmissionModel extends CommonFormModel
         if ($submissionEvent->hasPostSubmitCallbacks()) {
             return ['callback' => $submissionEvent];
         }
+
+        $this->abandonedSubmissionModel->deleteFor($form, $lead, $this->contactTracker->getTrackingId());
 
         // made it to the end so return the submission event to give the calling method access to tokens, results, etc
         // otherwise return false that no errors were encountered (to keep BC really)

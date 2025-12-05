@@ -177,7 +177,13 @@ var t,e;t=this,e=function(){"use strict";function t(t,e){var n=Object.keys(t);if
         };
 
         Form.getFormLink = function(options) {
-            return Core.getMauticBaseUrl() + 'index.php/form/' + options.data['id'] + '?' + options.params;
+            return (
+                Core.getMauticBaseUrl() +
+                '../form/' +
+                options.data['id'] +
+                '?' +
+                options.params
+            );
         };
 
         Form.createIframe = function(options, embed) {
@@ -208,6 +214,110 @@ var t,e;t=this,e=function(){"use strict";function t(t,e){var n=Object.keys(t);if
             return null;
         };
 
+        Form.getSessionId = function() {
+            var match = document.cookie.match(/(?:^|; )mautic_session_id=([^;]+)/);
+            return match ? decodeURIComponent(match[1]) : null;
+        };
+
+        Form.sendAbandonPing = function(formId, formElement) {
+            var formIdInput = formElement.querySelector('input[name="mauticform[formId]"]');
+            var numericFormId = formIdInput ? formIdInput.value : formId;
+
+            var fields = formElement.querySelectorAll('input[name^="mauticform["], textarea[name^="mauticform["], select[name^="mauticform["]');
+            var data   = {};
+            var count  = 0;
+
+            Array.prototype.forEach.call(fields, function(field) {
+                if (count >= 10) {
+                    return;
+                }
+
+                var nameMatch = field.name && field.name.match(/mauticform\[([^\]]+)]/);
+                var alias     = nameMatch ? nameMatch[1] : null;
+
+                if (!alias) {
+                    return;
+                }
+
+                if (field.type === 'checkbox' || field.type === 'radio') {
+                    if (!field.checked) {
+                        return;
+                    }
+                    data[alias] = field.value;
+                    count++;
+                    return;
+                }
+
+                var value = field.value;
+                if (!value) {
+                    return;
+                }
+
+                if (field.tagName.toLowerCase() === 'select' && field.multiple) {
+                    value = Array.prototype.map.call(field.selectedOptions, function(opt) { return opt.value; }).join(',');
+                }
+
+                data[alias] = value;
+                count++;
+            });
+
+            if (!Object.keys(data).length) {
+                return;
+            }
+
+            var payload = {
+                formId: numericFormId,
+                sessionId: Form.getSessionId(),
+                data: data
+            };
+
+            var url = Core.getMauticBaseUrl() + '../form/abandon';
+            var jsonData = JSON.stringify(payload);
+
+            if (navigator.sendBeacon) {
+                var blob = new Blob([jsonData], {type: 'application/json'});
+                navigator.sendBeacon(url, blob);
+            } else {
+                fetch(url, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: jsonData,
+                    credentials: 'include',
+                    keepalive: true
+                });
+            }
+        };
+
+        Form.initAbandonTracking = function(formId, formElement) {
+            if (!formElement) {
+                return;
+            }
+
+            Form.abandonTimers = Form.abandonTimers || {};
+
+            var schedulePing = function() {
+                clearTimeout(Form.abandonTimers[formId]);
+                Form.abandonTimers[formId] = setTimeout(function() {
+                    Form.sendAbandonPing(formId, formElement);
+                }, 1500);
+            };
+
+            var fields = formElement.querySelectorAll('input, textarea, select');
+            Array.prototype.forEach.call(fields, function(field) {
+                if (['submit', 'button', 'hidden', 'file'].indexOf(field.type) !== -1) {
+                    return;
+                }
+
+                field.addEventListener('input', schedulePing);
+                field.addEventListener('change', schedulePing);
+            });
+
+            formElement.addEventListener('submit', function() {
+                clearTimeout(Form.abandonTimers[formId]);
+                delete Form.abandonTimers[formId];
+            });
+        };
+
         Form.prepareForms = function() {
             if (Core.debug()) console.log('Preparing forms found on the page');
 
@@ -236,6 +346,7 @@ var t,e;t=this,e=function(){"use strict";function t(t,e){var n=Object.keys(t);if
                         });
                     }
 
+                    Form.initAbandonTracking(formId, theForm);
                     Form.populateValuesWithGetParameters();
                 }
             }

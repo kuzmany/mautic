@@ -108,6 +108,15 @@ final class FormEvents
     public const FORM_ON_SUBMIT = 'mautic.form_on_submit';
 
     /**
+     * The mautic.form_on_abandon event is dispatched when a form is abandoned.
+     *
+     * The event listener receives a Mautic\FormBundle\Event\FormAbandonmentEvent instance.
+     *
+     * @var string
+     */
+    public const FORM_ON_ABANDON = 'mautic.form_on_abandon';
+
+    /**
      * The mautic.form.on_campaign_trigger_condition event is fired when the campaign condition triggers.
      *
      * The event listener receives a

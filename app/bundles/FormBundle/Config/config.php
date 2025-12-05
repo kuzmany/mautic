@@ -99,6 +99,11 @@ return [
                 'path'       => '/form/generate.js',
                 'controller' => 'Mautic\FormBundle\Controller\PublicController::generateAction',
             ],
+            'mautic_form_abandon' => [
+                'path'       => '/form/abandon',
+                'controller' => 'Mautic\FormBundle\Controller\PublicController::abandonAction',
+                'method'     => 'POST',
+            ],
             'mautic_form_postmessage' => [
                 'path'       => '/form/message',
                 'controller' => 'Mautic\FormBundle\Controller\PublicController::messageAction',
