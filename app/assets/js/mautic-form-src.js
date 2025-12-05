@@ -177,7 +177,13 @@ var t,e;t=this,e=function(){"use strict";function t(t,e){var n=Object.keys(t);if
         };
 
         Form.getFormLink = function(options) {
-            return Core.getMauticBaseUrl() + 'index.php/form/' + options.data['id'] + '?' + options.params;
+            return (
+                Core.getMauticBaseUrl() +
+                '../form/' +
+                options.data['id'] +
+                '?' +
+                options.params
+            );
         };
 
         Form.createIframe = function(options, embed) {
@@ -214,6 +220,9 @@ var t,e;t=this,e=function(){"use strict";function t(t,e){var n=Object.keys(t);if
         };
 
         Form.sendAbandonPing = function(formId, formElement) {
+            var formIdInput = formElement.querySelector('input[name="mauticform[formId]"]');
+            var numericFormId = formIdInput ? formIdInput.value : formId;
+
             var fields = formElement.querySelectorAll('input[name^="mauticform["], textarea[name^="mauticform["], select[name^="mauticform["]');
             var data   = {};
             var count  = 0;
@@ -257,12 +266,12 @@ var t,e;t=this,e=function(){"use strict";function t(t,e){var n=Object.keys(t);if
             }
 
             var payload = {
-                formId: formId,
+                formId: numericFormId,
                 sessionId: Form.getSessionId(),
                 data: data
             };
 
-            var url      = Core.getMauticBaseUrl() + 'index.php/form/abandon';
+            var url = Core.getMauticBaseUrl() + '../form/abandon';
             var jsonData = JSON.stringify(payload);
 
             if (navigator.sendBeacon) {
