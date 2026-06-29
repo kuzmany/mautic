@@ -27,14 +27,14 @@ class SyncCommandTest extends TestCase
 
     private CommandTester $commandTester;
 
-    public function setUp(): void
+    protected function setUp(): void
     {
         parent::setUp();
 
         $this->syncService = $this->createMock(SyncServiceInterface::class);
         $application       = new Application();
 
-        $application->add(new SyncCommand($this->syncService));
+        $application->addCommand(new SyncCommand($this->syncService));
 
         // env is global option. Must be defined.
         $application->getDefinition()->addOption(

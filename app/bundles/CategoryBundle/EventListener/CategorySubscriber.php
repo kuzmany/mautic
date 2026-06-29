@@ -7,7 +7,6 @@ use Mautic\CategoryBundle\Event\CategoryEvent;
 use Mautic\CategoryBundle\Event\CategoryTypeEntityEvent;
 use Mautic\CategoryBundle\Event\CategoryTypesEvent;
 use Mautic\CategoryBundle\Model\CategoryModel;
-use Mautic\CoreBundle\Exception\RecordCanNotBeDeletedException;
 use Mautic\CoreBundle\Helper\BundleHelper;
 use Mautic\CoreBundle\Helper\IpLookupHelper;
 use Mautic\CoreBundle\Model\AuditLogModel;
@@ -94,11 +93,11 @@ class CategorySubscriber implements EventSubscriberInterface
             $message = $this->translator->trans(
                 'mautic.category.is_in_use.delete',
                 [
-                    '%entities%'     => implode(', ', array_map(fn ($entity): string => $this->translator->trans($entity['label']).' Id: '.$entity['id'], $usage)),
+                    '%entities%'     => implode(', ', array_map(fn (array $entity): string => $this->translator->trans($entity['label']).' Id: '.$entity['id'], $usage)),
                     '%categoryName%' => $event->getCategory()->getTitle(),
                 ],
                 'validators');
-            throw new RecordCanNotBeDeletedException($message);
+            $event->addDependencyError($message);
         }
     }
 

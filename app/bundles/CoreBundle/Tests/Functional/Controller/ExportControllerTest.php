@@ -10,7 +10,6 @@ use Mautic\ReportBundle\Entity\Report;
 use Mautic\UserBundle\Entity\Permission;
 use Mautic\UserBundle\Entity\Role;
 use Mautic\UserBundle\Entity\User;
-use PHPUnit\Framework\Assert;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\PasswordHasher\PasswordHasherInterface;
@@ -35,7 +34,7 @@ final class ExportControllerTest extends MauticMysqlTestCase
         $this->client->request(Request::METHOD_GET, '/s/contacts');
         $this->assertStringContainsString('Export to CSV', $this->client->getResponse()->getContent());
         $this->client->request(Request::METHOD_GET, '/s/contacts/batchExport?filetype=csv');
-        Assert::assertSame(Response::HTTP_OK, $this->client->getResponse()->getStatusCode(), $this->client->getResponse()->getContent());
+        self::assertResponseIsSuccessful();
     }
 
     public function testFormExportAction(): void
@@ -51,7 +50,7 @@ final class ExportControllerTest extends MauticMysqlTestCase
         $this->client->request(Request::METHOD_GET, '/s/forms/results/'.$formId);
         $this->assertStringContainsString('Export to CSV', $this->client->getResponse()->getContent());
         $this->client->request(Request::METHOD_GET, '/s/forms/results/'.$formId.'/export');
-        Assert::assertSame(Response::HTTP_OK, $this->client->getResponse()->getStatusCode());
+        self::assertResponseIsSuccessful();
     }
 
     public function testReportExportAction(): void
@@ -141,7 +140,7 @@ final class ExportControllerTest extends MauticMysqlTestCase
         $user->setUsername('john.doe');
         $user->setEmail('john.doe@email.com');
         $hasher = self::getContainer()->get('security.password_hasher_factory')->getPasswordHasher($user);
-        \assert($hasher instanceof PasswordHasherInterface);
+        $this->assertInstanceOf(PasswordHasherInterface::class, $hasher);
         $user->setPassword($hasher->hash('Maut1cR0cks!'));
         $user->setRole($role);
 

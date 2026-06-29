@@ -95,7 +95,7 @@ class FieldType extends AbstractType
             ]
         );
 
-        $new         = $options['data']->getId() ? false : true;
+        $new         = !(bool) $options['data']->getId();
         $type        = $options['data']->getType();
         $isIndex     = $options['data']->isIsIndex();
         $default     = (empty($type)) ? 'text' : $type;
@@ -531,7 +531,7 @@ class FieldType extends AbstractType
 
         if ($options['data']->getColumnIsNotRemoved()) {
             if (array_key_exists('tooltip', $attr)) {
-                $attr['tooltip'] = $attr['tooltip'].' mautic.lead.field.being_removed_in_background';
+                $attr['tooltip'] .= ' mautic.lead.field.being_removed_in_background';
             } else {
                 $attr['tooltip'] = 'mautic.lead.field.being_removed_in_background';
             }
@@ -617,7 +617,6 @@ class FieldType extends AbstractType
                 'attr'  => [
                     'tooltip'         => 'mautic.lead.field.form.isuniqueidentifer.tooltip',
                     'onchange'        => 'Mautic.displayUniqueIdentifierWarning(this);',
-                    'data-disable-on' => '{"leadfield_object":"company"}',
                 ],
                 'data' => (!empty($data)),
             ]

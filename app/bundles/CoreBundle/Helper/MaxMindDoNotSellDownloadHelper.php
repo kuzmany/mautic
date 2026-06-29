@@ -9,7 +9,7 @@ use Symfony\Contracts\HttpClient\HttpClientInterface;
 class MaxMindDoNotSellDownloadHelper
 {
     /**
-     * @const REMOTE_DATA
+     * @var string
      */
     public const REMOTE_DATA = 'https://api.maxmind.com/privacy/exclusions';
 
@@ -105,10 +105,7 @@ class MaxMindDoNotSellDownloadHelper
         return $this->getAuthPart(1);
     }
 
-    /**
-     * @param int $position
-     */
-    private function getAuthPart($position): string
+    private function getAuthPart(int $position): string
     {
         if (array_key_exists($position, $this->auth)) {
             return $this->auth[$position];

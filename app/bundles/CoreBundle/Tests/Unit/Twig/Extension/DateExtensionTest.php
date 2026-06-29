@@ -21,7 +21,7 @@ class DateExtensionTest extends TestCase
         $translator = $this->createMock(TranslatorInterface::class);
         $translator->method('trans')
             ->willReturnCallback(function ($id, $parameters = []) {
-                if (0 === strpos($id, 'mautic.core.date.')) {
+                if (str_starts_with($id, 'mautic.core.date.')) {
                     $unit = str_replace('mautic.core.date.', '', $id);
 
                     return $parameters['%count%'].' '.$unit.($parameters['%count%'] > 1 ? 's' : '');
@@ -55,11 +55,9 @@ class DateExtensionTest extends TestCase
         $functions = $this->dateExtension->getFunctions();
 
         $this->assertContainsOnlyInstancesOf(TwigFunction::class, $functions);
-        $this->assertCount(8, $functions);
+        $this->assertCount(9, $functions);
 
-        $functionNames = array_map(function (TwigFunction $function) {
-            return $function->getName();
-        }, $functions);
+        $functionNames = array_map(fn (TwigFunction $function) => $function->getName(), $functions);
 
         $this->assertContains('dateToText', $functionNames);
         $this->assertContains('dateToFull', $functionNames);
@@ -69,6 +67,7 @@ class DateExtensionTest extends TestCase
         $this->assertContains('dateToShort', $functionNames);
         $this->assertContains('dateFormatRange', $functionNames);
         $this->assertContains('dateToHumanized', $functionNames);
+        $this->assertContains('dateToTextShort', $functionNames);
     }
 
     public function testToText(): void
@@ -119,6 +118,13 @@ class DateExtensionTest extends TestCase
         $datetime = '2023-12-31 23:59:59';
         $result   = $this->dateExtension->toShort($datetime, 'UTC', 'Y-m-d H:i:s');
         $this->assertStringContainsString('Dec', $result);
+    }
+
+    public function testToTextShort(): void
+    {
+        $datetime = '2023-12-31 23:59:59';
+        $result   = $this->dateExtension->toTextShort($datetime, 'UTC', 'Y-m-d H:i:s');
+        $this->assertStringContainsString('2023', $result);
     }
 
     public function testFormatRange(): void

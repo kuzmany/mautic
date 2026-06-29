@@ -172,17 +172,19 @@ class DashboardController extends AbstractFormController
                 $passthroughVars['widgetId']     = $widget->getId();
                 $passthroughVars['widgetWidth']  = $widget->getWidth();
                 $passthroughVars['widgetHeight'] = $widget->getHeight();
+                $this->addFlashMessage('mautic.dashboard.widget.created');
             }
+            $passthroughVars['flashes'] = $this->getFlashContent();
 
             return new JsonResponse($passthroughVars);
-        } else {
-            return $this->delegateView([
-                'viewParameters' => [
-                    'form' => $form->createView(),
-                ],
-                'contentTemplate' => '@MauticDashboard/Widget/form.html.twig',
-            ]);
         }
+
+        return $this->delegateView([
+            'viewParameters' => [
+                'form' => $form->createView(),
+            ],
+            'contentTemplate' => '@MauticDashboard/Widget/form.html.twig',
+        ]);
     }
 
     /**
@@ -236,14 +238,14 @@ class DashboardController extends AbstractFormController
             }
 
             return new JsonResponse($passthroughVars);
-        } else {
-            return $this->delegateView([
-                'viewParameters' => [
-                    'form' => $form->createView(),
-                ],
-                'contentTemplate' => '@MauticDashboard/Widget/form.html.twig',
-            ]);
         }
+
+        return $this->delegateView([
+            'viewParameters' => [
+                'form' => $form->createView(),
+            ],
+            'contentTemplate' => '@MauticDashboard/Widget/form.html.twig',
+        ]);
     }
 
     /**
@@ -294,14 +296,12 @@ class DashboardController extends AbstractFormController
 
     /**
      * Saves the widgets of current user into a json and stores it for later as a file.
-     *
-     * @return Response
      */
-    public function saveAction(Request $request)
+    public function saveAction(Request $request): Response
     {
         // Accept only AJAX POST requests because those are check for CSRF tokens
         if (!$request->isMethod(Request::METHOD_POST) || !$request->isXmlHttpRequest()) {
-            return $this->accessDenied();
+            $this->throwAccessDenied();
         }
 
         $name = $this->getNameFromRequest($request);

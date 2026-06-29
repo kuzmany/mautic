@@ -30,7 +30,7 @@ class FormSubscriberTest extends TestCase
      */
     protected $formSubscriber;
 
-    public function setUp(): void
+    protected function setUp(): void
     {
         $this->emailModel     = $this->createMock(EmailModel::class);
         $this->contactTracker = $this->createMock(ContactTracker::class);
@@ -47,8 +47,6 @@ class FormSubscriberTest extends TestCase
     {
         $reflection = new \ReflectionMethod($this->formSubscriber, 'getCurrentLead');
 
-        $reflection->setAccessible(true);
-
         $feedback    = ['lead.create' => ['lead' => ['email' => 'foobar']]];
         $currentLead = $reflection->invoke($this->formSubscriber, $feedback);
 
@@ -61,8 +59,6 @@ class FormSubscriberTest extends TestCase
     public function testGetCurrentLeadWithoutLeadInFeedback(): void
     {
         $reflection = new \ReflectionMethod($this->formSubscriber, 'getCurrentLead');
-
-        $reflection->setAccessible(true);
 
         $contact = new Lead();
         $contact->setFirstname('Test');

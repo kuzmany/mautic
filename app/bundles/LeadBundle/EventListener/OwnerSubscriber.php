@@ -118,23 +118,19 @@ class OwnerSubscriber implements EventSubscriberInterface
 
     /**
      * Creates a token using defined pattern.
-     *
-     * @param string $field
      */
-    private function buildToken($field): string
+    private function buildToken(string $field): string
     {
         return sprintf($this->ownerFieldSprintf, $field);
     }
 
     /**
-     * Creates translation ready label Owner Firstname etc.
-     *
-     * @param string $field
+     * Creates translation ready label Owner: Firstname etc.
      */
-    private function buildLabel($field): string
+    private function buildLabel(string $field): string
     {
         return sprintf(
-            '%s %s',
+            '%s: %s',
             $this->translator->trans('mautic.lead.list.filter.owner'),
             $this->translator->trans('mautic.core.'.$field)
         );

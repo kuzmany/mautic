@@ -19,14 +19,12 @@ class PrivateAddressCheckerTest extends TestCase
 
         // Checker with mocked DNS resolver for URL tests
         $this->checkerWithMockedDns = new PrivateAddressChecker(
-            function (string $host) {
-                return match ($host) {
-                    'private.example.com' => ['192.168.1.1'],
-                    'public.example.com'  => ['203.0.113.1'],
-                    'api.example.com'     => ['8.8.8.8'],
-                    'localhost'           => ['127.0.0.1'],
-                    default               => false,
-                };
+            fn (string $host) => match ($host) {
+                'private.example.com' => ['192.168.1.1'],
+                'public.example.com'  => ['203.0.113.1'],
+                'api.example.com'     => ['8.8.8.8'],
+                'localhost'           => ['127.0.0.1'],
+                default               => false,
             }
         );
     }
@@ -136,7 +134,7 @@ class PrivateAddressCheckerTest extends TestCase
     public function testUnresolvableHostname(): void
     {
         $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage('URL validation failed: Could not resolve hostname');
+        $this->expectExceptionMessage('Could not resolve hostname unresolvable.example.com');
         $this->checkerWithMockedDns->isPrivateUrl('http://unresolvable.example.com');
     }
 
@@ -148,7 +146,7 @@ class PrivateAddressCheckerTest extends TestCase
     #[\PHPUnit\Framework\Attributes\DataProvider('edgeCaseUrlProvider')]
     public function testEdgeCaseUrls(string $url, bool $expectedResult): void
     {
-        $this->assertEquals($expectedResult, $this->checkerWithMockedDns->isPrivateUrl($url));
+        $this->assertSame($expectedResult, $this->checkerWithMockedDns->isPrivateUrl($url));
     }
 
     /**

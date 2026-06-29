@@ -71,7 +71,7 @@ final class TriggerModelTest extends \PHPUnit\Framework\TestCase
      */
     private MockObject $contactTracker;
 
-    public function setUp(): void
+    protected function setUp(): void
     {
         parent::setUp();
         $this->ipLookupHelper         = $this->createMock(IpLookupHelper::class);
@@ -100,7 +100,6 @@ final class TriggerModelTest extends \PHPUnit\Framework\TestCase
         // reset private property cachedEvents in TriggerModel instance
         $reflectionClass = new \ReflectionClass(TriggerModel::class);
         $property        = $reflectionClass->getProperty('cachedEvents');
-        $property->setAccessible(true);
         $property->setValue($this->triggerModel, []);
     }
 
@@ -145,9 +144,8 @@ final class TriggerModelTest extends \PHPUnit\Framework\TestCase
                     Assert::assertSame($triggerEvent, $event->getTriggerEvent());
 
                     return $event;
-                } else {
-                    $this->fail("Unexpected event name: $eventName");
                 }
+                $this->fail("Unexpected event name: $eventName");
             });
 
         $this->triggerModel->triggerEvent($triggerEvent->convertToArray(), $contact, true);
