@@ -66,11 +66,11 @@ final class FieldControllerTest extends MauticMysqlTestCase
 
         $response = $this->client->getResponse();
         self::assertResponseIsSuccessful();
-        $this->assertStringContainsString('Your custom field is being created, we will notify you when complete', $response->getContent());
+        $this->assertStringContainsString('Your custom field is being created, we will notify you when complete', (string) $response->getContent());
 
         // Get the created field
         $field = $this->em->getRepository(LeadField::class)->findOneBy(['alias' => $alias]);
-        $this->assertNotNull($field, 'Field was not created');
+        $this->assertInstanceOf(LeadField::class, $field, 'Field was not created');
         $this->assertSame($label, $field->getLabel());
 
         // Now edit the field - just change the label, and check Mautic will "schedule" the update of the
@@ -84,12 +84,12 @@ final class FieldControllerTest extends MauticMysqlTestCase
 
         $response = $this->client->getResponse();
         self::assertResponseIsSuccessful();
-        $this->assertStringContainsString($label, $response->getContent());
-        $this->assertStringContainsString('Your custom field is being updated, we will notify you when complete', $response->getContent());
+        $this->assertStringContainsString($label, (string) $response->getContent());
+        $this->assertStringContainsString('Your custom field is being updated, we will notify you when complete', (string) $response->getContent());
 
         // Run the background command to create the column
         $commandTester = $this->testSymfonyCommand(CreateCustomFieldCommand::COMMAND_NAME, ['--id' => $field->getId()]);
-        $this->assertEquals(0, $commandTester->getStatusCode());
+        $this->assertSame(0, $commandTester->getStatusCode());
 
         // Now edit the field again, see the Mautic reports a clean "was updated"
         $crawler = $this->client->request(Request::METHOD_GET, '/s/contacts/fields/edit/'.$field->getId());
@@ -103,8 +103,8 @@ final class FieldControllerTest extends MauticMysqlTestCase
 
         $response = $this->client->getResponse();
         self::assertResponseIsSuccessful();
-        $this->assertStringContainsString($label, $response->getContent());
-        $this->assertStringContainsString('has been updated!', $response->getContent());
+        $this->assertStringContainsString($label, (string) $response->getContent());
+        $this->assertStringContainsString('has been updated!', (string) $response->getContent());
     }
 
     public function testCloneFieldSubmission(): void

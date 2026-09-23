@@ -25,7 +25,7 @@ use Mautic\PageBundle\PageEvents;
 use MauticPlugin\MauticFocusBundle\Helper\TokenHelper as FocusTokenHelper;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
-final class DynamicContentSubscriber implements EventSubscriberInterface
+final readonly class DynamicContentSubscriber implements EventSubscriberInterface
 {
     public function __construct(
         private TrackableModel $trackableModel,

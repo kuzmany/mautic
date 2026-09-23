@@ -481,7 +481,7 @@ final class CustomFieldColumnTest extends \PHPUnit\Framework\TestCase
         $columnSchemaHelper    = $this->createMock(ColumnSchemaHelper::class);
         $schemaDefinition      = $this->createStub(SchemaDefinition::class);
         $logger                = $this->createStub(Logger::class);
-        $leadFieldSaver        = $this->createStub(LeadFieldSaver::class);
+        $leadFieldSaver        = $this->createMock(LeadFieldSaver::class);
         $customFieldIndex      = $this->createStub(CustomFieldIndex::class);
         $fieldColumnDispatcher = $this->createMock(FieldColumnDispatcher::class);
         $translator            = $this->createStub(TranslatorInterface::class);
